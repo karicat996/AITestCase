@@ -32,8 +32,9 @@ class TsharkCapture:
 
 
     def data_analysis(self,ip,type):
+        results = []
         # src_path = getPrinterData(ip,type)# 文件数据解析json
-        src_path = r"/data/tcp/172.16.1.234 .pcap"
+        src_path = r"D:/ChituManagerProject/data/tcp/192.168.0.110.pcap"
         if src_path is not None:
             packets = rdpcap(src_path)
 
@@ -44,25 +45,27 @@ class TsharkCapture:
                 payload = bytes(packet['UDP'].payload)
                 json_data = self._try_parse_json(payload)
                 if json_data:
-                    print(json_data)
+                    return json_data
 
             if packet.haslayer('TCP'):
                 payload = bytes(packet['TCP'].payload)
                 json_data = self._try_parse_json(payload)
                 if json_data:
-                    print(json_data)
+                    results.append(json_data)
 
             if packet.haslayer('HTTP'):
                 payload = bytes(packet['HTTP'].payload)
                 json_data = self._try_parse_json(payload)
                 if json_data:
-                    print(json_data)
+                    return json_data
 
             if packet.haslayer('Websocket'):
                 payload = bytes(packet['Websocket'].payload)
                 json_data = self._try_parse_json(payload)
                 if json_data:
-                    print(json_data)
+                    return json_data
+
+        return  results
 
     def _try_parse_json(self, payload):
         try:
@@ -110,7 +113,8 @@ class TsharkCapture:
             if item_tuple not in seen:
                 seen.add(item_tuple)
                 deduplicated_list.append(item)
-        print(deduplicated_list)
+        return deduplicated_list
+
 
     def _convert_to_immutable(self, obj):#将嵌套字典和列表转化为不可变的元组
 
