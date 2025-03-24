@@ -34,7 +34,7 @@ class TsharkCapture:
     def data_analysis(self,ip,type):
         results = []
         # src_path = getPrinterData(ip,type)# 文件数据解析json
-        src_path = r"D:/ChituManagerProject/data/tcp/192.168.0.110.pcap"
+        src_path = r"D:/ChituManagerProject/data/tcp/172.16.1.234.pcap"
         if src_path is not None:
             packets = rdpcap(src_path)
 
@@ -44,28 +44,31 @@ class TsharkCapture:
             if packet.haslayer('UDP'):
                 payload = bytes(packet['UDP'].payload)
                 json_data = self._try_parse_json(payload)
-                if json_data:
-                    return json_data
+                if json_data is not None:
+                    results.append(json_data)
+
 
             if packet.haslayer('TCP'):
                 payload = bytes(packet['TCP'].payload)
                 json_data = self._try_parse_json(payload)
-                if json_data:
+                if json_data is not None:
                     results.append(json_data)
+
 
             if packet.haslayer('HTTP'):
                 payload = bytes(packet['HTTP'].payload)
                 json_data = self._try_parse_json(payload)
-                if json_data:
-                    return json_data
+                if json_data is not None:
+                    results.append(json_data)
+
 
             if packet.haslayer('Websocket'):
                 payload = bytes(packet['Websocket'].payload)
                 json_data = self._try_parse_json(payload)
-                if json_data:
-                    return json_data
+                if json_data is not None:
+                    results.append(json_data)
 
-        return  results
+        return results
 
     def _try_parse_json(self, payload):
         try:
@@ -102,18 +105,26 @@ class TsharkCapture:
             return None
 
     #json数据去重
-    def json_deduplication(self,json_data):
-        if not isinstance(json_data, list):
-            json_data = [json_data]
+    def json_deduplication(self, results):
+        """支持一维数组的增强版去重"""
+
+        # 扁平化处理（兼容嵌套列表的情况）
+        def flatten(items):
+            for item in items:
+                if isinstance(item, list):
+                    yield from flatten(item)
+                else:
+                    yield item
+
         seen = set()
-        deduplicated_list = []
-        for item in json_data:
-            # 将JSON对象转换为一个不可变的元组，以便于比较
-            item_tuple = self._convert_to_immutable(item)
-            if item_tuple not in seen:
-                seen.add(item_tuple)
-                deduplicated_list.append(item)
-        return deduplicated_list
+        deduplicated = []
+        for item in flatten(results):  # 处理多维数组情况
+            item_key = self._convert_to_immutable(item)
+            if item_key not in seen:
+                seen.add(item_key)
+                deduplicated.append(item)
+        return deduplicated
+
 
 
     def _convert_to_immutable(self, obj):#将嵌套字典和列表转化为不可变的元组
@@ -125,10 +136,15 @@ class TsharkCapture:
         else:
             return obj
 
+    def get_results(self,ip,type):
+        data_list = self.data_analysis(ip,type)
+        results = self.json_deduplication(data_list)
+        return results
+
 
 
 if __name__ == "__main__":
     res = TsharkCapture()
-    results = res.data_analysis("192.168.0.110","tcp")
+    results = res.data_analysis("172.16.1.234","tcp")
     result = res.json_deduplication(results)
-    print(result)
+    print(len(result))
