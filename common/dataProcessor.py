@@ -86,12 +86,12 @@ class DataProcess:
 
 
 
-# if __name__ == "__main__":
-#     # 读取JSON数据
-#     demo_data = read_json(json_path)
-#
-#     # 转换为Markdown
-#     json_to_markdown_file(demo_data, markdown_path)
-#
-#     # 打开文件
-#     os.system(f"start {markdown_path}")
+if __name__ == "__main__":
+    # 读取JSON数据
+    demo_data = read_json(json_path)
+
+    # 转换为Markdown
+    json_to_markdown_file(demo_data, markdown_path)
+
+    # 打开文件
+    os.system(f"start {markdown_path}")
