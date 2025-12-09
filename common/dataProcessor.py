@@ -10,15 +10,11 @@ class DataProcess:
         json_path = r""
         markdown_path = r""
 
-    # 读取json文件数据
-    def read_json(json_path):
-        with open(json_path, "r", encoding="utf-8") as f:
-            demo_data = json.load(f)
-            return demo_data
+
 
 
     # 递归将JSON数据转换为Markdown格式
-    def json_to_markdown(data, level=0):
+    def json_to_markdown(self, data, level=0):
         """
         递归地将JSON数据转换为Markdown格式
         """
@@ -70,7 +66,7 @@ class DataProcess:
 
 
      # 将JSON转换为Markdown文件
-    def json_to_markdown_file(json_data, output_file):
+    def json_to_markdown_file(self, json_data, output_file):
         # 创建Markdown内容
         markdown_content = "# JSON数据转换结果\n\n"
         markdown_content += "## 测试用例\n\n"
@@ -83,7 +79,11 @@ class DataProcess:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(markdown_content)
 
-        print(f"Markdown文件已生成: {output_file}")
+        return output_file
+
+
+
+
 
 
 # if __name__ == "__main__":
