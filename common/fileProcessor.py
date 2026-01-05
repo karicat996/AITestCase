@@ -1,5 +1,5 @@
 import os
-import pathlib
+from pathlib import Path
 import json
 import yaml
 
@@ -22,6 +22,48 @@ class fileProcessor:
 
 
 
+    # 获取文件信息
+    def find_and_read_file(self,relative_path, start_dir = None, type = None):
+
+        try:
+            if start_dir is None:
+                start_dir = Path(__file__).parent.parent
+            target_path = Path(start_dir) / relative_path
+
+            if not target_path.exists():
+                raise FileNotFoundError(f"{target_path}文件不存在")
+            if not target_path.is_file():
+                raise IsADirectoryError(f"{target_path}不是文件")
+
+            if type == "json":
+                with open(target_path, 'r', encoding='utf-8')  as f:
+                    content = json.load(f)
+                return content
+
+            if type == "yaml":
+                with open(target_path, 'r', encoding='utf-8') as f:
+                    content = yaml.load(f, Loader=yaml.FullLoader)
+                return content
+
+            if type == "txt":
+                with open(target_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+                return content
+
+        except UnicodeDecodeError:
+            with open(target_path, 'w', encoding='gbk') as f:
+                return f.read()
+
+        except Exception as e:
+            print(f"读取失败：{e}")
+            return  None
+
+
+
+
+if __name__ == '__main__':
+    f = fileProcessor()
+    f.find_and_read_file("config/promptWord.yaml", type="yaml")
 
 
 
