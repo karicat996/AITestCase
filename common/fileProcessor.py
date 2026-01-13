@@ -63,7 +63,9 @@ class fileProcessor:
 
 if __name__ == '__main__':
     f = fileProcessor()
-    f.find_and_read_file("config/promptWord.yaml", type="yaml")
+    # f.find_and_read_file("config/promptWord.yaml", type="yaml")
+    res = f.find_and_read_file("config/template.json", type="json")
+    print(res)
 
 
 

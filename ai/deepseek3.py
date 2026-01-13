@@ -5,7 +5,7 @@ from common.promptProcessing import get_prompt
 from common.fileProcessor import fileProcessor
 class DeepSeekAPI:
 
-    def __init__(self, question):
+    def __init__(self):
         fp = fileProcessor()
         self.DEEPSEEK_API_KEY = fp.find_and_read_file("config/userInfo.yaml", type="yaml").get("DEEPSEEK_API_KEY")
         self.MODEL_NAME = "deepseek-chat"
@@ -13,7 +13,7 @@ class DeepSeekAPI:
         self.language = "Chinese"
         self.requestQuestion = get_prompt()
 
-    def get_answer(self):
+    def get_test_point_answer(self):
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -27,10 +27,10 @@ class DeepSeekAPI:
             , stream = False
         )
         result = response.choices[0].message.content
-        print(result)
-        # return result
+        print(f"获取到答案:{result}")
+        return result
 
 
 if __name__ == '__main__':
-    print(DeepSeekAPI("").get_answer())
+    print(DeepSeekAPI("").get_test_point_answer())
 
