@@ -3,12 +3,14 @@ import os
 import re
 from ai.deepseek3 import DeepSeekAPI
 from common.fileProcessor import fileProcessor
+
+
 class DataProcess:
 
     def __init__(self):
-
-        # self.ds = DeepSeekAPI().get_test_point_answer()
+        self.ds = DeepSeekAPI().get_test_point_answer()
         self.ts = fileProcessor().find_and_read_file("config/template.json", type="json")
+
 
     def extract_json_from_ai_response(self,text):
         pattern = r"```json\s*({[\s\S]*?})\s*```"
@@ -22,15 +24,32 @@ class DataProcess:
         else:
             print("未匹配到JSON")
 
+    def testpoint_to_list(self, data):
+        """
+        将测试点数据转换为列表
+        """
+        test_points = []
+        if isinstance(data, dict):
+            for item in data.values():
+                if isinstance(item, dict):
+                    # 接收递归调用的返回值
+                    test_points.extend(self.testpoint_to_list(item))
+                elif isinstance(item, list):
+                    for point in item:
+                        test_points.append(point)
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    test_points.extend(self.testpoint_to_list(item))
+                elif isinstance(item, list):
+                    for point in item:
+                        test_points.append(point)
+        else:
+            # 处理基本数据类型
+            pass
+        return test_points
 
-    def get_testcase_point(self):
-        data = self.extract_json_from_ai_response(self.ds)
-        # 筛选出测试用例,作为列表
 
-
-
-
-    # 针对测试点
     def json_to_markdown(self, data=None, output_file=None, level=0):
       """
       递归地将JSON数据转换为Markdown格式并写入文件
@@ -38,7 +57,6 @@ class DataProcess:
       if data is None:
         data = self.ds
         extracted_json = self.extract_json_from_ai_response(data)
-        print(type(data))
         if extracted_json:
           data = json.loads(extracted_json) # 解析提取的JSON
           print(type(data))
@@ -87,9 +105,7 @@ class DataProcess:
         self._write_testcase_recursive(data, f, level)
 
     def _write_testcase_recursive(self, data=None, file_handle=None, level=0):
-      """
-      递归写入测试用例格式数据
-      """
+
       # 定义标题级别映射
       title_levels = {
         "测试模块": 2,  # ## 级别
@@ -135,5 +151,6 @@ if __name__ == "__main__":
     dc = DataProcess()
     # 转换为Markdown
     # dc.json_to_markdown(output_file=r"D:\AIGeneration\config\answer.md")
-    dc.json_to_testcase(output_file=r"D:\AIGeneration\testcase\testcase.md")
+    dc.testpoint_to_list(fp)
+    # dc.json_to_testcase(output_file=r"D:\AIGeneration\testcase\testcase.md")
 
