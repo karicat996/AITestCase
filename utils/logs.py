@@ -83,9 +83,3 @@ class LogManager:
             if log_file.stat().st_mtime < cutoff_date.timestamp():
                 log_file.unlink(missing_ok=True)
 
-
-# 创建全局实例
-log_manager = LogManager()
-
-# 导出logger对象供其他模块使用
-log = logger

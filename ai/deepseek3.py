@@ -48,7 +48,6 @@ class DeepSeekAPI:
             , stream = False
         )
         result = response.choices[0].message.content
-        print(f"获取到答案:{result}")
         return result
 
 

@@ -7,8 +7,6 @@ from paddleocr import PaddleOCR
 import time
 import os
 
-
-
 def ocr_get_text_from_img(
     image_path: str
 ):
@@ -16,8 +14,9 @@ def ocr_get_text_from_img(
     从屏幕截取图片，并使用ocr获取text
     :return:
     """
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"{image_path}文件不存在")
     ocr =  paddleocr.PaddleOCR(lang='ch',use_angle_cls=True,precision='fp16')
-    print("ocr初始化成功")
     img = cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), cv2.IMREAD_COLOR)
     img = cv2.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 21)  # 智能降噪
 

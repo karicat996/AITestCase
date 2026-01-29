@@ -22,7 +22,11 @@ class DataProcess:
             valid_json = json_str.replace("{{", "{").replace("}}", "}")
             return valid_json  # 获得可解析的标准JSON
         else:
-            print("未匹配到JSON")
+            raise ValueError("未匹配到JSON")
+
+
+
+
 
     def testpoint_to_list(self, data):
         """
@@ -59,7 +63,6 @@ class DataProcess:
         extracted_json = self.extract_json_from_ai_response(data)
         if extracted_json:
           data = json.loads(extracted_json) # 解析提取的JSON
-          print(type(data))
         else:
           print("无法从数据中提取JSON内容")
       with open(output_file, "w", encoding="utf-8") as f:
