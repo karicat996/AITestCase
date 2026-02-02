@@ -2,9 +2,9 @@
 import xmind
 from utils.logs import LogManager
 from loguru import logger
-import pandas
-import openpyxl
-
+import pandas as pd
+from openpyxl import Workbook, load_workbook
+import os
 
 class MxindDataProcessor:
     def __init__(self):
@@ -155,27 +155,73 @@ class AdvancedTestCaseExtractor:
 
         print(data)
 
-
 class DicToXlsx:
     """
     将字典数据转换为XLSX文件
     """
+    def __init__(self):
+        self.xlsx_file = r'C:\Users\admin\Desktop\demo.xlsx'
+        file_dir = os.path.dirname(self.xlsx_file)
+        if file_dir and not os.path.exists(file_dir):  # 只有当目录不存在时才创建
+            os.makedirs(file_dir, exist_ok=True)
+        json_data = MxindDataProcessor().xmind_to_json()
+        extractor = AdvancedTestCaseExtractor(max_depth=10)
+        self.data = extractor.extract(json_data)
+        statistics = extractor.get_statistics()
+        print(f"提取到的数据: {len(self.data)} 条")
 
-    def __init__(self, dic, xlsx_file):
-        self.dic = dic
-        self.xlsx_file = xlsx_file
+    def table_data_processing(self):
+        try:
+            # 如果文件不存在，则创建新的工作簿并设置表头
+            if not os.path.exists(self.xlsx_file):
+                wb = Workbook()
+                sheet = wb.active
+                # 定义中文表头
+                headers_chinese = ['主题', '模块', '标题', '前置条件', '步骤', '预期结果']
+                for col_num, header in enumerate(headers_chinese, 1):
+                    sheet.cell(row=1, column=col_num, value=header)
+                # 设置表头行高
+                sheet.row_dimensions[1].height = 25
+                wb.save(self.xlsx_file)
+                print(f"已创建新文件并写入表头: {self.xlsx_file}")
 
-    def convert(self):
-        """
-        将字典数据转换为XLSX文件
-        """
-        workbook = xlsxwriter.Workbook(self.xlsx_file)
-        worksheet = workbook
+            # 加载现有的工作簿
+            wb = load_workbook(self.xlsx_file)
+            sheet = wb.active
+
+            # 检查表头是否已经存在，如果不存在则添加
+            first_cell = sheet.cell(row=1, column=1).value
+            headers_chinese = ['主题', '模块', '标题', '前置条件', '步骤', '预期结果']
+
+            # 检查第一列是否包含期望的表头值之一
+            if not first_cell or first_cell not in headers_chinese:
+                # 重新写入表头
+                for col_num, header in enumerate(headers_chinese, 1):
+                    sheet.cell(row=1, column=col_num, value=header)
+                print("已写入表头到第一行")
+
+            # 获取现有数据的最后一行
+            last_row = sheet.max_row
+            # 定义英文键名用于从数据字典中获取值
+            headers_english = ['Subject', 'model', 'title', 'header', 'steps', 'result']
+
+            # 遍历数据数组，逐行写入
+            for row_idx, data_dict in enumerate(self.data, start=last_row + 1):
+                for col_idx, header in enumerate(headers_english, start=1):
+                    # 从字典中获取对应键的值，如果键不存在则写入空字符串
+                    value = data_dict.get(header, '')
+                    sheet.cell(row=row_idx, column=col_idx, value=value)
+
+            # 保存工作簿
+            wb.save(self.xlsx_file)
+            print(f"数据已成功写入: {self.xlsx_file}")
+
+        except PermissionError:
+            print(f"权限错误：无法访问文件 {self.xlsx_file}，请确保文件未被其他程序打开")
+        except Exception as e:
+            print(f"写入Excel文件时发生错误: {str(e)}")
 
 
 if __name__ == '__main__':
-    json_data = MxindDataProcessor().xmind_to_json()
-    extractor = AdvancedTestCaseExtractor(max_depth=10)
-    results = extractor.extract(json_data)
-    total = extractor.get_statistics()
-    print(results)
+    dic_to_xlsx = DicToXlsx()
+    dic_to_xlsx.table_data_processing()
