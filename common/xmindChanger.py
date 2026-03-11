@@ -5,10 +5,11 @@ from loguru import logger
 import pandas as pd
 from openpyxl import Workbook, load_workbook
 import os
+from common.dataProcessor import WriteInfo
 
-class MxindDataProcessor:
+class MxindDataProcessor:#  xmind数据整理
     def __init__(self):
-        self.xmind_file = r"C:\Users\admin\Desktop\test.xmind"
+        self.xmind_file = r"C:\Users\admin\Desktop\demo.xmind"
         self.logging = LogManager()
         self.case_dict = {}
     def xmind_to_json(self):
@@ -20,7 +21,7 @@ class MxindDataProcessor:
             return sheet[0]
 
 
-class AdvancedTestCaseExtractor:
+class AdvancedTestCaseExtractor: #测试用例数据提取
 
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
@@ -155,10 +156,7 @@ class AdvancedTestCaseExtractor:
 
         print(data)
 
-class DicToXlsx:
-    """
-    将字典数据转换为XLSX文件
-    """
+class DicToXlsx: # 字典转换成用例
     def __init__(self):
         self.xlsx_file = r'C:\Users\admin\Desktop\demo.xlsx'
         file_dir = os.path.dirname(self.xlsx_file)
@@ -222,6 +220,17 @@ class DicToXlsx:
             print(f"写入Excel文件时发生错误: {str(e)}")
 
 
+
+#xmind测试点转化json
+
+
+
+#xmind测试用例转换成
+
 if __name__ == '__main__':
-    dic_to_xlsx = DicToXlsx()
-    dic_to_xlsx.table_data_processing()
+    # dic_to_xlsx = DicToXlsx()
+    # dic_to_xlsx.table_data_processing()
+    dc = MxindDataProcessor()
+    res = dc.xmind_to_json()
+    DD = WriteInfo()
+    DD.write_json_to_file(data=res, file=r"D:\AIGeneration\testcase\demo.json")

@@ -11,7 +11,6 @@ class DataProcess:
         self.ds = DeepSeekAPI().get_test_point_answer()
         self.ts = fileProcessor().find_and_read_file("config/template.json", type="json")
 
-
     def extract_json_from_ai_response(self,text):
         pattern = r"```json\s*({[\s\S]*?})\s*```"
         match = re.search(pattern, text, re.DOTALL)
@@ -23,10 +22,6 @@ class DataProcess:
             return valid_json  # 获得可解析的标准JSON
         else:
             raise ValueError("未匹配到JSON")
-
-
-
-
 
     def testpoint_to_list(self, data):
         """
@@ -148,6 +143,15 @@ class DataProcess:
             file_handle.write(f"{item}\n")
 
 
+class WriteInfo:
+    def write_json_to_file(self, data, file):#将数据写入json文件中
+        try:
+            with open(file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            print(f"数据已成功写入文件：{file}")
+        except Exception as e:
+            print(f"写入文件时发生错误：{e}")
+            raise
 
 if __name__ == "__main__":
     # 转换为Markdown

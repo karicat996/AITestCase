@@ -3,11 +3,13 @@ import os
 from openai import OpenAI
 from common.promptProcessing import get_prompt
 from common.fileProcessor import fileProcessor
-from common.dataProcessor import DataProcess
+
 class DeepSeekAPI:
 
     def __init__(self):
         fp = fileProcessor()
+        # 延迟导入，避免循环依赖
+        from common.dataProcessor import DataProcess
         dp = DataProcess()
         self.DEEPSEEK_API_KEY = fp.find_and_read_file("config/userInfo.yaml", type="yaml").get("DEEPSEEK_API_KEY")
         self.MODEL_NAME = "deepseek-chat"
