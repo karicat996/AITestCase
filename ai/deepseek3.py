@@ -54,5 +54,5 @@ class DeepSeekAPI:
 
 
 if __name__ == '__main__':
-    print(DeepSeekAPI("").get_test_point_answer())
+    print(DeepSeekAPI().get_test_point_answer())
 

@@ -1,5 +1,6 @@
 # mxind数据转换器
 import xmind
+import json
 from utils.logs import LogManager
 from loguru import logger
 import pandas as pd
@@ -221,7 +222,167 @@ class DicToXlsx: # 字典转换成用例
 
 
 
-#xmind测试点转化json
+
+#json转换成xmind
+def json_to_xmind(json_data, output_file,template_file=None):
+    """
+    将 JSON 数据转换为 XMind文件
+    
+    Args:
+        json_data: JSON 格式的测试用例数据
+        output_file: 输出的 XMind文件路径
+    
+    Returns:
+        bool: 转换是否成功
+    """
+    try:
+        # 创建新的 XMind 工作簿
+        if template_file is None:
+            template_file = os.path.join(os.path.dirname(__file__), 'template.xmind')
+            # 若默认模板不存在，则回退到项目 config 目录的 template.json 对应的空 xmind（需要你提前准备）
+            if not os.path.exists(template_file):
+                template_file = r"C:\Users\admin\Desktop\test.xmind"  # 你需要在本地准备这个空白模板
+
+            # 加载模板工作簿
+        workbook = xmind.load(template_file)
+        sheets = workbook.getData()
+        if not sheets:
+            print("模板文件中没有工作表")
+            return False
+        sheet = sheets[0]
+        
+        # 设置工作表标题
+        if isinstance(json_data, dict) and 'title' in json_data:
+            sheet.setTitle(json_data['title'])
+        else:
+            sheet.setTitle('测试用例')
+        
+        # 获取根主题
+        root_topic = sheet.getRootTopic()
+        
+        # 如果 json_data 是字典且包含 topic 键
+        if isinstance(json_data, dict) and 'topic' in json_data:
+            _build_xmind_topic(root_topic, json_data['topic'])
+        elif isinstance(json_data, dict):
+            # 直接作为根主题处理
+            _build_xmind_topic(root_topic, json_data)
+        elif isinstance(json_data, list):
+            # 如果是列表，每个元素作为一个子主题
+            for item in json_data:
+                if isinstance(item, dict):
+                    child_topic = root_topic.addSubTopic()
+                    _build_xmind_topic(child_topic, item)
+        
+        # 保存 XMind文件
+        file_dir = os.path.dirname(output_file)
+        if file_dir and not os.path.exists(file_dir):
+            os.makedirs(file_dir, exist_ok=True)
+        
+        xmind.save(workbook, output_file)
+        print(f"XMind文件已成功生成：{output_file}")
+        return True
+        
+    except Exception as e:
+        print(f"转换 XMind文件时发生错误：{str(e)}")
+        return False
+
+
+def _build_xmind_topic(xmind_topic, data):
+    """
+    递归构建 XMind 主题
+    
+    Args:
+        xmind_topic: XMind 主题对象
+        data: 数据字典或字符串
+    """
+    if isinstance(data, str):
+        xmind_topic.setTitle(data)
+    elif isinstance(data, dict):
+        # 设置当前主题标题
+        title = data.get('title', data.get('name', ''))
+        if title:
+            xmind_topic.setTitle(title)
+        
+        # 处理子主题
+        topics = data.get('topics', data.get('children', []))
+        if topics and isinstance(topics, list):
+            for child_data in topics:
+                child_topic = xmind_topic.addSubTopic()
+                _build_xmind_topic(child_topic, child_data)
+        
+        # 处理备注信息（如果有）
+        notes = data.get('notes', data.get('comment', ''))
+        if notes:
+            xmind_topic.setNote(notes)
+            
+        # 处理测试用例的特殊字段
+        if 'steps' in data or 'result' in data:
+            note_content = ""
+            if 'steps' in data and data['steps']:
+                note_content += f"步骤：{data['steps']}\n"
+            if 'result' in data and data['result']:
+                note_content += f"预期结果：{data['result']}\n"
+            if note_content:
+                existing_note = xmind_topic.getNote()
+                if existing_note:
+                    xmind_topic.setNote(f"{existing_note}\n{note_content}")
+                else:
+                    xmind_topic.setNote(note_content)
+    elif isinstance(data, list):
+        # 如果是列表，第一个元素作为标题，其余作为子主题
+        if len(data) > 0:
+            xmind_topic.setTitle(str(data[0]))
+            for item in data[1:]:
+                child_topic = xmind_topic.addSubTopic()
+                _build_xmind_topic(child_topic, item)
+
+
+
+class XmindPointJson:#xmind 测试点转化 json
+
+    def __init__(self):
+        self.xmind_file = r"C:\Users\admin\Desktop\test.xmind"
+
+    def readXmindData(self):
+        workbook = xmind.load(self.xmind_file)
+        sheet = workbook.getData()
+        if not sheet:
+            print("模板文件中没有工作表")
+            return None
+        else:
+            JsonData = sheet[0]
+        return JsonData
+
+    def extract_test_points_data(self):
+        """
+        从给定的数据中提取测试点和其子项，生成新的JSON格式
+
+        Args:
+            data: 包含原始数据的字典
+
+        Returns:
+            dict: 新的JSON格式数据，格式为 {"测试点1": ["功能可靠", "性能安全", "使用方便"], "测试点2": [...]}
+        """
+        # 创建新的结果字典
+        result = {}
+        data = self.readXmindData()
+        # 遍历主题下的topics获取测试点
+        topics = data.get('topic', {}).get('topics', [])
+
+        for topic in topics:
+            test_point_title = topic.get('title')  # 测试点标题，如"测试点1"
+
+            # 获取该测试点下的所有子主题
+            sub_topics = topic.get('topics', [])
+            sub_titles = [sub_topic.get('title') for sub_topic in sub_topics]
+
+            # 将测试点作为键，子项列表作为值添加到结果中
+            result[test_point_title] = sub_titles
+
+        print(result)
+
+
+
 
 
 
@@ -230,7 +391,19 @@ class DicToXlsx: # 字典转换成用例
 if __name__ == '__main__':
     # dic_to_xlsx = DicToXlsx()
     # dic_to_xlsx.table_data_processing()
-    dc = MxindDataProcessor()
-    res = dc.xmind_to_json()
-    DD = WriteInfo()
-    DD.write_json_to_file(data=res, file=r"D:\AIGeneration\testcase\demo.json")
+    # dc = MxindDataProcessor()
+    # res = dc.xmind_to_json()
+    # DD = WriteInfo()
+    # DD.write_json_to_file(data=res, file=r"D:\AIGeneration\testcase\demo.json")
+    
+    # 示例：将 JSON 数据转换为 XMind文件
+    
+    # 读取 JSON 文件
+    # with open(r"D:\AIGeneration\testcase\demo.json", 'r', encoding='utf-8') as f:
+    #     json_data = json.load(f)
+    #
+    # # 转换为 XMind并导出
+    # output_xmind = r"C:\Users\admin\Desktop\demo_output.xmind"
+    # json_to_xmind(json_data, output_xmind)
+    res = XmindPointJson()
+    res.extract_test_points_data()
