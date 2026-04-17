@@ -1,6 +1,7 @@
 # mxind数据转换器
 import xmind
 import json
+import uuid
 from utils.logs import LogManager
 from loguru import logger
 import pandas as pd
@@ -289,6 +290,7 @@ class XmindPointJson:
             return None
         else:
             JsonData = sheet[0]
+            print(JsonData)
         return JsonData
 
     def extract_test_points_data(self):
@@ -323,9 +325,8 @@ class XmindPointJson:
 class JsonToXmind:
     #获取测试点转化为xmind格式文件
     def primaryJsonToTrueJson(self,json_data):
-        PASS
+        pass
 
-    #正确格式的json转换成xmind
     def json_to_xmind(self,json_data, output_file,template_file=None):
         try:
             # 创建新的 XMind 工作簿
@@ -379,6 +380,134 @@ class JsonToXmind:
             print(f"转换 XMind文件时发生错误：{str(e)}")
             return False
 
+    def convert_test_points_to_xmind_format(self,input_data, root_title="逻辑图", sheet_title="测试用例"):
+        def generate_id():
+            return str(uuid.uuid4())
+
+        test_point_topics = []
+        test_point_counter = 1
+
+        for category, subcategories in input_data.items():
+            if isinstance(subcategories, dict):
+                sub_topics = []
+                for sub_key, sub_values in subcategories.items():
+                    sub_topic = {
+                        'id': generate_id(),
+                        'link': None,
+                        'title': sub_key,  # 如"等价类划分"
+                        'note': None,
+                        'label': None,
+                        'comment': None,
+                        'markers': []
+                    }
+                    sub_topics.append(sub_topic)
+
+                    # 构建测试点主题
+                    test_point_topic = {
+                        'id': generate_id(),
+                        'link': None,
+                        'title': f"测试点{test_point_counter}",  # 如"测试点1"
+                        'note': None,
+                        'label': None,
+                        'comment': None,
+                        'markers': [],
+                        'topics': sub_topics
+                    }
+                    test_point_topics.append(test_point_topic)
+                    test_point_counter += 1
+
+            elif isinstance(subcategories, list): # 如果直接是列表，每个元素作为子主题
+                sub_topics = []
+                for item in subcategories:
+                    sub_topic = {
+                        'id': generate_id(),
+                        'link': None,
+                        'title': str(item),
+                        'note': None,
+                        'label': None,
+                        'comment': None,
+                        'markers': []
+                    }
+                    sub_topics.append(sub_topic)
+
+                test_point_topic = {
+                    'id': generate_id(),
+                    'link': None,
+                    'title': f"测试点{test_point_counter}",
+                    'note': None,
+                    'label': None,
+                    'comment': None,
+                    'markers': [],
+                    'topics': sub_topics
+                }
+                test_point_topics.append(test_point_topic)
+                test_point_counter += 1
+
+                # 构建完整的XMind JSON结构
+        xmind_json = {
+            'id': generate_id(),
+            'title': root_title,
+            'topic': {
+                'id': generate_id(),
+                'link': None,
+                'title': sheet_title,
+                'note': None,
+                'label': None,
+                'comment': None,
+                'markers': [],
+                'topics': test_point_topics
+            }
+        }
+
+        return xmind_json
+
+    def save_xmind_json(self,data, output_file):
+        """
+        将XMind格式的JSON数据保存到文件
+        """
+        try:
+            # 确保目录存在
+            file_dir = os.path.dirname(output_file)
+            if file_dir and not os.path.exists(file_dir):
+                os.makedirs(file_dir, exist_ok=True)
+
+            # 写入JSON文件（单行格式，与测试点2.json保持一致）
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+
+            print(f"XMind格式JSON已成功保存到: {output_file}")
+            return True
+        except Exception as e:
+            print(f"保存JSON文件时发生错误: {str(e)}")
+            return False
+
+    def convert_and_export_to_xmind(self,input_data, output_xmind_file, root_title="逻辑图", sheet_title="测试用例",
+                                    template_file=None):
+        """
+        一键转换并导出为XMind文件
+
+        Args:
+            input_data: 原始测试点数据
+            output_xmind_file: 输出的XMind文件路径
+            root_title: 根节点标题
+            sheet_title: 工作表标题
+            template_file: XMind模板文件路径（可选）
+
+        Returns:
+            bool: 是否成功
+        """
+        # 步骤1: 转换为XMind标准JSON格式
+        xmind_json = convert_test_points_to_xmind_format(input_data, root_title, sheet_title)
+
+        # 步骤2: 使用JsonToXmind类导出为XMind文件
+        converter = JsonToXmind()
+        success = converter.json_to_xmind(xmind_json, output_xmind_file, template_file)
+
+        if success:
+            print(f"XMind文件已成功生成: {output_xmind_file}")
+
+        return success
+
 
 #AI给出json，转化为xmind格式文件
 
@@ -401,12 +530,12 @@ if __name__ == '__main__':
     # res = dc.xmind_to_json()
     # DD = WriteInfo()
     # DD.write_json_to_file(data=res, file=r"D:\AIGeneration\testcase\demo.json")
-
-    with open(r"D:\AIGeneration\testcase\demo.json", 'r', encoding='utf-8') as f:
-        json_data = json.load(f)
     #
-    # # 转换为 XMind并导出
-    output_xmind = r"C:\Users\admin\Desktop\demo_output.xmind"
-    json_to_xmind(json_data, output_xmind)
-    # res = XmindPointJson()
-    # res.extract_test_points_data()
+    # with open(r"D:\AIGeneration\testcase\demo.json", 'r', encoding='utf-8') as f:
+    #     json_data = json.load(f)
+    # #
+    # # # 转换为 XMind并导出
+    # output_xmind = r"C:\Users\admin\Desktop\demo_output.xmind"
+    # json_to_xmind(json_data, output_xmind)
+    res = XmindPointJson()
+    res.extract_test_points_data()
