@@ -4,6 +4,7 @@ import json
 import uuid
 from utils.logs import LogManager
 from loguru import logger
+from fileProcessor import fileProcessor
 import pandas as pd
 from openpyxl import Workbook, load_workbook
 import os
@@ -21,7 +22,6 @@ class MxindDataProcessor:#  xmind数据整理
         if sheet:
             logger.debug("调试信息")
             return sheet[0]
-
 
 class AdvancedTestCaseExtractor: #测试用例数据提取
 
@@ -222,10 +222,6 @@ class DicToXlsx: # 字典转换成用例
             print(f"写入Excel文件时发生错误: {str(e)}")
 
 
-
-
-
-
 def _build_xmind_topic(xmind_topic, data):
     """
     递归构建 XMind 主题
@@ -296,10 +292,8 @@ class XmindPointJson:
     def extract_test_points_data(self):
         """
         从给定的数据中提取测试点和其子项，生成新的JSON格式
-
         Args:
             data: 包含原始数据的字典
-
         Returns:
             dict: 新的JSON格式数据，格式为 {"测试点1": ["功能可靠", "性能安全", "使用方便"], "测试点2": [...]}
         """
@@ -322,133 +316,270 @@ class XmindPointJson:
         print(result)
 
 
+
+#将AI给的json数据转化为xmind
 class JsonToXmind:
-    #获取测试点转化为xmind格式文件
-    def primaryJsonToTrueJson(self,json_data):
-        pass
+    """JSON 数据转换为 XMind 格式的处理器"""
 
-    def json_to_xmind(self,json_data, output_file,template_file=None):
+    DEFAULT_ROOT_TITLE = "逻辑图"
+    DEFAULT_SHEET_TITLE = "测试用例"
+    DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
+    BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
+    FALLBACK_TEMPLATE_PATH = r"C:\Users\admin\Desktop\test.xmind"
+    # 标记是否已经警告过模板残留问题
+    _template_warning_shown = False
+    def __init__(self, template_file=None):
+        """
+        初始化转换器
+
+        Args:
+            template_file: XMind 模板文件路径，默认使用内置模板
+        """
+        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
+        self._ensure_blank_template_exists()
+        self.template_file = template_file or self.BLANK_TEMPLATE_PATH
+
+
+    def _ensure_blank_template_exists(self):
+        """确保空白模板文件存在，如果不存在则自动创建"""
+        if os.path.exists(self.BLANK_TEMPLATE_PATH):
+            return  # 已存在，无需创建
+
         try:
-            # 创建新的 XMind 工作簿
-            if template_file is None:
-                template_file = os.path.join(os.path.dirname(__file__), 'template.xmind')
-                # 若默认模板不存在，则回退到项目 config 目录的 template.json 对应的空 xmind（需要你提前准备）
-                if not os.path.exists(template_file):
-                    template_file = r"C:\Users\admin\Desktop\test.xmind"  # 你需要在本地准备这个空白模板
+            import zipfile
 
-                # 加载模板工作簿
-            workbook = xmind.load(template_file)
-            # sheets = workbook.getData()
+            # 创建一个真正的空白 XMind 文件（XMind 8 格式）
+            with zipfile.ZipFile(self.BLANK_TEMPLATE_PATH, 'w', zipfile.ZIP_DEFLATED) as zf:
+                # content.xml - 只包含一个空的根主题，没有任何子主题
+                content_xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <xmap-content xmlns="urn:xmind:xmap:xmlns:content:2.0" xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink" modified-by="Lingma" timestamp="1234567890">
+    <sheet id="sheet1" modified-by="Lingma" timestamp="1234567890">
+    <topic id="root1" modified-by="Lingma" structure-class="org.xmind.ui.logic.right" timestamp="1234567890">
+    <title>Root</title>
+    </topic>
+    </sheet>
+    </xmap-content>'''
+                zf.writestr('content.xml', content_xml.encode('utf-8'))
+
+                # meta.xml - 元数据
+                meta_xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <meta xmlns="urn:xmind:xmap:xmlns:meta:2.0" version="2.0">
+    <Creator>Lingma AI</Creator>
+    <Created>2024-01-01T00:00:00.000+0800</Created>
+    </meta>'''
+                zf.writestr('meta.xml', meta_xml.encode('utf-8'))
+
+            self.logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
+        except Exception as e:
+            self.logger.error(f"创建空白模板失败：{str(e)}")
+            raise
+    def _get_template_file(self, template_file=None):
+
+        # 优先级：用户指定 > 空白模板 > 默认模板 > 备用模板
+        if template_file and os.path.exists(template_file):
+            return template_file
+        elif os.path.exists(self.BLANK_TEMPLATE_PATH):
+            return self.BLANK_TEMPLATE_PATH
+        elif os.path.exists(self.DEFAULT_TEMPLATE_PATH):
+            return self.DEFAULT_TEMPLATE_PATH
+        elif os.path.exists(self.FALLBACK_TEMPLATE_PATH):
+            return self.FALLBACK_TEMPLATE_PATH
+        else:
+            raise FileNotFoundError(
+                f"未找到 XMind 模板文件。\n"
+                f"请确保以下路径之一存在：\n"
+                f"1. {self.BLANK_TEMPLATE_PATH}（自动生成）\n"
+                f"2. {self.DEFAULT_TEMPLATE_PATH}\n"
+                f"3. {self.FALLBACK_TEMPLATE_PATH}"
+            )
+
+    def json_to_xmind(self, json_data, output_file, template_file=None):
+
+        try:
+            # 获取有效的模板文件
+            valid_template = self._get_template_file(template_file)
+
+            # 加载模板工作簿
+            workbook = xmind.load(valid_template)
             sheet = workbook.getPrimarySheet()
+
             if not sheet:
-                print("模板文件中没有工作表")
+                self.logger.error("模板文件中没有工作表")
                 return False
 
-
             # 设置工作表标题
-            if isinstance(json_data, dict) and 'title' in json_data:
-                sheet.setTitle(json_data['title'])
-            else:
-                sheet.setTitle('测试用例')
+            sheet_title = json_data.get('title', self.DEFAULT_SHEET_TITLE) if isinstance(json_data,
+             dict) else self.DEFAULT_SHEET_TITLE
+            sheet.setTitle(sheet_title)
 
             # 获取根主题
             root_topic = sheet.getRootTopic()
 
-            # 如果 json_data 是字典且包含 topic 键
-            if isinstance(json_data, dict) and 'topic' in json_data:
-                _build_xmind_topic(root_topic, json_data['topic'])
-            elif isinstance(json_data, dict):
-                # 直接作为根主题处理
-                _build_xmind_topic(root_topic, json_data)
-            elif isinstance(json_data, list):
-                # 如果是列表，每个元素作为一个子主题
-                for item in json_data:
-                    if isinstance(item, dict):
-                        child_topic = root_topic.addSubTopic()
-                        _build_xmind_topic(child_topic, item)
 
-            # 保存 XMind文件
-            file_dir = os.path.dirname(output_file)
-            if file_dir and not os.path.exists(file_dir):
-                os.makedirs(file_dir, exist_ok=True)
+            self._build_root_content_clean(root_topic, json_data)
 
+            # 确保输出目录存在
+            self._ensure_directory_exists(output_file)
+
+            # 保存 XMind 文件
             xmind.save(workbook, output_file)
-            print(f"XMind文件已成功生成：{output_file}")
+            self.logger.info(f"XMind 文件已成功生成：{output_file}")
             return True
 
+        except FileNotFoundError as e:
+            self.logger.error(f"模板文件未找到：{str(e)}")
+            return False
         except Exception as e:
-            print(f"转换 XMind文件时发生错误：{str(e)}")
+            self.logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
             return False
 
-    def convert_test_points_to_xmind_format(self,input_data, root_title="逻辑图", sheet_title="测试用例"):
-        def generate_id():
-            return str(uuid.uuid4())
 
-        test_point_topics = []
-        test_point_counter = 1
+    def _build_root_content_clean(self, root_topic, json_data):
+        """
 
-        for category, subcategories in input_data.items():
-            if isinstance(subcategories, dict):
-                sub_topics = []
-                for sub_key, sub_values in subcategories.items():
-                    sub_topic = {
-                        'id': generate_id(),
-                        'link': None,
-                        'title': sub_key,  # 如"等价类划分"
-                        'note': None,
-                        'label': None,
-                        'comment': None,
-                        'markers': []
-                    }
-                    sub_topics.append(sub_topic)
+        Args:
+            root_topic: XMind 根主题对象
+            json_data: JSON 数据
+        """
+        if isinstance(json_data, dict):
+            if 'topic' in json_data:
+                topic_data = json_data['topic']
+                # 先设置根主题标题
+                if 'title' in topic_data:
+                    root_topic.setTitle(topic_data['title'])
+                # 然后递归构建子主题
+                _build_xmind_topic(root_topic, topic_data)
+            else:
+                # 直接作为根主题处理
+                if 'title' in json_data:
+                    root_topic.setTitle(json_data['title'])
+                _build_xmind_topic(root_topic, json_data)
+        elif isinstance(json_data, list):
+            # 如果是列表，每个元素作为一个子主题
+            for item in json_data:
+                if isinstance(item, dict):
+                    child_topic = root_topic.addSubTopic()
+                    _build_xmind_topic(child_topic, item)
 
-                    # 构建测试点主题
-                    test_point_topic = {
-                        'id': generate_id(),
-                        'link': None,
-                        'title': f"测试点{test_point_counter}",  # 如"测试点1"
-                        'note': None,
-                        'label': None,
-                        'comment': None,
-                        'markers': [],
-                        'topics': sub_topics
-                    }
-                    test_point_topics.append(test_point_topic)
-                    test_point_counter += 1
+    def convert_test_points_to_xmind_format(self, input_data, root_title=DEFAULT_ROOT_TITLE, sheet_title=DEFAULT_SHEET_TITLE):
+        """
+        将测试点数据转换为 XMind 标准 JSON 格式
 
-            elif isinstance(subcategories, list): # 如果直接是列表，每个元素作为子主题
-                sub_topics = []
-                for item in subcategories:
-                    sub_topic = {
-                        'id': generate_id(),
-                        'link': None,
-                        'title': str(item),
-                        'note': None,
-                        'label': None,
-                        'comment': None,
-                        'markers': []
-                    }
-                    sub_topics.append(sub_topic)
+        Args:
+            input_data: 测试点数据（dict）
+            root_title: 根节点标题
+            sheet_title: 工作表标题
 
-                test_point_topic = {
-                    'id': generate_id(),
-                    'link': None,
-                    'title': f"测试点{test_point_counter}",
-                    'note': None,
-                    'label': None,
-                    'comment': None,
-                    'markers': [],
-                    'topics': sub_topics
-                }
-                test_point_topics.append(test_point_topic)
-                test_point_counter += 1
+        Returns:
+            dict: XMind 格式的 JSON 数据
+        """
+        category_topics = []
 
-                # 构建完整的XMind JSON结构
-        xmind_json = {
-            'id': generate_id(),
+        # 遍历顶层分类（如"功能测试"、"用户使用场景"）
+        for category_name, category_data in input_data.items():
+            # 为每个分类创建主题
+            category_topic = self._create_category_topic(category_name, category_data)
+            category_topics.append(category_topic)
+
+        return self._build_xmind_json_structure(
+            category_topics,
+            root_title,
+            sheet_title
+        )
+
+    def _create_category_topic(self, category_name, category_data):
+        """
+        创建分类主题（如"功能测试"）
+
+        Args:
+            category_name: 分类名称
+            category_data: 分类下的数据（dict 或 list）
+
+        Returns:
+            dict: 分类主题数据
+        """
+        sub_topics = self._extract_sub_topics(category_data)
+
+        return {
+            'id': self._generate_id(),
+            'link': None,
+            'title': category_name,  # 使用实际分类名，而非"测试点1"
+            'note': None,
+            'label': None,
+            'comment': None,
+            'markers': [],
+            'topics': sub_topics
+        }
+
+    def _extract_sub_topics(self, subcategories):
+        """
+        提取子主题列表
+
+        Args:
+            subcategories: 子类别数据（dict 或 list）
+
+        Returns:
+            list: 子主题列表
+        """
+        sub_topics = []
+
+        if isinstance(subcategories, dict):
+            for sub_key, sub_value in subcategories.items():
+                # 如果值是列表，创建带子主题的主题节点
+                if isinstance(sub_value, list):
+                    parent_topic = self._create_sub_topic(sub_key)
+                    # 为列表中的每个元素创建子主题
+                    child_topics = []
+                    for item in sub_value:
+                        child_topics.append(self._create_sub_topic(str(item)))
+                    parent_topic['topics'] = child_topics
+                    sub_topics.append(parent_topic)
+                else:
+                    # 如果值是字符串或其他类型，直接创建主题
+                    sub_topics.append(self._create_sub_topic(sub_key))
+        elif isinstance(subcategories, list):
+            for item in subcategories:
+                sub_topics.append(self._create_sub_topic(str(item)))
+
+        return sub_topics
+
+    def _create_sub_topic(self, title):
+        """
+        创建单个子主题
+
+        Args:
+            title: 子主题标题
+
+        Returns:
+            dict: 子主题数据
+        """
+        return {
+            'id': self._generate_id(),
+            'link': None,
+            'title': title,
+            'note': None,
+            'label': None,
+            'comment': None,
+            'markers': []
+        }
+
+    def _build_xmind_json_structure(self, test_point_topics, root_title, sheet_title):
+        """
+        构建完整的 XMind JSON 结构
+
+        Args:
+            test_point_topics: 测试点主题列表
+            root_title: 根节点标题
+            sheet_title: 工作表标题
+
+        Returns:
+            dict: 完整的 XMind JSON 结构
+        """
+        return {
+            'id': self._generate_id(),
             'title': root_title,
             'topic': {
-                'id': generate_id(),
+                'id': self._generate_id(),
                 'link': None,
                 'title': sheet_title,
                 'note': None,
@@ -459,57 +590,65 @@ class JsonToXmind:
             }
         }
 
-        return xmind_json
+    @staticmethod
+    def _generate_id():
+        """生成唯一 ID"""
+        return str(uuid.uuid4())
 
-    def save_xmind_json(self,data, output_file):
+    def save_xmind_json(self, data, output_file):
         """
-        将XMind格式的JSON数据保存到文件
+        将 XMind 格式的 JSON 数据保存到文件
+
+        Args:
+            data: JSON 数据
+            output_file: 输出文件路径
+
+        Returns:
+            bool: 保存是否成功
         """
         try:
-            # 确保目录存在
-            file_dir = os.path.dirname(output_file)
-            if file_dir and not os.path.exists(file_dir):
-                os.makedirs(file_dir, exist_ok=True)
+            self._ensure_directory_exists(output_file)
 
-            # 写入JSON文件（单行格式，与测试点2.json保持一致）
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False)
 
-            print(f"XMind格式JSON已成功保存到: {output_file}")
+            self.logger.info(f"XMind 格式 JSON 已成功保存到: {output_file}")
             return True
         except Exception as e:
-            print(f"保存JSON文件时发生错误: {str(e)}")
+            self.logger.error(f"保存 JSON 文件时发生错误: {str(e)}", exc_info=True)
             return False
 
-    def convert_and_export_to_xmind(self,input_data, output_xmind_file, root_title="逻辑图", sheet_title="测试用例",
+    def convert_and_export_to_xmind(self, input_data, output_xmind_file,
+                                    root_title=DEFAULT_ROOT_TITLE,
+                                    sheet_title=DEFAULT_SHEET_TITLE,
                                     template_file=None):
-        """
-        一键转换并导出为XMind文件
 
-        Args:
-            input_data: 原始测试点数据
-            output_xmind_file: 输出的XMind文件路径
-            root_title: 根节点标题
-            sheet_title: 工作表标题
-            template_file: XMind模板文件路径（可选）
+        # 步骤1: 转换为 XMind 标准 JSON 格式
+        xmind_json = self.convert_test_points_to_xmind_format(
+            input_data,
+            root_title,
+            sheet_title
+        )
 
-        Returns:
-            bool: 是否成功
-        """
-        # 步骤1: 转换为XMind标准JSON格式
-        xmind_json = convert_test_points_to_xmind_format(input_data, root_title, sheet_title)
-
-        # 步骤2: 使用JsonToXmind类导出为XMind文件
-        converter = JsonToXmind()
-        success = converter.json_to_xmind(xmind_json, output_xmind_file, template_file)
+        # 步骤2: 导出为 XMind 文件
+        success = self.json_to_xmind(xmind_json, output_xmind_file, template_file)
 
         if success:
-            print(f"XMind文件已成功生成: {output_xmind_file}")
+            self.logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
 
         return success
 
+    @staticmethod
+    def _ensure_directory_exists(file_path):
+        """
+        确保文件所在目录存在
 
-#AI给出json，转化为xmind格式文件
+        Args:
+            file_path: 文件路径
+        """
+        file_dir = os.path.dirname(file_path)
+        if file_dir and not os.path.exists(file_dir):
+            os.makedirs(file_dir, exist_ok=True)
 
 
 #获取测试用例转化为xmind格式文件
@@ -533,9 +672,20 @@ if __name__ == '__main__':
     #
     # with open(r"D:\AIGeneration\testcase\demo.json", 'r', encoding='utf-8') as f:
     #     json_data = json.load(f)
-    # #
     # # # 转换为 XMind并导出
     # output_xmind = r"C:\Users\admin\Desktop\demo_output.xmind"
     # json_to_xmind(json_data, output_xmind)
-    res = XmindPointJson()
-    res.extract_test_points_data()
+    # res = XmindPointJson()
+    # res.extract_test_points_data()
+    converter = JsonToXmind()
+    # 准备测试点数据
+    filepath =r"D:\AIGeneration\testcase\测试点.json"
+    get_json = fileProcessor()
+    test_data = get_json.find_and_read_file(filepath, type="json")
+    # 一键转换并导出
+    success = converter.convert_and_export_to_xmind(
+        input_data=test_data,
+        output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
+        root_title="测试大纲",
+        sheet_title="功能测试用例"
+    )
