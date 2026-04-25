@@ -3,6 +3,7 @@ import xmind
 import json
 import re
 import uuid
+from xmind.core.markerref import MarkerId
 from utils.logs import LogManager
 from loguru import logger
 from fileProcessor import fileProcessor
@@ -820,7 +821,6 @@ class TestcaseJsonToXmind:
                     self._add_testcase_hierarchy(module_topic, testcase)
 
 
-
     def _add_testcase_hierarchy(self, parent_topic, testcase):
         """
         添加测试用例的完整层级结构（模块 -> 标题 -> 前置条件 -> 操作步骤 -> 预期结果）
@@ -833,14 +833,30 @@ class TestcaseJsonToXmind:
         title = testcase.get('标题', '未命名用例')
         priority = testcase.get('用例等级', '')
 
-        # 如果有优先级，添加到标题前面
-        if priority:
-            display_title = f"[{priority}] {title}"
-        else:
-            display_title = title
-
         title_topic = parent_topic.addSubTopic()
-        title_topic.setTitle(display_title)
+        title_topic.setTitle(title)
+
+        # 添加优先级图标（使用 XMind 原生图标）
+        if priority:
+            # 将 P0, P1, P2, P3 等映射到 XMind 的优先级图标
+            priority_map = {
+                'P0': MarkerId.priority1,  # 优先级1（红色旗帜）
+                'P1': MarkerId.priority2,  # 优先级2（橙色旗帜）
+                'P2': MarkerId.priority3,  # 优先级3（黄色旗帜）
+                'P3': MarkerId.priority4,  # 优先级4（绿色旗帜）
+                'P4': MarkerId.priority5,  # 优先级5（蓝色旗帜）
+                'P5': MarkerId.priority6,  # 优先级6（紫色旗帜）
+                'P6': MarkerId.priority7,  # 优先级7（灰色旗帜）
+                'P7': MarkerId.priority8,  # 优先级8（白色旗帜）
+                'P8': MarkerId.priority9,  # 优先级9
+            }
+
+            marker_id = priority_map.get(priority)
+            if marker_id:
+                try:
+                    title_topic.addMarker(marker_id)
+                except Exception as e:
+                    self.logger.warning(f"添加优先级图标失败: {str(e)}")
 
         # 第2层：前置条件作为标题的子节点
         precondition = testcase.get('前置条件', '')
@@ -850,9 +866,9 @@ class TestcaseJsonToXmind:
             # 如果前置条件是列表，在当前节点用编号展示
             if isinstance(precondition, list):
                 precondition_items = [f"{i+1}. {str(p)}" for i, p in enumerate(precondition)]
-                precondition_topic.setTitle("前置条件：\n" + "\n".join(precondition_items))
+                precondition_topic.setTitle("\n".join(precondition_items))
             else:
-                precondition_topic.setTitle(f"前置条件：{precondition}")
+                precondition_topic.setTitle(f"{precondition}")
 
             # 第3层：操作步骤作为前置条件的子节点
             steps = testcase.get('操作步骤', [])
@@ -861,10 +877,10 @@ class TestcaseJsonToXmind:
 
                 # 如果操作步骤是列表，在当前节点用编号展示
                 if isinstance(steps, list):
-                    steps_items = [f"{i+1}. {str(step)}" for i, step in enumerate(steps)]
-                    steps_topic.setTitle("操作步骤：\n" + "\n".join(steps_items))
+                    steps_items = [f"{str(step)}" for i, step in enumerate(steps)]
+                    steps_topic.setTitle("\n".join(steps_items))
                 else:
-                    steps_topic.setTitle(f"操作步骤：{steps}")
+                    steps_topic.setTitle(f"{steps}")
 
                 # 第4层：预期结果作为操作步骤的子节点
                 expected_result = testcase.get('预期结果', '')
@@ -873,10 +889,10 @@ class TestcaseJsonToXmind:
 
                     # 如果预期结果是列表，在当前节点用编号展示
                     if isinstance(expected_result, list):
-                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
-                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                        result_items = [f"{str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("\n".join(result_items))
                     else:
-                        result_topic.setTitle(f"预期结果：{expected_result}")
+                        result_topic.setTitle(f"{expected_result}")
             else:
                 # 如果没有操作步骤，但有预期结果，预期结果作为前置条件的子节点
                 expected_result = testcase.get('预期结果', '')
@@ -887,7 +903,7 @@ class TestcaseJsonToXmind:
                         result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
                         result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
                     else:
-                        result_topic.setTitle(f"预期结果：{expected_result}")
+                        result_topic.setTitle(f"{expected_result}")
         else:
             # 如果没有前置条件，操作步骤作为标题的子节点
             steps = testcase.get('操作步骤', [])
@@ -895,10 +911,10 @@ class TestcaseJsonToXmind:
                 steps_topic = title_topic.addSubTopic()
 
                 if isinstance(steps, list):
-                    steps_items = [f"{i+1}. {str(step)}" for i, step in enumerate(steps)]
-                    steps_topic.setTitle("操作步骤：\n" + "\n".join(steps_items))
+                    steps_items = [f"{str(step)}" for i, step in enumerate(steps)]
+                    steps_topic.setTitle("\n".join(steps_items))
                 else:
-                    steps_topic.setTitle(f"操作步骤：{steps}")
+                    steps_topic.setTitle(f"{steps}")
 
                 # 预期结果作为操作步骤的子节点
                 expected_result = testcase.get('预期结果', '')
@@ -906,10 +922,10 @@ class TestcaseJsonToXmind:
                     result_topic = steps_topic.addSubTopic()
 
                     if isinstance(expected_result, list):
-                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
-                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                        result_items = [f"{str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("\n".join(result_items))
                     else:
-                        result_topic.setTitle(f"预期结果：{expected_result}")
+                        result_topic.setTitle(f"{expected_result}")
             else:
                 # 如果都没有，直接添加预期结果
                 expected_result = testcase.get('预期结果', '')
@@ -917,11 +933,10 @@ class TestcaseJsonToXmind:
                     result_topic = title_topic.addSubTopic()
 
                     if isinstance(expected_result, list):
-                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
-                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                        result_items = [f"{str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("\n".join(result_items))
                     else:
-                        result_topic.setTitle(f"预期结果：{expected_result}")
-
+                        result_topic.setTitle(f"{expected_result}")
 
     @staticmethod
     def extract_priority_from_title(title):
@@ -935,8 +950,6 @@ class TestcaseJsonToXmind:
             tuple: (优先级, 清理后的标题)
                    例如: ("P0", "测试模块1")
         """
-        import re
-
         # 匹配 [P0], [P1], [P2], [P3] 等格式
         pattern = r'^\[(P\d+)\]\s*(.+)$'
         match = re.match(pattern, title)
@@ -951,20 +964,18 @@ class TestcaseJsonToXmind:
     @staticmethod
     def add_priority_to_title(priority, title):
         """
-        给标题添加优先级标记
+        给标题添加优先级标记（已废弃，现在使用图标方式）
 
         Args:
             priority: 优先级，如 "P0", "P1"
             title: 原始标题
 
         Returns:
-            str: 带优先级的标题，如 "[P0] 测试模块1"
+            str: 带优先级的标题（仅用于兼容旧代码）
         """
         if priority:
             return f"[{priority}] {title}"
         return title
-
-
 
 
     def convert_and_export_to_xmind(self, input_data, output_xmind_file,
@@ -1012,13 +1023,14 @@ class TestcaseJsonToXmind:
             os.makedirs(file_dir, exist_ok=True)
 
 
+#测试用例的xmind格式文件转为xls/csv/xlsx格式文件
+# class TestcaseXmindToXlsx:
 
 
-#测试用例的xmind格式文件转为json
 
 #AI给出json，转化为execl格式文件
 
-#AI给出json，转化为xmind格式文件
+
 
 
 
