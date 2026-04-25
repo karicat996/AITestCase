@@ -14,7 +14,7 @@ class DeepSeekAPI:
         self.userName = "user"
         self.language = "Chinese"
         self.requestQuestion = get_prompt()
-        # self.testcaseQuestion = get_testcase(prompt_input)
+        self.testcaseQuestion = get_testcase()
 
     def get_test_point_answer(self):
         client = OpenAI(
@@ -75,5 +75,5 @@ class DeepSeekAPI:
         return test_points
 
 if __name__ == '__main__':
-    print(DeepSeekAPI().get_test_point_answer())
+    print(DeepSeekAPI().get_testcase_answer())
 

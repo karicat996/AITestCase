@@ -1,6 +1,7 @@
 # mxind数据转换器
 import xmind
 import json
+import re
 import uuid
 from utils.logs import LogManager
 from loguru import logger
@@ -318,11 +319,11 @@ class XmindPointJson:
 
 
 #将AI给的json数据转化为xmind
-class JsonToXmind:
+class TestcasePointJsonToXmind:
     """JSON 数据转换为 XMind 格式的处理器"""
 
     DEFAULT_ROOT_TITLE = "逻辑图"
-    DEFAULT_SHEET_TITLE = "测试用例"
+    DEFAULT_SHEET_TITLE = "测试点"
     DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
     BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
     FALLBACK_TEMPLATE_PATH = r"C:\Users\admin\Desktop\test.xmind"
@@ -652,6 +653,366 @@ class JsonToXmind:
 
 
 #获取测试用例转化为xmind格式文件
+class TestcaseJsonToXmind:
+    """将测试用例JSON数据转换为XMind格式的处理器"""
+
+    DEFAULT_ROOT_TITLE = "测试用例"
+    DEFAULT_SHEET_TITLE = "功能测试"
+    DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
+    BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
+    FALLBACK_TEMPLATE_PATH = r"C:\Users\admin\Desktop\test.xmind"
+
+    def __init__(self, template_file=None):
+        """
+        初始化转换器
+
+        Args:
+            template_file: XMind 模板文件路径，默认使用内置模板
+        """
+        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
+        self._ensure_blank_template_exists()
+        self.template_file = template_file or self.BLANK_TEMPLATE_PATH
+
+    def _ensure_blank_template_exists(self):
+        """确保空白模板文件存在，如果不存在则自动创建"""
+        if os.path.exists(self.BLANK_TEMPLATE_PATH):
+            return
+
+        try:
+            import zipfile
+
+            with zipfile.ZipFile(self.BLANK_TEMPLATE_PATH, 'w', zipfile.ZIP_DEFLATED) as zf:
+                content_xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<xmap-content xmlns="urn:xmind:xmap:xmlns:content:2.0" xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink" modified-by="Lingma" timestamp="1234567890">
+<sheet id="sheet1" modified-by="Lingma" timestamp="1234567890">
+<topic id="root1" modified-by="Lingma" structure-class="org.xmind.ui.logic.right" timestamp="1234567890">
+<title>Root</title>
+</topic>
+</sheet>
+</xmap-content>'''
+                zf.writestr('content.xml', content_xml.encode('utf-8'))
+
+                meta_xml = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<meta xmlns="urn:xmind:xmap:xmlns:meta:2.0" version="2.0">
+<Creator>Lingma AI</Creator>
+<Created>2024-01-01T00:00:00.000+0800</Created>
+</meta>'''
+                zf.writestr('meta.xml', meta_xml.encode('utf-8'))
+
+            self.logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
+        except Exception as e:
+            self.logger.error(f"创建空白模板失败：{str(e)}")
+            raise
+
+    def _get_template_file(self, template_file=None):
+        """获取有效的模板文件路径"""
+        if template_file and os.path.exists(template_file):
+            return template_file
+        elif os.path.exists(self.BLANK_TEMPLATE_PATH):
+            return self.BLANK_TEMPLATE_PATH
+        elif os.path.exists(self.DEFAULT_TEMPLATE_PATH):
+            return self.DEFAULT_TEMPLATE_PATH
+        elif os.path.exists(self.FALLBACK_TEMPLATE_PATH):
+            return self.FALLBACK_TEMPLATE_PATH
+        else:
+            raise FileNotFoundError(
+                f"未找到 XMind 模板文件。\n"
+                f"请确保以下路径之一存在：\n"
+                f"1. {self.BLANK_TEMPLATE_PATH}（自动生成）\n"
+                f"2. {self.DEFAULT_TEMPLATE_PATH}\n"
+                f"3. {self.FALLBACK_TEMPLATE_PATH}"
+            )
+
+    def json_to_xmind(self, json_data, output_file, template_file=None):
+        """
+        将测试用例JSON数据转换为XMind文件
+
+        Args:
+            json_data: 测试用例JSON数据（字典或列表）
+            output_file: 输出的XMind文件路径
+            template_file: 可选的模板文件路径
+
+        Returns:
+            bool: 转换是否成功
+        """
+        try:
+            valid_template = self._get_template_file(template_file)
+
+            workbook = xmind.load(valid_template)
+            sheet = workbook.getPrimarySheet()
+
+            if not sheet:
+                self.logger.error("模板文件中没有工作表")
+                return False
+
+            sheet_title = json_data.get('sheet_title', self.DEFAULT_SHEET_TITLE) if isinstance(json_data, dict) else self.DEFAULT_SHEET_TITLE
+            sheet.setTitle(sheet_title)
+
+            root_topic = sheet.getRootTopic()
+
+            self._build_testcase_structure(root_topic, json_data)
+
+            self._ensure_directory_exists(output_file)
+
+            xmind.save(workbook, output_file)
+            self.logger.info(f"XMind 文件已成功生成：{output_file}")
+            return True
+
+        except FileNotFoundError as e:
+            self.logger.error(f"模板文件未找到：{str(e)}")
+            return False
+        except Exception as e:
+            self.logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
+            return False
+
+
+    def _build_testcase_structure(self, root_topic, json_data):
+        """
+        构建测试用例的XMind结构
+
+        Args:
+            root_topic: XMind根主题对象
+            json_data: 测试用例JSON数据
+        """
+        if isinstance(json_data, dict):
+            test_cases = json_data.get('测试用例', [])
+            if not test_cases:
+                test_cases = json_data.get('testcases', [])
+
+            if isinstance(test_cases, list):
+                # 按模块分组
+                modules_dict = {}
+                for testcase in test_cases:
+                    if isinstance(testcase, dict):
+                        module_name = testcase.get('测试模块', '未分类模块')
+                        if module_name not in modules_dict:
+                            modules_dict[module_name] = []
+                        modules_dict[module_name].append(testcase)
+
+                # 为每个模块创建节点
+                for module_name, cases in modules_dict.items():
+                    module_topic = root_topic.addSubTopic()
+                    module_topic.setTitle(module_name)
+
+                    # 为该模块下的每个用例创建子节点
+                    for testcase in cases:
+                        self._add_testcase_hierarchy(module_topic, testcase)
+            else:
+                self.logger.warning("测试用例数据格式不正确，应为列表")
+
+        elif isinstance(json_data, list):
+            # 按模块分组
+            modules_dict = {}
+            for testcase in json_data:
+                if isinstance(testcase, dict):
+                    module_name = testcase.get('测试模块', '未分类模块')
+                    if module_name not in modules_dict:
+                        modules_dict[module_name] = []
+                    modules_dict[module_name].append(testcase)
+
+            # 为每个模块创建节点
+            for module_name, cases in modules_dict.items():
+                module_topic = root_topic.addSubTopic()
+                module_topic.setTitle(module_name)
+
+                # 为该模块下的每个用例创建子节点
+                for testcase in cases:
+                    self._add_testcase_hierarchy(module_topic, testcase)
+
+
+
+    def _add_testcase_hierarchy(self, parent_topic, testcase):
+        """
+        添加测试用例的完整层级结构（模块 -> 标题 -> 前置条件 -> 操作步骤 -> 预期结果）
+
+        Args:
+            parent_topic: 父主题对象（模块节点）
+            testcase: 测试用例数据
+        """
+        # 第1层：用例标题作为模块的子节点
+        title = testcase.get('标题', '未命名用例')
+        priority = testcase.get('用例等级', '')
+
+        # 如果有优先级，添加到标题前面
+        if priority:
+            display_title = f"[{priority}] {title}"
+        else:
+            display_title = title
+
+        title_topic = parent_topic.addSubTopic()
+        title_topic.setTitle(display_title)
+
+        # 第2层：前置条件作为标题的子节点
+        precondition = testcase.get('前置条件', '')
+        if precondition:
+            precondition_topic = title_topic.addSubTopic()
+
+            # 如果前置条件是列表，在当前节点用编号展示
+            if isinstance(precondition, list):
+                precondition_items = [f"{i+1}. {str(p)}" for i, p in enumerate(precondition)]
+                precondition_topic.setTitle("前置条件：\n" + "\n".join(precondition_items))
+            else:
+                precondition_topic.setTitle(f"前置条件：{precondition}")
+
+            # 第3层：操作步骤作为前置条件的子节点
+            steps = testcase.get('操作步骤', [])
+            if steps:
+                steps_topic = precondition_topic.addSubTopic()
+
+                # 如果操作步骤是列表，在当前节点用编号展示
+                if isinstance(steps, list):
+                    steps_items = [f"{i+1}. {str(step)}" for i, step in enumerate(steps)]
+                    steps_topic.setTitle("操作步骤：\n" + "\n".join(steps_items))
+                else:
+                    steps_topic.setTitle(f"操作步骤：{steps}")
+
+                # 第4层：预期结果作为操作步骤的子节点
+                expected_result = testcase.get('预期结果', '')
+                if expected_result:
+                    result_topic = steps_topic.addSubTopic()
+
+                    # 如果预期结果是列表，在当前节点用编号展示
+                    if isinstance(expected_result, list):
+                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                    else:
+                        result_topic.setTitle(f"预期结果：{expected_result}")
+            else:
+                # 如果没有操作步骤，但有预期结果，预期结果作为前置条件的子节点
+                expected_result = testcase.get('预期结果', '')
+                if expected_result:
+                    result_topic = precondition_topic.addSubTopic()
+
+                    if isinstance(expected_result, list):
+                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                    else:
+                        result_topic.setTitle(f"预期结果：{expected_result}")
+        else:
+            # 如果没有前置条件，操作步骤作为标题的子节点
+            steps = testcase.get('操作步骤', [])
+            if steps:
+                steps_topic = title_topic.addSubTopic()
+
+                if isinstance(steps, list):
+                    steps_items = [f"{i+1}. {str(step)}" for i, step in enumerate(steps)]
+                    steps_topic.setTitle("操作步骤：\n" + "\n".join(steps_items))
+                else:
+                    steps_topic.setTitle(f"操作步骤：{steps}")
+
+                # 预期结果作为操作步骤的子节点
+                expected_result = testcase.get('预期结果', '')
+                if expected_result:
+                    result_topic = steps_topic.addSubTopic()
+
+                    if isinstance(expected_result, list):
+                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                    else:
+                        result_topic.setTitle(f"预期结果：{expected_result}")
+            else:
+                # 如果都没有，直接添加预期结果
+                expected_result = testcase.get('预期结果', '')
+                if expected_result:
+                    result_topic = title_topic.addSubTopic()
+
+                    if isinstance(expected_result, list):
+                        result_items = [f"{i+1}. {str(r)}" for i, r in enumerate(expected_result)]
+                        result_topic.setTitle("预期结果：\n" + "\n".join(result_items))
+                    else:
+                        result_topic.setTitle(f"预期结果：{expected_result}")
+
+
+    @staticmethod
+    def extract_priority_from_title(title):
+        """
+        从标题中提取优先级标记
+
+        Args:
+            title: 标题字符串，如 "[P0] 测试模块1"
+
+        Returns:
+            tuple: (优先级, 清理后的标题)
+                   例如: ("P0", "测试模块1")
+        """
+        import re
+
+        # 匹配 [P0], [P1], [P2], [P3] 等格式
+        pattern = r'^\[(P\d+)\]\s*(.+)$'
+        match = re.match(pattern, title)
+
+        if match:
+            priority = match.group(1)
+            clean_title = match.group(2)
+            return priority, clean_title
+        else:
+            return None, title
+
+    @staticmethod
+    def add_priority_to_title(priority, title):
+        """
+        给标题添加优先级标记
+
+        Args:
+            priority: 优先级，如 "P0", "P1"
+            title: 原始标题
+
+        Returns:
+            str: 带优先级的标题，如 "[P0] 测试模块1"
+        """
+        if priority:
+            return f"[{priority}] {title}"
+        return title
+
+
+
+
+    def convert_and_export_to_xmind(self, input_data, output_xmind_file,
+                                    root_title=DEFAULT_ROOT_TITLE,
+                                    sheet_title=DEFAULT_SHEET_TITLE,
+                                    template_file=None):
+        """
+        一键转换并导出测试用例为XMind文件
+
+        Args:
+            input_data: 测试用例JSON数据
+            output_xmind_file: 输出的XMind文件路径
+            root_title: 根节点标题
+            sheet_title: 工作表标题
+            template_file: 可选的模板文件路径
+
+        Returns:
+            bool: 转换是否成功
+        """
+        try:
+            if isinstance(input_data, dict):
+                input_data['sheet_title'] = sheet_title
+
+            success = self.json_to_xmind(input_data, output_xmind_file, template_file)
+
+            if success:
+                self.logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
+
+            return success
+
+        except Exception as e:
+            self.logger.error(f"转换过程中发生错误: {str(e)}", exc_info=True)
+            return False
+
+    @staticmethod
+    def _ensure_directory_exists(file_path):
+        """
+        确保文件所在目录存在
+
+        Args:
+            file_path: 文件路径
+        """
+        file_dir = os.path.dirname(file_path)
+        if file_dir and not os.path.exists(file_dir):
+            os.makedirs(file_dir, exist_ok=True)
+
+
+
 
 #测试用例的xmind格式文件转为json
 
@@ -677,15 +1038,37 @@ if __name__ == '__main__':
     # json_to_xmind(json_data, output_xmind)
     # res = XmindPointJson()
     # res.extract_test_points_data()
-    converter = JsonToXmind()
-    # 准备测试点数据
-    filepath =r"D:\AIGeneration\testcase\测试点.json"
+    # converter = JsonToXmind()
+    # # 准备测试点数据
+    # filepath =r"D:\AIGeneration\testcase\测试点.json"
+    # get_json = fileProcessor()
+    # test_data = get_json.find_and_read_file(filepath, type="json")
+    # # 一键转换并导出
+    # success = converter.convert_and_export_to_xmind(
+    #     input_data=test_data,
+    #     output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
+    #     root_title="测试大纲",
+    #     sheet_title="功能测试用例"
+    # )
+    # 测试用例JSON转XMind示例
+    print("\n=== 测试用例JSON转XMind ===")
+    testcase_converter = TestcaseJsonToXmind()
+
+    # 读取测试用例JSON文件
+    testcase_json_path = r"D:\AIGeneration\testcase\测试用例.json"
     get_json = fileProcessor()
-    test_data = get_json.find_and_read_file(filepath, type="json")
-    # 一键转换并导出
-    success = converter.convert_and_export_to_xmind(
-        input_data=test_data,
-        output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
-        root_title="测试大纲",
+    testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
+
+    # 转换并导出
+    output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+    success = testcase_converter.convert_and_export_to_xmind(
+        input_data=testcase_data,
+        output_xmind_file=output_xmind,
+        root_title="测试用例",
         sheet_title="功能测试用例"
     )
+
+    if success:
+        print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
+    else:
+        print("✗ 转换失败")

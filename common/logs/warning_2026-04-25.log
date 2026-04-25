@@ -1,0 +1,3 @@
+2026-04-25 09:16:11.884 | ERROR    | __main__:json_to_xmind:764 - 转换 XMind 文件时发生错误：'TopicElement' object has no attribute 'setLabel'
+2026-04-25 09:17:40.303 | ERROR    | __main__:json_to_xmind:764 - 转换 XMind 文件时发生错误：'TopicElement' object has no attribute 'setLabel'
+2026-04-25 09:30:56.538 | ERROR    | __main__:json_to_xmind:764 - 转换 XMind 文件时发生错误：'TopicElement' object has no attribute 'setNote'
