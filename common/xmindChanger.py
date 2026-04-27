@@ -9,12 +9,69 @@ from loguru import logger
 from fileProcessor import fileProcessor
 import pandas as pd
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font, PatternFill
 import os
 from common.dataProcessor import WriteInfo
 
-class MxindDataProcessor:#  xmind数据整理
+OUTPUT_JSON_PATH = r"D:\AIGeneration\testcase\xmind_output.json"
+TEST_XMIND_PATH = r"D:\AIGeneration\testcase\测试用例.xmind"
+TEMPLATE_XMIND_PATH = r"C:\Users\admin\Desktop\test.xmind"
+TESTCASE_JSON_PATH = r"D:\AIGeneration\testcase\output.json"
+OUTPUT_XLSX_PATH = r"D:\AIGeneration\testcase\AI_Generated_Test_Cases.xlsx"
+CONVERTED_TESTCASES_JSON_PATH = r"D:\AIGeneration\testcase\converted_testcases.json"
+def _build_xmind_topic(xmind_topic, data):
+    """
+    递归构建 XMind 主题
+
+    Args:
+        xmind_topic: XMind 主题对象
+        data: 数据字典或字符串
+    """
+    if isinstance(data, str):
+        xmind_topic.setTitle(data)
+    elif isinstance(data, dict):
+        # 设置当前主题标题
+        title = data.get('title', data.get('name', ''))
+        if title:
+            xmind_topic.setTitle(title)
+
+        # 处理子主题
+        topics = data.get('topics', data.get('children', []))
+        if topics and isinstance(topics, list):
+            for child_data in topics:
+                child_topic = xmind_topic.addSubTopic()
+                _build_xmind_topic(child_topic, child_data)
+
+        # 处理备注信息（如果有）
+        notes = data.get('notes', data.get('comment', ''))
+        if notes:
+            xmind_topic.setNote(notes)
+
+        # 处理测试用例的特殊字段
+        if 'steps' in data or 'result' in data:
+            note_content = ""
+            if 'steps' in data and data['steps']:
+                note_content += f"步骤：{data['steps']}\n"
+            if 'result' in data and data['result']:
+                note_content += f"预期结果：{data['result']}\n"
+            if note_content:
+                existing_note = xmind_topic.getNote()
+                if existing_note:
+                    xmind_topic.setNote(f"{existing_note}\n{note_content}")
+                else:
+                    xmind_topic.setNote(note_content)
+    elif isinstance(data, list):
+        # 如果是列表，第一个元素作为标题，其余作为子主题
+        if len(data) > 0:
+            xmind_topic.setTitle(str(data[0]))
+            for item in data[1:]:
+                child_topic = xmind_topic.addSubTopic()
+                _build_xmind_topic(child_topic, item)
+
+#  xmind数据整理
+class MxindDataProcessor:
     def __init__(self):
-        self.xmind_file = r"C:\Users\admin\Desktop\demo.xmind"
+        self.xmind_file = TEST_XMIND_PATH
         self.logging = LogManager()
         self.case_dict = {}
     def xmind_to_json(self):
@@ -23,9 +80,22 @@ class MxindDataProcessor:#  xmind数据整理
         logger.debug("调试信息")
         if sheet:
             logger.debug("调试信息")
-            return sheet[0]
+            data = sheet[0]
+            return data
+            print(data)
+    def write_to_json(self):
+        res = self.xmind_to_json()
+        # 获取到数据后写入xmind.json文件
+        if res:
+            output_json_path = OUTPUT_JSON_PATH
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(res, f, ensure_ascii=False, indent=2)
+            print(f"✓ XMind数据已保存到: {output_json_path}")
+        else:
+            print("✗ 未能读取到XMind数据")
 
-class AdvancedTestCaseExtractor: #测试用例数据提取
+#测试用例数据提取
+class AdvancedTestCaseExtractor:
 
     def __init__(self, max_depth=None):
         self.max_depth = max_depth
@@ -160,7 +230,8 @@ class AdvancedTestCaseExtractor: #测试用例数据提取
 
         print(data)
 
-class DicToXlsx: # 字典转换成用例
+#字典转化成xlsx
+class DicToXlsx:
     def __init__(self):
         self.xlsx_file = r'C:\Users\admin\Desktop\demo.xlsx'
         file_dir = os.path.dirname(self.xlsx_file)
@@ -223,57 +294,6 @@ class DicToXlsx: # 字典转换成用例
         except Exception as e:
             print(f"写入Excel文件时发生错误: {str(e)}")
 
-
-def _build_xmind_topic(xmind_topic, data):
-    """
-    递归构建 XMind 主题
-
-    Args:
-        xmind_topic: XMind 主题对象
-        data: 数据字典或字符串
-    """
-    if isinstance(data, str):
-        xmind_topic.setTitle(data)
-    elif isinstance(data, dict):
-        # 设置当前主题标题
-        title = data.get('title', data.get('name', ''))
-        if title:
-            xmind_topic.setTitle(title)
-
-        # 处理子主题
-        topics = data.get('topics', data.get('children', []))
-        if topics and isinstance(topics, list):
-            for child_data in topics:
-                child_topic = xmind_topic.addSubTopic()
-                _build_xmind_topic(child_topic, child_data)
-
-        # 处理备注信息（如果有）
-        notes = data.get('notes', data.get('comment', ''))
-        if notes:
-            xmind_topic.setNote(notes)
-
-        # 处理测试用例的特殊字段
-        if 'steps' in data or 'result' in data:
-            note_content = ""
-            if 'steps' in data and data['steps']:
-                note_content += f"步骤：{data['steps']}\n"
-            if 'result' in data and data['result']:
-                note_content += f"预期结果：{data['result']}\n"
-            if note_content:
-                existing_note = xmind_topic.getNote()
-                if existing_note:
-                    xmind_topic.setNote(f"{existing_note}\n{note_content}")
-                else:
-                    xmind_topic.setNote(note_content)
-    elif isinstance(data, list):
-        # 如果是列表，第一个元素作为标题，其余作为子主题
-        if len(data) > 0:
-            xmind_topic.setTitle(str(data[0]))
-            for item in data[1:]:
-                child_topic = xmind_topic.addSubTopic()
-                _build_xmind_topic(child_topic, item)
-
-
 # 测试点的xmind 转化 json
 class XmindPointJson:
 
@@ -317,8 +337,6 @@ class XmindPointJson:
 
         print(result)
 
-
-
 #将AI给的json数据转化为xmind
 class TestcasePointJsonToXmind:
     """JSON 数据转换为 XMind 格式的处理器"""
@@ -327,7 +345,7 @@ class TestcasePointJsonToXmind:
     DEFAULT_SHEET_TITLE = "测试点"
     DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
     BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
-    FALLBACK_TEMPLATE_PATH = r"C:\Users\admin\Desktop\test.xmind"
+    FALLBACK_TEMPLATE_PATH = TEMPLATE_XMIND_PATH
     # 标记是否已经警告过模板残留问题
     _template_warning_shown = False
     def __init__(self, template_file=None):
@@ -652,7 +670,6 @@ class TestcasePointJsonToXmind:
         if file_dir and not os.path.exists(file_dir):
             os.makedirs(file_dir, exist_ok=True)
 
-
 #获取测试用例转化为xmind格式文件
 class TestcaseJsonToXmind:
     """将测试用例JSON数据转换为XMind格式的处理器"""
@@ -661,7 +678,7 @@ class TestcaseJsonToXmind:
     DEFAULT_SHEET_TITLE = "功能测试"
     DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
     BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
-    FALLBACK_TEMPLATE_PATH = r"C:\Users\admin\Desktop\test.xmind"
+    FALLBACK_TEMPLATE_PATH = TEMPLATE_XMIND_PATH
 
     def __init__(self, template_file=None):
         """
@@ -1022,24 +1039,511 @@ class TestcaseJsonToXmind:
         if file_dir and not os.path.exists(file_dir):
             os.makedirs(file_dir, exist_ok=True)
 
+#测试用例的xmind格式文件转为相关格式json文件
+class TestcaseXmindToAIJson:
+    """
+    读取xmind文件
+    筛选过滤相关数据转化为相关格式json
+    """
 
-#测试用例的xmind格式文件转为xls/csv/xlsx格式文件
-# class TestcaseXmindToXlsx:
+    def __init__(self):
+        self.xmind_json_path = OUTPUT_JSON_PATH
+        self.output_json_path = CONVERTED_TESTCASES_JSON_PATH
+        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
 
+    def read_xmind_json(self, file_path=None):
+        """
+        读取XMind格式的JSON文件
+        Args:
+            file_path: XMind JSON文件路径
+        Returns:
+            dict: XMind JSON数据
+        """
+        try:
+            path = file_path or self.xmind_json_path
 
+            # 尝试用标准json.load读取
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                self.logger.info(f"成功读取XMind JSON文件: {path}")
+                return data
+            except json.JSONDecodeError:
+                # 如果失败，尝试用ast.literal_eval读取Python字典格式
+                self.logger.info("检测到非标准JSON格式，尝试使用ast解析...")
+                import ast
+                with open(path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # 将 None 替换为 null，True/False 替换为标准值
+                content = content.replace('None', 'null').replace('True', 'true').replace('False', 'false')
+
+                # 尝试再次用json加载
+                try:
+                    data = json.loads(content)
+                    self.logger.info(f"成功读取XMind JSON文件（ast转换后）: {path}")
+                    return data
+                except:
+                    # 最后尝试ast.literal_eval
+                    data = ast.literal_eval(content)
+                    self.logger.info(f"成功读取XMind JSON文件（ast解析）: {path}")
+                    return data
+
+        except Exception as e:
+            self.logger.error(f"读取XMind JSON文件失败: {str(e)}")
+            return None
+
+    def extract_priority_from_marker(self, markers):
+        """
+        从标记中提取优先级
+        Args:
+            markers: 标记列表，如 ['priority-1']
+        Returns:
+            str: 优先级字符串，如 'P0'
+        """
+        if not markers:
+            return ''
+
+        priority_map = {
+            'priority-1': 'P0',
+            'priority-2': 'P1',
+            'priority-3': 'P2',
+            'priority-4': 'P3',
+            'priority-5': 'P4',
+            'priority-6': 'P5',
+            'priority-7': 'P6',
+            'priority-8': 'P7',
+            'priority-9': 'P8',
+        }
+
+        for marker in markers:
+            if marker in priority_map:
+                return priority_map[marker]
+
+        return ''
+
+    def parse_steps_text(self, steps_text):
+        """
+        解析操作步骤文本，将其转换为列表
+        Args:
+            steps_text: 步骤文本，可能是多行字符串
+        Returns:
+            list: 步骤列表
+        """
+        if not steps_text:
+            return []
+
+        # 如果已经是列表，直接返回
+        if isinstance(steps_text, list):
+            return steps_text
+
+        # 按换行符分割
+        steps = [step.strip() for step in steps_text.split('\n') if step.strip()]
+        return steps
+
+    def traverse_and_extract(self, topics, current_module=None):
+        """
+        递归遍历XMind主题树，提取测试用例
+        Args:
+            topics: 主题列表
+            current_module: 当前模块名称
+        Returns:
+            list: 测试用例列表
+        """
+        test_cases = []
+
+        if not topics:
+            return test_cases
+
+        for topic in topics:
+            title = topic.get('title', '')
+            markers = topic.get('markers', [])
+            sub_topics = topic.get('topics', [])
+
+            # 如果没有子主题，跳过
+            if not sub_topics:
+                continue
+
+            # 检查是否有优先级标记，如果有，说明这是测试用例节点
+            has_priority = any(marker.startswith('priority-') for marker in markers)
+
+            if has_priority:
+                # 这是测试用例节点，提取完整信息
+                testcase = self.extract_testcase_from_hierarchy(topic, current_module)
+                if testcase:
+                    test_cases.append(testcase)
+            else:
+                # 这可能是模块节点或其他中间节点，继续递归
+                # 如果子主题有优先级标记，说明当前是模块节点
+                first_sub = sub_topics[0] if sub_topics else None
+                if first_sub and any(marker.startswith('priority-') for marker in first_sub.get('markers', [])):
+                    # 当前是模块节点，设置模块名并递归处理子主题
+                    module_name = title
+                    for sub_topic in sub_topics:
+                        sub_cases = self.traverse_and_extract([sub_topic], current_module=module_name)
+                        test_cases.extend(sub_cases)
+                else:
+                    # 继续递归查找
+                    sub_cases = self.traverse_and_extract(sub_topics, current_module=current_module)
+                    test_cases.extend(sub_cases)
+
+        return test_cases
+
+    def extract_testcase_from_hierarchy(self, topic_node, module_name):
+        """
+        从层级结构中提取单个测试用例
+        Args:
+            topic_node: 测试用例主题节点
+            module_name: 所属模块名称
+        Returns:
+            dict: 测试用例字典
+        """
+        try:
+            # 第1层：测试用例标题
+            title = topic_node.get('title', '')
+            markers = topic_node.get('markers', [])
+            priority = self.extract_priority_from_marker(markers)
+
+            # 获取子主题
+            level1_topics = topic_node.get('topics', [])
+            if not level1_topics:
+                return None
+
+            # 第2层：前置条件
+            precondition_topic = level1_topics[0]
+            precondition = precondition_topic.get('title', '')
+
+            # 获取前置条件的子主题
+            level2_topics = precondition_topic.get('topics', [])
+            if not level2_topics:
+                return None
+
+            # 第3层：操作步骤
+            steps_topic = level2_topics[0]
+            steps_text = steps_topic.get('title', '')
+            steps = self.parse_steps_text(steps_text)
+
+            # 获取操作步骤的子主题
+            level3_topics = steps_topic.get('topics', [])
+            expected_result = ''
+            if level3_topics:
+                # 第4层：预期结果
+                result_topic = level3_topics[0]
+                expected_result = result_topic.get('title', '')
+
+            # 构建测试用例对象
+            testcase = {
+                '测试模块': module_name or '',
+                '用例等级': priority,
+                '标题': title,
+                '前置条件': precondition,
+                '操作步骤': steps,
+                '预期结果': expected_result
+            }
+
+            return testcase
+
+        except Exception as e:
+            self.logger.warning(f"提取测试用例失败: {str(e)}")
+            return None
+
+    def convert_to_testcase_format(self, xmind_data):
+        """
+        将XMind格式数据转换为测试用例JSON格式
+        Args:
+            xmind_data: XMind JSON数据
+        Returns:
+            dict: 测试用例JSON格式数据
+        """
+        try:
+            # 获取根主题
+            root_topic = xmind_data.get('topic', {})
+            if not root_topic:
+                self.logger.error("XMind数据中没有找到topic节点")
+                return {'测试用例': []}
+
+            # 获取第一层主题（模块级别）
+            modules = root_topic.get('topics', [])
+
+            # 遍历并提取所有测试用例
+            all_testcases = []
+            for module_topic in modules:
+                module_name = module_topic.get('title', '')
+                sub_topics = module_topic.get('topics', [])
+
+                # 对每个模块下的用例进行提取
+                module_testcases = self.traverse_and_extract([module_topic])
+                all_testcases.extend(module_testcases)
+
+            # 构建最终结果
+            result = {
+                '测试用例': all_testcases
+            }
+
+            self.logger.info(f"成功转换 {len(all_testcases)} 条测试用例")
+            return result
+
+        except Exception as e:
+            self.logger.error(f"转换数据格式失败: {str(e)}", exc_info=True)
+            return {'测试用例': []}
+
+    def save_to_json(self, data, output_path=None):
+        """
+        保存为JSON文件
+        Args:
+            data: 要保存的数据
+            output_path: 输出文件路径
+        Returns:
+            bool: 是否保存成功
+        """
+        try:
+            path = output_path or self.output_json_path
+
+            # 确保目录存在
+            output_dir = os.path.dirname(path)
+            if output_dir and not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+            self.logger.info(f"测试用例JSON已保存到: {path}")
+            print(f"✓ 测试用例JSON已保存到: {path}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"保存JSON文件失败: {str(e)}")
+            print(f"✗ 保存失败: {str(e)}")
+            return False
+
+    def convert(self, input_path=None, output_path=None):
+        """
+        主转换方法：读取XMind JSON并转换为测试用例JSON
+        Args:
+            input_path: 输入XMind JSON文件路径
+            output_path: 输出测试用例JSON文件路径
+        Returns:
+            dict: 转换后的测试用例数据
+        """
+        print("开始转换XMind数据为测试用例JSON...")
+
+        # 1. 读取XMind JSON
+        xmind_data = self.read_xmind_json(input_path)
+        if not xmind_data:
+            print("✗ 读取XMind数据失败")
+            return None
+
+        # 2. 转换为测试用例格式
+        testcase_data = self.convert_to_testcase_format(xmind_data)
+
+        # 3. 保存结果
+        success = self.save_to_json(testcase_data, output_path)
+
+        if success:
+            print(f"✓ 转换完成！共生成 {len(testcase_data.get('测试用例', []))} 条测试用例")
+        else:
+            print("✗ 转换失败")
+
+        return testcase_data
 
 #AI给出json，转化为execl格式文件
+class AIJsonToXlsx:
 
+    def __init__(self):
+        self.file_path = TESTCASE_JSON_PATH
+        self.output_file = OUTPUT_XLSX_PATH
+        self.sheet_name = "Sheet1"
+        self.column_names = []
+
+    # 读取数据
+    def read_data(self):
+        get_json = fileProcessor()
+        test_data = get_json.find_and_read_file(self.file_path, type="json")
+        print(isinstance(test_data, dict))
+        return test_data
+
+    # 过滤筛选
+    def filter_data(self):
+        """
+        过滤和整理测试用例数据
+        Returns:
+            list: 整理后的测试用例列表
+        """
+        test_data = self.read_data()
+        if not test_data or '测试用例' not in test_data:
+            print("未找到有效的测试用例数据")
+            return []
+        
+        test_cases = test_data['测试用例']
+        filtered_cases = []
+        
+        for case in test_cases:
+            if isinstance(case, dict):
+                # 确保必要的字段存在
+                filtered_case = {
+                    '测试模块': case.get('测试模块', ''),
+                    '用例等级': case.get('用例等级', ''),
+                    '标题': case.get('标题', ''),
+                    '前置条件': case.get('前置条件', ''),
+                    '操作步骤': case.get('操作步骤', []),
+                    '预期结果': case.get('预期结果', '')
+                }
+                filtered_cases.append(filtered_case)
+        
+        return filtered_cases
+
+    # 创建模板  自定义字段+ 字段的键值字段  模板参考tapd的标准
+    def create_template(self):
+        """
+        创建Excel模板，定义表头结构
+        Returns:
+            list: 表头列表
+        """
+        headers = ['测试模块', '用例等级', '标题', '前置条件', '操作步骤', '预期结果']
+        self.column_names = headers
+        return headers
+
+    # 写入数据
+    def write_data(self, test_cases):
+        """
+        将测试用例数据写入Excel文件
+        Args:
+            test_cases: 测试用例列表
+        """
+        try:
+            # 创建工作簿和工作表
+            wb = Workbook()
+            ws = wb.active
+            ws.title = self.sheet_name
+            
+            # 定义表头样式：绿色背景 + 粗体字体
+            header_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+            header_font = Font(bold=True)
+            
+            # 写入表头
+            headers = self.create_template()
+            for col_num, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+            
+            # 设置表头行高为25
+            ws.row_dimensions[1].height = 25
+            
+            # 写入数据行
+            for row_num, case in enumerate(test_cases, 2):  # 从第2行开始写数据
+                # 处理操作步骤（可能是列表或字符串）
+                steps = case.get('操作步骤', [])
+                if isinstance(steps, list):
+                    steps_text = '\n'.join([str(step) for step in steps])
+                else:
+                    steps_text = str(steps)
+                
+                # 写入各列数据
+                ws.cell(row=row_num, column=1, value=case.get('测试模块', ''))
+                ws.cell(row=row_num, column=2, value=case.get('用例等级', ''))
+                ws.cell(row=row_num, column=3, value=case.get('标题', ''))
+                ws.cell(row=row_num, column=4, value=case.get('前置条件', ''))
+                ws.cell(row=row_num, column=5, value=steps_text)
+                ws.cell(row=row_num, column=6, value=case.get('预期结果', ''))
+                
+                # 设置所有数据行的行高为25
+                ws.row_dimensions[row_num].height = 25
+            
+            # 自动调整列宽
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)  # 最大宽度限制为50
+                ws.column_dimensions[column_letter].width = adjusted_width
+            
+            # 保存文件
+            wb.save(self.output_file)
+            print(f"测试用例已成功导出到: {self.output_file}")
+            return True
+            
+        except Exception as e:
+            print(f"写入Excel文件时发生错误: {str(e)}")
+            return False
+
+    # 导出
+    def export(self):
+        """
+        主导出方法，执行完整的数据转换流程
+        Returns:
+            bool: 导出是否成功
+        """
+        print("开始转换测试用例数据...")
+        
+        # 1. 读取并过滤数据
+        test_cases = self.filter_data()
+        if not test_cases:
+            print("没有可导出的测试用例数据")
+            return False
+        
+        print(f"共找到 {len(test_cases)} 条测试用例")
+        
+        # 2. 写入Excel
+        success = self.write_data(test_cases)
+        
+        if success:
+            print("测试用例转换完成！")
+        else:
+            print("测试用例转换失败！")
+        
+        return success
 
 
 
 
 
 if __name__ == '__main__':
+
+    # dc = MxindDataProcessor()
+    # res = dc.write_to_json()
+
+
+
+    #
+    # converter = TestcaseXmindToAIJson()
+    #
+    # # 步骤1：读取XMind JSON
+    # xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind.json")
+    #
+    # # 步骤2：转换为测试用例格式
+    # testcase_data = converter.convert_to_testcase_format(xmind_data)
+    #
+    # # 步骤3：保存
+    # converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+
+
+
+
+    # converter = AIJsonToXlsx()
+    #
+    # # 步骤1：读取数据
+    # data = converter.read_data()
+    # print(data)
+    #
+    # # 步骤2：过滤数据
+    # test_cases = converter.filter_data()
+    # print(f"共 {len(test_cases)} 条用例")
+    #
+    # # 步骤3：写入Excel
+    # success = converter.write_data(test_cases)
+    # if success:
+    #     print("转换成功！")
+
+
     # dic_to_xlsx = DicToXlsx()
     # dic_to_xlsx.table_data_processing()
-    # dc = MxindDataProcessor()
-    # res = dc.xmind_to_json()
+
     # DD = WriteInfo()
     # DD.write_json_to_file(data=res, file=r"D:\AIGeneration\testcase\demo.json")
     #
@@ -1050,37 +1554,48 @@ if __name__ == '__main__':
     # json_to_xmind(json_data, output_xmind)
     # res = XmindPointJson()
     # res.extract_test_points_data()
-    # converter = JsonToXmind()
-    # # 准备测试点数据
-    # filepath =r"D:\AIGeneration\testcase\测试点.json"
-    # get_json = fileProcessor()
-    # test_data = get_json.find_and_read_file(filepath, type="json")
-    # # 一键转换并导出
-    # success = converter.convert_and_export_to_xmind(
-    #     input_data=test_data,
-    #     output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
-    #     root_title="测试大纲",
-    #     sheet_title="功能测试用例"
-    # )
-    # 测试用例JSON转XMind示例
-    print("\n=== 测试用例JSON转XMind ===")
-    testcase_converter = TestcaseJsonToXmind()
 
-    # 读取测试用例JSON文件
-    testcase_json_path = r"D:\AIGeneration\testcase\测试用例.json"
+
+
+
+    converter = TestcasePointJsonToXmind()
+    # 准备测试点数据
+    filepath =r"D:\AIGeneration\testcase\测试点.json"
     get_json = fileProcessor()
-    testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
-
-    # 转换并导出
-    output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
-    success = testcase_converter.convert_and_export_to_xmind(
-        input_data=testcase_data,
-        output_xmind_file=output_xmind,
-        root_title="测试用例",
+    test_data = get_json.find_and_read_file(filepath, type="json")
+    # 一键转换并导出
+    success = converter.convert_and_export_to_xmind(
+        input_data=test_data,
+        output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
+        root_title="测试大纲",
         sheet_title="功能测试用例"
     )
 
-    if success:
-        print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
-    else:
-        print("✗ 转换失败")
+
+
+
+
+
+
+    # 测试用例JSON转XMind示例
+    # print("\n=== 测试用例JSON转XMind ===")
+    # testcase_converter = TestcaseJsonToXmind()
+    #
+    # # 读取测试用例JSON文件
+    # testcase_json_path = r"D:\AIGeneration\testcase\测试用例.json"
+    # get_json = fileProcessor()
+    # testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
+    #
+    # # 转换并导出
+    # output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+    # success = testcase_converter.convert_and_export_to_xmind(
+    #     input_data=testcase_data,
+    #     output_xmind_file=output_xmind,
+    #     root_title="测试用例",
+    #     sheet_title="功能测试用例"
+    # )
+    #
+    # if success:
+    #     print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
+    # else:
+    #     print("✗ 转换失败")

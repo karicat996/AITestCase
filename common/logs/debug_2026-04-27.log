@@ -1,0 +1,31 @@
+2026-04-27 17:26:46.366 | DEBUG    | __main__:xmind_to_json:25 - 调试信息
+2026-04-27 17:26:46.367 | DEBUG    | __main__:xmind_to_json:27 - 调试信息
+2026-04-27 17:35:40.394 | ERROR    | __main__:read_xmind_json:1205 - 读取XMind JSON文件失败: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+2026-04-27 17:35:40.397 | ERROR    | __main__:convert_to_testcase_format:1393 - 转换数据格式失败: 'NoneType' object has no attribute 'get'
+2026-04-27 17:35:40.398 | INFO     | __main__:save_to_json:1416 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 17:35:40.421 | DEBUG    | __main__:xmind_to_json:25 - 调试信息
+2026-04-27 17:35:40.422 | DEBUG    | __main__:xmind_to_json:27 - 调试信息
+2026-04-27 17:36:03.586 | ERROR    | __main__:read_xmind_json:1205 - 读取XMind JSON文件失败: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+2026-04-27 17:36:03.590 | ERROR    | __main__:convert_to_testcase_format:1393 - 转换数据格式失败: 'NoneType' object has no attribute 'get'
+2026-04-27 17:36:03.592 | INFO     | __main__:save_to_json:1416 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 17:37:14.862 | INFO     | __main__:read_xmind_json:1209 - 检测到非标准JSON格式，尝试使用ast解析...
+2026-04-27 17:37:14.908 | ERROR    | __main__:read_xmind_json:1229 - 读取XMind JSON文件失败: malformed node or string on line 1: <ast.Name object at 0x000001AA880DB810>
+2026-04-27 17:37:14.909 | ERROR    | __main__:convert_to_testcase_format:1417 - 转换数据格式失败: 'NoneType' object has no attribute 'get'
+2026-04-27 17:37:14.911 | INFO     | __main__:save_to_json:1440 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 17:41:49.498 | DEBUG    | __main__:xmind_to_json:25 - 调试信息
+2026-04-27 17:41:49.499 | DEBUG    | __main__:xmind_to_json:27 - 调试信息
+2026-04-27 17:42:25.939 | DEBUG    | __main__:xmind_to_json:25 - 调试信息
+2026-04-27 17:42:25.940 | DEBUG    | __main__:xmind_to_json:27 - 调试信息
+2026-04-27 17:43:06.110 | INFO     | __main__:read_xmind_json:1206 - 成功读取XMind JSON文件: D:\AIGeneration\testcase\xmind.json
+2026-04-27 17:43:06.111 | INFO     | __main__:convert_to_testcase_format:1414 - 成功转换 0 条测试用例
+2026-04-27 17:43:06.112 | INFO     | __main__:save_to_json:1441 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 17:46:33.996 | INFO     | __main__:read_xmind_json:1206 - 成功读取XMind JSON文件: D:\AIGeneration\testcase\xmind.json
+2026-04-27 17:46:33.998 | INFO     | __main__:convert_to_testcase_format:1420 - 成功转换 6 条测试用例
+2026-04-27 17:46:34.000 | INFO     | __main__:save_to_json:1447 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 18:02:51.221 | DEBUG    | __main__:xmind_to_json:80 - 调试信息
+2026-04-27 18:02:51.222 | DEBUG    | __main__:xmind_to_json:82 - 调试信息
+2026-04-27 18:04:21.462 | INFO     | __main__:read_xmind_json:1069 - 成功读取XMind JSON文件: D:\AIGeneration\testcase\xmind.json
+2026-04-27 18:04:21.463 | INFO     | __main__:convert_to_testcase_format:1283 - 成功转换 6 条测试用例
+2026-04-27 18:04:21.464 | INFO     | __main__:save_to_json:1310 - 测试用例JSON已保存到: D:\AIGeneration\testcase\output.json
+2026-04-27 18:12:09.110 | INFO     | __main__:json_to_xmind:446 - XMind 文件已成功生成：D:\AIGeneration\testcase\output.xmind
+2026-04-27 18:12:09.112 | INFO     | __main__:convert_and_export_to_xmind:657 - XMind 文件已成功生成: D:\AIGeneration\testcase\output.xmind

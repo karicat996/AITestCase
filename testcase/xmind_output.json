@@ -1,0 +1,301 @@
+{
+  "id": "sheet1",
+  "title": "功能测试用例",
+  "topic": {
+    "id": "root1",
+    "link": null,
+    "title": "Root",
+    "note": null,
+    "label": null,
+    "comment": null,
+    "markers": [],
+    "topics": [
+      {
+        "id": "5a914b14f0d8d2e6faf8462e11",
+        "link": null,
+        "title": "测试模块1",
+        "note": null,
+        "label": null,
+        "comment": null,
+        "markers": [],
+        "topics": [
+          {
+            "id": "e5383f2fa057242b03ad0c82be",
+            "link": null,
+            "title": "验证功能可靠-核心功能执行无误",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-1"
+            ],
+            "topics": [
+              {
+                "id": "e5383f2fa0572864734f511202",
+                "link": null,
+                "title": "系统处于初始状态，所有依赖服务正常",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "6c663bbab76bb7930e9fc3b72f",
+                    "link": null,
+                    "title": "1. 进入测试模块1主页\n2. 执行核心功能操作（如点击主按钮、提交表单）\n3. 检查反馈结果",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "6c663bbab76bb7fcb1dac92c6e",
+                        "link": null,
+                        "title": "功能正常执行，无异常报错，输出符合需求文档",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "00100d6fb84e88c09d23676066",
+            "link": null,
+            "title": "验证性能安全-高负载下无数据泄漏或崩溃",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-2"
+            ],
+            "topics": [
+              {
+                "id": "00100d6fb84e8b7137fa6a389f",
+                "link": null,
+                "title": "模拟多用户并发环境，系统监控工具已开启",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "00100d6fb84e825a9d55a58e3e",
+                    "link": null,
+                    "title": "1. 使用压力测试工具发送100并发请求\n2. 持续操作5分钟\n3. 检查CPU/内存占用及日志",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "9361acc4c6e4e89830e8c6fe9b",
+                        "link": null,
+                        "title": "请求成功率≥99%，无内存泄漏，响应时间在阈值内",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "9361acc4c6e4e32c23558bee57",
+            "link": null,
+            "title": "验证使用方便-常用操作不超过3步完成",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-3"
+            ],
+            "topics": [
+              {
+                "id": "870206f03cdaabc5313692f563",
+                "link": null,
+                "title": "任意正常用户登录系统",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "870206f03cdaa197e569fc0ba6",
+                    "link": null,
+                    "title": "1. 统计完成核心任务所需的点击/交互步骤数\n2. 记录每一步的耗时与易用性",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "8387c8ce62c803a103134732d7",
+                        "link": null,
+                        "title": "核心任务步骤≤3步，提示清晰，无歧义交互",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "8387c8ce62c8046fbcad095956",
+        "link": null,
+        "title": "测试模块2",
+        "note": null,
+        "label": null,
+        "comment": null,
+        "markers": [],
+        "topics": [
+          {
+            "id": "8387c8ce62c801af29d144f867",
+            "link": null,
+            "title": "验证优化好-界面渲染与数据加载速度达标",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-2"
+            ],
+            "topics": [
+              {
+                "id": "a5875209c17ac260ba946d3fe8",
+                "link": null,
+                "title": "网络环境正常，清除浏览器缓存",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "a5875209c17ac29cfcb082433c",
+                    "link": null,
+                    "title": "1. 打开测试模块2页面\n2. 记录页面完全加载时间\n3. 对比优化前后的加载数据",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "977bc86f3050fede201e32845c",
+                        "link": null,
+                        "title": "加载时间小于2秒，CPU使用率正常，无明显卡顿",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "977bc86f3050f7ff3c5f9d2268",
+            "link": null,
+            "title": "验证便利好用-关键功能入口易找且有提示",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-3"
+            ],
+            "topics": [
+              {
+                "id": "319b141cbba61e9346562d9b5c",
+                "link": null,
+                "title": "新用户首次使用系统",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "319b141cbba611303cc964c9d7",
+                    "link": null,
+                    "title": "1. 进入测试模块2\n2. 尝试查找常用功能（如搜索、导出）\n3. 点击功能项并检查提示",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "319b141cbba61ea715a0ac8527",
+                        "link": null,
+                        "title": "功能入口在显眼位置，悬浮/点击有友好提示，无需额外培训",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "b1deb788845c35acc5b748b3d7",
+            "link": null,
+            "title": "验证经典红-UI主题一致性检查",
+            "note": null,
+            "label": null,
+            "comment": null,
+            "markers": [
+              "priority-4"
+            ],
+            "topics": [
+              {
+                "id": "b1deb788845c38bf8f31f279e8",
+                "link": null,
+                "title": "主题设置为默认经典红色调",
+                "note": null,
+                "label": null,
+                "comment": null,
+                "markers": [],
+                "topics": [
+                  {
+                    "id": "b2e0c0b3af7ac2c607e2373abc",
+                    "link": null,
+                    "title": "1. 遍历模块2所有页面\n2. 检查组件的按钮、链接、图标颜色\n3. 与设计文档色值对比",
+                    "note": null,
+                    "label": null,
+                    "comment": null,
+                    "markers": [],
+                    "topics": [
+                      {
+                        "id": "b2e0c0b3af7acf0e1754ce1cb8",
+                        "link": null,
+                        "title": "所有红色元素色值为#C62828或设计规范指定值，风格统一",
+                        "note": null,
+                        "label": null,
+                        "comment": null,
+                        "markers": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
