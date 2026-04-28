@@ -6,7 +6,7 @@ import uuid
 from xmind.core.markerref import MarkerId
 from utils.logs import LogManager
 from loguru import logger
-from fileProcessor import fileProcessor
+from common.fileProcessor import *
 import pandas as pd
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
@@ -1502,13 +1502,10 @@ class AIJsonToXlsx:
 
 
 
-
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
     # dc = MxindDataProcessor()
     # res = dc.write_to_json()
-
-
 
     #
     # converter = TestcaseXmindToAIJson()
@@ -1552,24 +1549,11 @@ if __name__ == '__main__':
     # # # 转换为 XMind并导出
     # output_xmind = r"C:\Users\admin\Desktop\demo_output.xmind"
     # json_to_xmind(json_data, output_xmind)
+
     # res = XmindPointJson()
     # res.extract_test_points_data()
 
 
-
-
-    converter = TestcasePointJsonToXmind()
-    # 准备测试点数据
-    filepath =r"D:\AIGeneration\testcase\测试点.json"
-    get_json = fileProcessor()
-    test_data = get_json.find_and_read_file(filepath, type="json")
-    # 一键转换并导出
-    success = converter.convert_and_export_to_xmind(
-        input_data=test_data,
-        output_xmind_file=r"D:\AIGeneration\testcase\output.xmind",
-        root_title="测试大纲",
-        sheet_title="功能测试用例"
-    )
 
 
 

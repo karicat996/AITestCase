@@ -2,16 +2,18 @@
 import yaml
 from common.fileProcessor import fileProcessor
 
-def get_prompt():
-    fp = fileProcessor()
-    origin_data = fp.find_and_read_file("config/promptWord.yaml", type="yaml")
-    template_prompt = origin_data.get("text") + origin_data.get("promptTemplate") + origin_data.get("format")
-    user_input = "杯子"
-    prompt = " ".join([user_input, template_prompt ])
-    return prompt
+def get_prompt(user_input):
+    if user_input is None:
+        logger.error("输入内容为空")
+    else:
+        fp = fileProcessor()
+        origin_data = fp.find_and_read_file("config/promptWord.yaml", type="yaml")
+        template_prompt = origin_data.get("text") + origin_data.get("promptTemplate") + origin_data.get("format")
+        prompt = " ".join([user_input, template_prompt])
+        return prompt
 
 
-def get_testcase():
+def get_testcase(prompt_input):
     fp = fileProcessor()
     origin_data = fp.find_and_read_file("config/promptWord.yaml", type="yaml")
     template_prompt = origin_data.get("testcasePrompt")

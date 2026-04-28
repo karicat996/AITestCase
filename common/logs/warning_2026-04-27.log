@@ -1,6 +1,0 @@
-2026-04-27 17:35:40.394 | ERROR    | __main__:read_xmind_json:1205 - 读取XMind JSON文件失败: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
-2026-04-27 17:35:40.397 | ERROR    | __main__:convert_to_testcase_format:1393 - 转换数据格式失败: 'NoneType' object has no attribute 'get'
-2026-04-27 17:36:03.586 | ERROR    | __main__:read_xmind_json:1205 - 读取XMind JSON文件失败: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
-2026-04-27 17:36:03.590 | ERROR    | __main__:convert_to_testcase_format:1393 - 转换数据格式失败: 'NoneType' object has no attribute 'get'
-2026-04-27 17:37:14.908 | ERROR    | __main__:read_xmind_json:1229 - 读取XMind JSON文件失败: malformed node or string on line 1: <ast.Name object at 0x000001AA880DB810>
-2026-04-27 17:37:14.909 | ERROR    | __main__:convert_to_testcase_format:1417 - 转换数据格式失败: 'NoneType' object has no attribute 'get'

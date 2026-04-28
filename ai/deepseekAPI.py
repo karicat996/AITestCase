@@ -13,10 +13,9 @@ class DeepSeekAPI:
         self.MODEL_NAME = "deepseek-chat"
         self.userName = "user"
         self.language = "Chinese"
-        self.requestQuestion = get_prompt()
-        self.testcaseQuestion = get_testcase()
 
-    def get_test_point_answer(self):
+    def get_test_point_answer(self,user_input):
+        self.requestQuestion = get_prompt(user_input)
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -33,7 +32,8 @@ class DeepSeekAPI:
         print(f"获取到答案:{result}")
         return result
 
-    def get_testcase_answer(self):
+    def get_testcase_answer(self,prompt_input):
+        self.testcaseQuestion = get_testcase(prompt_input)
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -46,6 +46,7 @@ class DeepSeekAPI:
             ]
             , stream = False
         )
+        print("已发送请求，等待生成....")
         result = response.choices[0].message.content
         return result
 
