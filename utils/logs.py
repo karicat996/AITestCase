@@ -6,16 +6,21 @@ from datetime import datetime, timedelta
 
 
 class LogManager:
+    _initialized = False # 防止重复初始化导致日志重复输出
+
     def __init__(self, log_dir="logs", retention_days=30):
         """
         初始化日志管理器
 
         Args:
-            log_dir (str): 日志存储目录
+            log_dir (str): 日志存储目录（可以是相对路径或绝对路径）
             retention_days (int): 日志保留天数，默认30天
         """
+        if LogManager._initialized:
+            return
+            
         self.log_dir = Path(log_dir)
-        self.log_dir.mkdir(exist_ok=True)
+        self.log_dir.mkdir(parents=True, exist_ok=True) # parents=True 确保多级目录创建
         self.retention_days = retention_days
 
         # 移除默认的日志处理器
@@ -36,43 +41,22 @@ class LogManager:
 
         # 启动时清理过期日志
         self._clean_old_logs()
+        
+        LogManager._initialized = True
 
     def _add_file_handlers(self):
-        """添加不同级别的文件日志处理器"""
-        # DEBUG级别日志
+        """添加文件日志处理器（按日期分割的单一日志文件）"""
+        # 使用单个日志文件，包含所有级别的日志
         logger.add(
-            self.log_dir / "debug_{time:YYYY-MM-DD}.log",
+            self.log_dir / "app_{time:YYYY-MM-DD}.log",
             level="DEBUG",
-            rotation="00:00",
-            retention=f"{self.retention_days} days",
-            encoding="utf-8"
-        )
-
-        # INFO级别日志
-        logger.add(
-            self.log_dir / "info_{time:YYYY-MM-DD}.log",
-            level="INFO",
-            rotation="00:00",
-            retention=f"{self.retention_days} days",
-            encoding="utf-8"
-        )
-
-        # WARNING级别日志
-        logger.add(
-            self.log_dir / "warning_{time:YYYY-MM-DD}.log",
-            level="WARNING",
-            rotation="00:00",
-            retention=f"{self.retention_days} days",
-            encoding="utf-8"
-        )
-
-        # ERROR级别日志
-        logger.add(
-            self.log_dir / "error_{time:YYYY-MM-DD}.log",
-            level="ERROR",
-            rotation="00:00",
-            retention=f"{self.retention_days} days",
-            encoding="utf-8"
+            rotation="00:00",  # 每天午夜自动切换新文件
+            retention=f"{self.retention_days} days",  # 自动删除过期日志
+            encoding="utf-8",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            enqueue=True,  # 异步写入，提高性能
+            backtrace=True,  # 显示完整的异常堆栈
+            diagnose=True  # 显示详细的异常信息
         )
 
     def _clean_old_logs(self):

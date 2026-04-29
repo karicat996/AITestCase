@@ -484,21 +484,28 @@ class TestcasePointJsonToXmind:
     def convert_test_points_to_xmind_format(self, input_data, root_title=DEFAULT_ROOT_TITLE, sheet_title=DEFAULT_SHEET_TITLE):
         """
         将测试点数据转换为 XMind 标准 JSON 格式
-
-        Args:
-            input_data: 测试点数据（dict）
-            root_title: 根节点标题
-            sheet_title: 工作表标题
-
-        Returns:
-            dict: XMind 格式的 JSON 数据
+        支持多种模板规则自动识别
         """
         category_topics = []
+        
+        # 获取当前数据适用的提取规则
+        rule = self._get_template_rule(input_data)
 
-        # 遍历顶层分类（如"功能测试"、"用户使用场景"）
+        # 遍历顶层分类（如"LCD光固化3D打印机"）
         for category_name, category_data in input_data.items():
-            # 为每个分类创建主题
-            category_topic = self._create_category_topic(category_name, category_data)
+            # 使用选定的规则提取子主题
+            sub_topics = self._extract_sub_topics_by_rule(category_data, rule)
+            
+            category_topic = {
+                'id': self._generate_id(),
+                'link': None,
+                'title': category_name,
+                'note': None,
+                'label': None,
+                'comment': None,
+                'markers': [],
+                'topics': sub_topics
+            }
             category_topics.append(category_topic)
 
         return self._build_xmind_json_structure(
@@ -506,6 +513,65 @@ class TestcasePointJsonToXmind:
             root_title,
             sheet_title
         )
+
+    def _get_template_rule(self, data):
+        """
+        根据数据结构自动判断使用的模板规则
+        """
+        if not data or not isinstance(data, dict):
+            return 'simple'
+        
+        # 检查第一层值的类型
+        first_val = next(iter(data.values()))
+        if isinstance(first_val, list) and first_val and isinstance(first_val[0], dict):
+            # 检查第二层是否还是字典列表（深度嵌套结构，如测试点.json）
+            second_val = first_val[0]
+            if isinstance(second_val, dict):
+                return 'deep_nested'
+        return 'standard'
+
+    def _extract_sub_topics_by_rule(self, data, rule):
+        """
+        根据规则提取子主题
+        """
+        if rule == 'deep_nested':
+            return self._extract_deep_topics(data)
+        else:
+            return self._extract_sub_topics(data)
+
+    def _extract_deep_topics(self, data_list):
+        """
+        专门处理深层嵌套的字典结构 (Module -> SubModule -> TestPoints)
+        对应结构: [{"Z轴": [{"调平": [{"类型":...}]}]}]
+        """
+        topics = []
+        if not isinstance(data_list, list):
+            return topics
+
+        for item in data_list:
+            if not isinstance(item, dict):
+                continue
+            
+            # 遍历当前层的 Key-Value (例如: "Z轴运动功能": [...])
+            for key, value in item.items():
+                parent_topic = self._create_sub_topic(key)
+                
+                # 递归处理下一层
+                if isinstance(value, list):
+                    children = self._extract_deep_topics(value)
+                    if children:
+                        parent_topic['topics'] = children
+                elif isinstance(value, dict):
+                    # 如果值是字典，继续深入
+                    children = self._extract_deep_topics([value])
+                    if children:
+                        parent_topic['topics'] = children
+                elif isinstance(value, str):
+                    # 叶子节点
+                    parent_topic['topics'] = [self._create_sub_topic(value)]
+                
+                topics.append(parent_topic)
+        return topics
 
     def _create_category_topic(self, category_name, category_data):
         """
@@ -669,6 +735,7 @@ class TestcasePointJsonToXmind:
         file_dir = os.path.dirname(file_path)
         if file_dir and not os.path.exists(file_dir):
             os.makedirs(file_dir, exist_ok=True)
+
 
 #获取测试用例转化为xmind格式文件
 class TestcaseJsonToXmind:
@@ -1502,7 +1569,7 @@ class AIJsonToXlsx:
 
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
     # dc = MxindDataProcessor()
     # res = dc.write_to_json()
@@ -1555,7 +1622,26 @@ class AIJsonToXlsx:
 
 
 
+    with open(r'D:\AIGeneration\testcase\测试点.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
 
+    # 2. 实例化工具类
+    converter = TestcasePointJsonToXmind()
+
+    # 3. 执行转换并导出 XMind
+    # root_title: 整个思维导图的最外层根节点名称
+    # sheet_title: 工作表的标题
+    success = converter.convert_and_export_to_xmind(
+        input_data=data,
+        output_xmind_file=r'D:\AIGeneration\testcase\output_test_points.xmind',
+        root_title="功能测试",
+        sheet_title="LCD打印机测试点"
+    )
+
+    if success:
+        print("XMind 文件生成成功！")
+    else:
+        print("生成失败，请检查日志。")
 
 
 
