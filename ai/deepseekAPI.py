@@ -34,6 +34,7 @@ class DeepSeekAPI:
 
     def get_testcase_answer(self,prompt_input):
         self.testcaseQuestion = get_testcase(prompt_input)
+        print("已发送测试用例生成请求，等待生成....")
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -46,8 +47,9 @@ class DeepSeekAPI:
             ]
             , stream = False
         )
-        print("已发送请求，等待生成....")
         result = response.choices[0].message.content
+        print(type(result))
+        print(f"获取到答案:{result}")
         return result
 
     def point_to_list(self, data= None):

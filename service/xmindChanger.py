@@ -11,7 +11,7 @@ import pandas as pd
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 import os
-from common.dataProcessor import WriteInfo
+
 
 OUTPUT_JSON_PATH = r"D:\AIGeneration\testcase\xmind_output.json"
 TEST_XMIND_PATH = r"D:\AIGeneration\testcase\测试用例.xmind"
@@ -19,6 +19,7 @@ TEMPLATE_XMIND_PATH = r"C:\Users\admin\Desktop\test.xmind"
 TESTCASE_JSON_PATH = r"D:\AIGeneration\testcase\output.json"
 OUTPUT_XLSX_PATH = r"D:\AIGeneration\testcase\AI_Generated_Test_Cases.xlsx"
 CONVERTED_TESTCASES_JSON_PATH = r"D:\AIGeneration\testcase\converted_testcases.json"
+LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 def _build_xmind_topic(xmind_topic, data):
     """
     递归构建 XMind 主题
@@ -735,7 +736,6 @@ class TestcasePointJsonToXmind:
         file_dir = os.path.dirname(file_path)
         if file_dir and not os.path.exists(file_dir):
             os.makedirs(file_dir, exist_ok=True)
-
 
 #获取测试用例转化为xmind格式文件
 class TestcaseJsonToXmind:
@@ -1566,10 +1566,231 @@ class AIJsonToXlsx:
         
         return success
 
+#测试点json提取成符合测试用例输入规则标准的data,然后写入到输出的json文件中
+class TestPointToAIJson:
+    """
+    将测试点数据转换为简化的测试转化数据格式
+    Attributes:
+        logger: 日志记录器
+    """
+    def __init__(self):
+        """
+        初始化转换器
+        """
+
+    def convert_testpoint_to_simple_format(self, input_data: dict) -> dict:
+        """
+        将测试点数据转换为简化的测试转化数据格式
+        提取测试模块下的测试点名称和场景描述，重组为扁平化结构
+        
+        Args:
+            input_data: 测试点JSON数据
+            
+        Returns:
+            Dict: 转换后的简化格式数据
+            
+        Raises:
+            TypeError: 当输入数据类型不正确时抛出
+            ValueError: 当输入数据为空时抛出
+        """
+        if not input_data:
+            raise ValueError("输入数据不能为空")
+        
+        if not isinstance(input_data, dict):
+            raise TypeError(f"期望输入类型为dict，实际得到: {type(input_data).__name__}")
+        
+        result = {}
+        
+        # 遍历顶层产品/需求名称
+        for product_name, modules_list in input_data.items():
+            logger.info(f"正在处理产品: {product_name}")
+            
+            if not isinstance(modules_list, list):
+                logger.warning(f"产品 '{product_name}' 的数据不是列表格式，跳过")
+                continue
+            
+            # 遍历每个功能模块
+            for module_item in modules_list:
+                if not isinstance(module_item, dict):
+                    continue
+                
+                for module_name, test_points_list in module_item.items():
+                    logger.debug(f"正在处理模块: {module_name}")
+                    
+                    # 遍历测试点列表
+                    if isinstance(test_points_list, list):
+                        for test_point_item in test_points_list:
+                            if not isinstance(test_point_item, dict):
+                                continue
+                            
+                            for test_point_name, scenarios_list in test_point_item.items():
+                                # 提取该测试点下的所有场景描述
+                                scenario_descriptions = []
+                                
+                                if isinstance(scenarios_list, list):
+                                    for scenario in scenarios_list:
+                                        if isinstance(scenario, dict):
+                                            # 提取场景描述
+                                            desc = self._extract_scenario_description(scenario)
+                                            if desc:
+                                                scenario_descriptions.append(desc)
+                                
+                                # 只有当有场景描述时才添加到结果中
+                                if scenario_descriptions:
+                                    result[test_point_name] = scenario_descriptions
+                                    logger.debug(
+                                        f"提取测试点 '{test_point_name}': {len(scenario_descriptions)} 个场景"
+                                    )
+        
+        logger.info(
+            f"转换完成，共提取 {len(result)} 个测试点"
+        )
+        return result
+
+    def _extract_scenario_description(self, scenario: dict) -> str:
+        """
+        从场景字典中提取格式化的场景描述
+        
+        Args:
+            scenario: 场景字典，如 {"正向：Z轴升降至指定高度位置精度准确": "输入目标高度，Z轴准确移动到对应位置"}
+            
+        Returns:
+            str: 格式化后的场景描述，如 "正向-Z轴升降至指定高度位置精度准确"
+        """
+        if not scenario or not isinstance(scenario, dict):
+            return ""
+        
+        # 获取第一个键值对
+        for key, value in scenario.items():
+            # 判断是否包含中文冒号或英文冒号
+            if "：" in key:
+                parts = key.split("：", 1)
+                scenario_type = parts[0]  # 正向/反向
+                scenario_title = parts[1] if len(parts) > 1 else ""  # 场景标题
+            elif ":" in key:
+                parts = key.split(":", 1)
+                scenario_type = parts[0]
+                scenario_title = parts[1] if len(parts) > 1 else ""
+            else:
+                # 没有分隔符，直接使用整个key
+                scenario_type = ""
+                scenario_title = key
+            
+            # 组合格式：类型-标题
+            if scenario_type and scenario_title:
+                return f"{scenario_type}-{scenario_title}"
+            elif scenario_title:
+                return scenario_title
+            else:
+                return key
+        
+        return ""
+
+    def save_to_json(self, data: dict, output_file: str) -> str:
+        """
+        将转换后的数据保存为JSON文件
+        
+        Args:
+            data: 要保存的JSON数据
+            output_file: 输出文件路径
+            
+        Returns:
+            str: 保存文件的绝对路径
+            
+        Raises:
+            ValueError: 当输出文件路径为空时抛出
+            IOError: 当文件写入失败时抛出
+        """
+        if not output_file:
+            raise ValueError("输出文件路径不能为空")
+        
+        # 确保输出目录存在
+        output_dir = os.path.dirname(output_file)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+            logger.info(f"创建输出目录: {output_dir}")
+        
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            
+            abs_path = os.path.abspath(output_file)
+            logger.info(f"JSON文件保存成功: {abs_path}")
+            return abs_path
+            
+        except IOError as e:
+            logger.error(f"文件写入失败: {output_file}, 错误: {str(e)}")
+            raise
+
+    def convert_and_save(self, input_file: str, output_file: str,extract: bool) -> str:
+        """
+        读取测试点JSON文件，转换为简化格式并保存
+        
+        Args:
+            input_file: 输入的测试点JSON文件路径
+            output_file: 输出的简化格式JSON文件路径
+            
+        Returns:
+            str: 输出文件的绝对路径
+            
+        Raises:
+            FileNotFoundError: 当输入文件不存在时抛出
+            json.JSONDecodeError: 当JSON解析失败时抛出
+        """
+        # 读取输入文件
+        if not os.path.exists(input_file):
+            raise FileNotFoundError(f"输入文件不存在: {input_file}")
+        
+        logger.info(f"开始读取测试点文件: {input_file}")
+        
+        try:
+            with open(input_file, 'r', encoding='utf-8') as f:
+                input_data = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON解析失败: {str(e)}")
+            raise
+        
+        # 转换数据
+
+        logger.info("开始转换数据...")
+        res_data = self.convert_testpoint_to_simple_format(input_data)
+        if extract:
+            # 保存结果
+            logger.info(f"保存转换结果到: {output_file}")
+            output_path = self.save_to_json(res_data, output_file)
+            # 统计信息
+            test_point_count = len(res_data)
+            scenario_count = sum(len(scenarios) for scenarios in res_data.values())
+
+            logger.info(
+                f"转换完成！共 {test_point_count} 个测试点，{scenario_count} 个场景"
+            )
+        else:
+            logger.info("不保存结果到文件中")
+        return res_data
 
 
 
-if __name__ == '__main__':
+
+
+
+# if __name__ == '__main__':
+    # converter = TestPointToAIJson()
+    #
+    # # 一键转换并保存
+    # output_path = converter.convert_and_save(
+    #     input_file=r'D:\AIGeneration\testcase\测试点.json',
+    #     output_file=r'D:\AIGeneration\testcase\测试转化数据.json'
+    # )
+    #
+    # print(f"转换成功！输出文件: {output_path}")
+
+
+
+
+
+
+
 
     # dc = MxindDataProcessor()
     # res = dc.write_to_json()
@@ -1620,29 +1841,29 @@ if __name__ == '__main__':
     # res = XmindPointJson()
     # res.extract_test_points_data()
 
-
-
-    with open(r'D:\AIGeneration\testcase\测试点.json', 'r', encoding='utf-8') as f:
-        data = json.load(f)
-
-    # 2. 实例化工具类
-    converter = TestcasePointJsonToXmind()
-
-    # 3. 执行转换并导出 XMind
-    # root_title: 整个思维导图的最外层根节点名称
-    # sheet_title: 工作表的标题
-    success = converter.convert_and_export_to_xmind(
-        input_data=data,
-        output_xmind_file=r'D:\AIGeneration\testcase\output_test_points.xmind',
-        root_title="功能测试",
-        sheet_title="LCD打印机测试点"
-    )
-
-    if success:
-        print("XMind 文件生成成功！")
-    else:
-        print("生成失败，请检查日志。")
-
+    #
+    #
+    # with open(r'D:\AIGeneration\testcase\测试点.json', 'r', encoding='utf-8') as f:
+    #     data = json.load(f)
+    #
+    # # 2. 实例化工具类
+    # converter = TestcasePointJsonToXmind()
+    #
+    # # 3. 执行转换并导出 XMind
+    # # root_title: 整个思维导图的最外层根节点名称
+    # # sheet_title: 工作表的标题
+    # success = converter.convert_and_export_to_xmind(
+    #     input_data=data,
+    #     output_xmind_file=r'D:\AIGeneration\testcase\output_test_points.xmind',
+    #     root_title="功能测试",
+    #     sheet_title="LCD打印机测试点"
+    # )
+    #
+    # if success:
+    #     print("XMind 文件生成成功！")
+    # else:
+    #     print("生成失败，请检查日志。")
+    #
 
 
 
