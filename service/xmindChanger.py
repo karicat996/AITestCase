@@ -754,7 +754,6 @@ class TestcaseJsonToXmind:
         Args:
             template_file: XMind 模板文件路径，默认使用内置模板
         """
-        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
         self._ensure_blank_template_exists()
         self.template_file = template_file or self.BLANK_TEMPLATE_PATH
 
@@ -784,9 +783,9 @@ class TestcaseJsonToXmind:
 </meta>'''
                 zf.writestr('meta.xml', meta_xml.encode('utf-8'))
 
-            self.logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
+            logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
         except Exception as e:
-            self.logger.error(f"创建空白模板失败：{str(e)}")
+            logger.error(f"创建空白模板失败：{str(e)}")
             raise
 
     def _get_template_file(self, template_file=None):
@@ -840,69 +839,96 @@ class TestcaseJsonToXmind:
             self._ensure_directory_exists(output_file)
 
             xmind.save(workbook, output_file)
-            self.logger.info(f"XMind 文件已成功生成：{output_file}")
+            logger.info(f"XMind 文件已成功生成：{output_file}")
             return True
 
         except FileNotFoundError as e:
-            self.logger.error(f"模板文件未找到：{str(e)}")
+            logger.error(f"模板文件未找到：{str(e)}")
             return False
         except Exception as e:
-            self.logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
+            logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
             return False
 
 
     def _build_testcase_structure(self, root_topic, json_data):
         """
         构建测试用例的XMind结构
+        支持多种JSON格式：
+        1. {"测试用例": [...]}
+        2. {"testcases": [...]}
+        3. {"测试点名称": [{用例1}, {用例2}], ...}  ← 你的格式
 
         Args:
             root_topic: XMind根主题对象
             json_data: 测试用例JSON数据
         """
         if isinstance(json_data, dict):
+            # 尝试标准格式：{"测试用例": [...]} 或 {"testcases": [...]}
             test_cases = json_data.get('测试用例', [])
             if not test_cases:
                 test_cases = json_data.get('testcases', [])
-
-            if isinstance(test_cases, list):
-                # 按模块分组
-                modules_dict = {}
-                for testcase in test_cases:
-                    if isinstance(testcase, dict):
-                        module_name = testcase.get('测试模块', '未分类模块')
-                        if module_name not in modules_dict:
-                            modules_dict[module_name] = []
-                        modules_dict[module_name].append(testcase)
-
-                # 为每个模块创建节点
-                for module_name, cases in modules_dict.items():
-                    module_topic = root_topic.addSubTopic()
-                    module_topic.setTitle(module_name)
-
-                    # 为该模块下的每个用例创建子节点
-                    for testcase in cases:
-                        self._add_testcase_hierarchy(module_topic, testcase)
+            
+            # 如果找到标准格式，按模块分组
+            if test_cases and isinstance(test_cases, list):
+                self._build_from_standard_format(root_topic, test_cases)
             else:
-                self.logger.warning("测试用例数据格式不正确，应为列表")
+                # 否则，假设是 {"测试点名称": [用例列表]} 格式
+                self._build_from_testpoint_format(root_topic, json_data)
 
         elif isinstance(json_data, list):
-            # 按模块分组
-            modules_dict = {}
-            for testcase in json_data:
+            # 直接是列表格式，按模块分组
+            self._build_from_standard_format(root_topic, json_data)
+        else:
+            logger.warning(f"不支持的JSON数据类型: {type(json_data).__name__}")
+
+    def _build_from_standard_format(self, root_topic, test_cases):
+        """
+        从标准格式构建XMind结构（按测试模块分组）
+        
+        Args:
+            root_topic: XMind根主题对象
+            test_cases: 测试用例列表
+        """
+        # 按模块分组
+        modules_dict = {}
+        for testcase in test_cases:
+            if isinstance(testcase, dict):
+                module_name = testcase.get('测试模块', '未分类模块')
+                if module_name not in modules_dict:
+                    modules_dict[module_name] = []
+                modules_dict[module_name].append(testcase)
+
+        # 为每个模块创建节点
+        for module_name, cases in modules_dict.items():
+            module_topic = root_topic.addSubTopic()
+            module_topic.setTitle(module_name)
+
+            # 为该模块下的每个用例创建子节点
+            for testcase in cases:
+                self._add_testcase_hierarchy(module_topic, testcase)
+
+    def _build_from_testpoint_format(self, root_topic, json_data):
+        """
+        从测试点格式构建XMind结构（以测试点名称为分组）
+        适用于格式：{"Z轴升降准确性": [{用例1}, {用例2}], ...}
+        
+        Args:
+            root_topic: XMind根主题对象
+            json_data: 测试用例JSON数据（字典，键为测试点名称）
+        """
+        for test_point_name, test_cases in json_data.items():
+            if not isinstance(test_cases, list):
+                logger.warning(f"测试点 '{test_point_name}' 的数据不是列表，跳过")
+                continue
+            
+            # 创建测试点节点（作为一级分类）
+            testpoint_topic = root_topic.addSubTopic()
+            testpoint_topic.setTitle(test_point_name)
+            
+            # 为该测试点下的每个用例创建子节点
+            for testcase in test_cases:
                 if isinstance(testcase, dict):
-                    module_name = testcase.get('测试模块', '未分类模块')
-                    if module_name not in modules_dict:
-                        modules_dict[module_name] = []
-                    modules_dict[module_name].append(testcase)
-
-            # 为每个模块创建节点
-            for module_name, cases in modules_dict.items():
-                module_topic = root_topic.addSubTopic()
-                module_topic.setTitle(module_name)
-
-                # 为该模块下的每个用例创建子节点
-                for testcase in cases:
-                    self._add_testcase_hierarchy(module_topic, testcase)
+                    self._add_testcase_hierarchy(testpoint_topic, testcase)
 
 
     def _add_testcase_hierarchy(self, parent_topic, testcase):
@@ -940,7 +966,7 @@ class TestcaseJsonToXmind:
                 try:
                     title_topic.addMarker(marker_id)
                 except Exception as e:
-                    self.logger.warning(f"添加优先级图标失败: {str(e)}")
+                    logger.warning(f"添加优先级图标失败: {str(e)}")
 
         # 第2层：前置条件作为标题的子节点
         precondition = testcase.get('前置条件', '')
@@ -1086,12 +1112,12 @@ class TestcaseJsonToXmind:
             success = self.json_to_xmind(input_data, output_xmind_file, template_file)
 
             if success:
-                self.logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
+                logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
 
             return success
 
         except Exception as e:
-            self.logger.error(f"转换过程中发生错误: {str(e)}", exc_info=True)
+            logger.error(f"转换过程中发生错误: {str(e)}", exc_info=True)
             return False
 
     @staticmethod

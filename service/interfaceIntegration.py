@@ -2,6 +2,7 @@ from service.xmindChanger import *
 from ai.deepseekAPI import *
 from common.promptProcessing import fileProcessor
 import os
+import time
 import json
 class interfaceAITestPoint:
     """
@@ -131,21 +132,145 @@ class interfaceAITestCaseXmind:
         self.converter = TestcaseJsonToXmind()
         self.get_json = fileProcessor()
         self.ai_test_input = interfaceAITestInput()
-    def get_ai_testcase_write_json(self, user_input, output_path,extract, storage_file_path):
-        user_input = self.ai_test_input.get_test_case_template(user_input, output_path, extract)
-        if not user_input:
-            print("没有获取到测试用例模板数据")
+    def get_ai_testcase_write_json(self, user_input, output_path, extract, storage_file_path):
+        """
+        Args:
+            user_input: 用户输入（测试点文件或数据）
+            output_path: 输出路径
+            extract: 是否提取为AI友好格式
+            storage_file_path: 存储文件路径
+
+        """
+        try:
+            # 1. 获取测试用例模板数据
+            user_input = self.ai_test_input.get_test_case_template(user_input, output_path, extract)
+            if not user_input:
+                logger.error("没有获取到测试用例模板数据")
+                return False
+            
+            # 2. 调用AI生成测试用例
+            ds_res = self.DS.get_testcase_answer(user_input)
+            if not ds_res:
+                logger.error("AI未返回数据")
+                return False
+            logger.info(f"✓ AI返回数据，长度: {len(ds_res)} 字符")
+            
+            # 3. 清理和解析AI返回的数据
+            cleaned_data = self.clean_ai_json_response(ds_res)
+            if not cleaned_data:
+                logger.error("无法解析AI返回的JSON数据")
+                return False
+            
+            logger.info(f"✓ JSON数据解析成功，类型: {type(cleaned_data).__name__}")
+            
+            # 4. 写入JSON文件（传入字典对象，而非字符串）
+            self.get_json.write_file(storage_file_path, cleaned_data, "json")
+            
+            logger.info(f"✓ 测试用例已保存到: {storage_file_path}")
+            print("执行完毕")
+            return True
+            
+        except Exception as e:
+            logger.error(f"✗ 执行失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False
-        ds_res = self.DS.get_testcase_answer(user_input)
-        if ds_res:
-            #数据存在写入文件中
-            self.get_json.write_file(storage_file_path, ds_res, "json")
-        print("执行完毕")
+
+    def clean_ai_json_response(self, ai_response: str):
+        """
+        清理和解析AI返回的JSON数据，兼容多种格式
+        
+        支持的格式：
+        1. 纯JSON字符串: {"key": "value"}
+        2. 带```json标记: ```json\n{...}\n```
+        3. 带```标记: ```\n{...}\n```
+        4. 前后有额外文本: "这是回答\n```json\n{...}\n```\n结束"
+        
+        Args:
+            ai_response: AI返回的原始字符串
+        Returns:
+            dict or list: 解析后的JSON对象，失败返回None
+        """
+        if not ai_response or not isinstance(ai_response, str):
+            logger.warning("AI返回数据为空或不是字符串")
+            return None
+        
+        # 去除首尾空白
+        ai_response = ai_response.strip()
+        
+        # 方法1：尝试直接解析（适用于纯JSON）
+        try:
+            data = json.loads(ai_response)
+            logger.debug("直接解析JSON成功")
+            return data
+        except json.JSONDecodeError:
+            logger.debug("直接解析失败，尝试提取代码块")
+        
+        # 方法2：提取```json ... ``` 或 ``` ... ``` 代码块
+        import re
+        
+        # 匹配 ```json ... ``` 或 ``` ... ```
+        patterns = [
+            r'```json\s*([\s\S]*?)\s*```',  # ```json ... ```
+            r'```\s*([\s\S]*?)\s*```',       # ``` ... ```
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, ai_response, re.DOTALL)
+            if match:
+                json_str = match.group(1).strip()
+                logger.debug(f"通过正则提取到JSON字符串，长度: {len(json_str)}")
+                
+                # 尝试解析提取的JSON
+                try:
+                    data = json.loads(json_str)
+                    logger.debug("解析提取的JSON成功")
+                    return data
+                except json.JSONDecodeError as e:
+                    logger.warning(f"提取的JSON解析失败: {str(e)}")
+                    continue
+        
+        # 方法3：尝试找到第一个 { 和最后一个 }
+        logger.debug("尝试查找JSON对象边界")
+        start_idx = ai_response.find('{')
+        end_idx = ai_response.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx+1]
+            logger.debug(f"提取JSON对象，长度: {len(json_str)}")
+            
+            try:
+                data = json.loads(json_str)
+                logger.debug("解析JSON对象成功")
+                return data
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON对象解析失败: {str(e)}")
+        
+        # 方法4：尝试找到第一个 [ 和最后一个 ]（数组格式）
+        logger.debug("尝试查找JSON数组边界")
+        start_idx = ai_response.find('[')
+        end_idx = ai_response.rfind(']')
+        
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx+1]
+            logger.debug(f"提取JSON数组，长度: {len(json_str)}")
+            
+            try:
+                data = json.loads(json_str)
+                logger.debug("解析JSON数组成功")
+                return data
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON数组解析失败: {str(e)}")
+        
+        # 所有方法都失败
+        logger.error("无法从AI响应中提取有效的JSON数据")
+        logger.debug(f"AI响应前200字符: {ai_response[:200]}")
+        return None
 
     def get_testcase_xmind(self):
         print("\n=== 测试用例JSON转化成xmind")
         # 读取测试用例JSON文件
-        testcase_json_path = r"D:\AIGeneration\testcase\测试用例.json"
+        testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
         testcase_data = self.get_json.find_and_read_file(testcase_json_path, type="json")
 
         # 转换并导出
@@ -221,5 +346,7 @@ if __name__ == '__main__':
                                         extract=False,
                                         storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
                                         )
+     time.sleep(5)
+     interfaceAITestCaseXmind().get_testcase_xmind()
 
     # interfaceAITestPoint().get_test_point(user_input="LCD光固化3D打印机，带Z轴，功能有加热功能，曝光时间，延时打印，中断打印续打，支持多种树脂打印,支持连接app", output_path=r"D:\AIGeneration\testcase\output.xmind", storage_json=r"D:\AIGeneration\testcase\测试点.json")
