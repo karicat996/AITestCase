@@ -12,7 +12,6 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 import os
 
-
 OUTPUT_JSON_PATH = r"D:\AIGeneration\testcase\xmind_output.json"
 TEST_XMIND_PATH = r"D:\AIGeneration\testcase\测试用例.xmind"
 TEMPLATE_XMIND_PATH = r"C:\Users\admin\Desktop\test.xmind"
@@ -84,11 +83,10 @@ class MxindDataProcessor:
             data = sheet[0]
             return data
             print(data)
-    def write_to_json(self):
+    def write_to_json(self,output_json_path):
         res = self.xmind_to_json()
         # 获取到数据后写入xmind.json文件
         if res:
-            output_json_path = OUTPUT_JSON_PATH
             with open(output_json_path, 'w', encoding='utf-8') as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)
             print(f"✓ XMind数据已保存到: {output_json_path}")
@@ -1144,7 +1142,7 @@ class TestcaseXmindToAIJson:
         self.output_json_path = CONVERTED_TESTCASES_JSON_PATH
         self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
 
-    def read_xmind_json(self, file_path=None):
+    def read_xmind_json(self, json_file_path):
         """
         读取XMind格式的JSON文件
         Args:
@@ -1153,13 +1151,11 @@ class TestcaseXmindToAIJson:
             dict: XMind JSON数据
         """
         try:
-            path = file_path or self.xmind_json_path
-
             # 尝试用标准json.load读取
             try:
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(json_file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                self.logger.info(f"成功读取XMind JSON文件: {path}")
+                self.logger.info(f"成功读取XMind JSON文件: {json_file_path}")
                 return data
             except json.JSONDecodeError:
                 # 如果失败，尝试用ast.literal_eval读取Python字典格式
@@ -1174,12 +1170,12 @@ class TestcaseXmindToAIJson:
                 # 尝试再次用json加载
                 try:
                     data = json.loads(content)
-                    self.logger.info(f"成功读取XMind JSON文件（ast转换后）: {path}")
+                    self.logger.info(f"成功读取XMind JSON文件（ast转换后）: {json_file_path}")
                     return data
                 except:
                     # 最后尝试ast.literal_eval
                     data = ast.literal_eval(content)
-                    self.logger.info(f"成功读取XMind JSON文件（ast解析）: {path}")
+                    self.logger.info(f"成功读取XMind JSON文件（ast解析）: {json_file_path}")
                     return data
 
         except Exception as e:
@@ -1800,7 +1796,7 @@ class TestPointToAIJson:
 
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
     # converter = TestPointToAIJson()
     #
     # # 一键转换并保存
@@ -1822,16 +1818,16 @@ class TestPointToAIJson:
     # res = dc.write_to_json()
 
     #
-    # converter = TestcaseXmindToAIJson()
-    #
-    # # 步骤1：读取XMind JSON
-    # xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind.json")
-    #
-    # # 步骤2：转换为测试用例格式
-    # testcase_data = converter.convert_to_testcase_format(xmind_data)
-    #
-    # # 步骤3：保存
-    # converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+    converter = TestcaseXmindToAIJson()
+
+    # 步骤1：读取XMind JSON
+    xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
+
+    # 步骤2：转换为测试用例格式
+    testcase_data = converter.convert_to_testcase_format(xmind_data)
+
+    # 步骤3：保存
+    converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
 
 
 

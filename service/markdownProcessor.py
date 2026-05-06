@@ -4,6 +4,7 @@ import re
 from typing import Optional, List, Union, Dict, Any
 from common.fileProcessor import fileProcessor
 from utils.logs import LogManager
+from loguru import logger
 
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 
@@ -17,12 +18,11 @@ class MarkdownProcess:
         Args:
             template_path: 测试用例模板文件路径，默认为 config/template.json
         """
-        self.logger = LogManager().get_logger()
         try:
             self.ts = fileProcessor().find_and_read_file(template_path, type="json")
-            self.logger.info(f"成功加载模板文件: {template_path}")
+            logger.info(f"成功加载模板文件: {template_path}")
         except Exception as e:
-            self.logger.error(f"加载模板文件失败: {template_path}, 错误: {str(e)}")
+            logger.error(f"加载模板文件失败: {template_path}, 错误: {str(e)}")
             self.ts = {}
             raise
 
@@ -53,10 +53,10 @@ class MarkdownProcess:
             json_str = match.group(1)
             # 修复双大括号问题（Jinja2模板语法）
             valid_json = json_str.replace("{{", "{").replace("}}", "}")
-            self.logger.debug("成功从AI响应中提取JSON")
+            logger.debug("成功从AI响应中提取JSON")
             return valid_json
         else:
-            self.logger.warning("未匹配到JSON代码块，尝试直接解析")
+            logger.warning("未匹配到JSON代码块，尝试直接解析")
             # 尝试直接查找JSON对象
             direct_match = re.search(r"({[\s\S]*})", text, re.DOTALL)
             if direct_match:
@@ -83,7 +83,7 @@ class MarkdownProcess:
         
         test_points = []
         self._flatten_data(data, test_points)
-        self.logger.debug(f"成功转换测试点，共 {len(test_points)} 条")
+        logger.debug(f"成功转换测试点，共 {len(test_points)} 条")
         return test_points
     
     def _flatten_data(self, data: Any, result: List[Any]) -> None:
@@ -134,24 +134,24 @@ class MarkdownProcess:
         output_dir = os.path.dirname(output_file)
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
-            self.logger.info(f"创建输出目录: {output_dir}")
+            logger.info(f"创建输出目录: {output_dir}")
         
         # 如果data是字符串且需要自动提取，则提取JSON
         if isinstance(data, str) and auto_extract:
             try:
                 extracted_json = self.extract_json_from_ai_response(data)
                 data = json.loads(extracted_json)
-                self.logger.info("成功从字符串中提取并解析JSON")
+                logger.info("成功从字符串中提取并解析JSON")
             except (ValueError, json.JSONDecodeError) as e:
-                self.logger.error(f"JSON提取或解析失败: {str(e)}")
+                logger.error(f"JSON提取或解析失败: {str(e)}")
                 raise
         elif isinstance(data, str):
             # 不自动提取，直接尝试解析为JSON字符串
             try:
                 data = json.loads(data)
-                self.logger.info("成功解析JSON字符串")
+                logger.info("成功解析JSON字符串")
             except json.JSONDecodeError as e:
-                self.logger.error(f"JSON解析失败: {str(e)}")
+                logger.error(f"JSON解析失败: {str(e)}")
                 raise
         
         # 验证数据类型
@@ -164,11 +164,11 @@ class MarkdownProcess:
                 self._write_markdown_recursive(data, f, level=0)
             
             abs_path = os.path.abspath(output_file)
-            self.logger.info(f"Markdown文件生成成功: {abs_path}")
+            logger.info(f"Markdown文件生成成功: {abs_path}")
             return abs_path
             
         except IOError as e:
-            self.logger.error(f"文件写入失败: {output_file}, 错误: {str(e)}")
+            logger.error(f"文件写入失败: {output_file}, 错误: {str(e)}")
             raise
 
     def _write_markdown_recursive(self, data: Any, file_handle, level: int = 0) -> None:
@@ -228,25 +228,25 @@ class MarkdownProcess:
             if not self.ts:
                 raise ValueError("默认模板数据为空，请提供data参数或检查模板文件")
             data = self.ts
-            self.logger.info("使用默认模板数据")
+            logger.info("使用默认模板数据")
         
         # 确保输出目录存在
         output_dir = os.path.dirname(output_file)
         if output_dir and not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
-            self.logger.info(f"创建输出目录: {output_dir}")
+            logger.info(f"创建输出目录: {output_dir}")
         
         try:
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(f"# {title}\n\n")
                 self._write_testcase_recursive(data, f, level=0)
-            
+
             abs_path = os.path.abspath(output_file)
-            self.logger.info(f"测试用例文件生成成功: {abs_path}")
+            logger.info(f"测试用例文件生成成功: {abs_path}")
             return abs_path
             
         except IOError as e:
-            self.logger.error(f"文件写入失败: {output_file}, 错误: {str(e)}")
+            logger.error(f"文件写入失败: {output_file}, 错误: {str(e)}")
             raise
 
     def _write_testcase_recursive(self, data: Any, file_handle, level: int = 0) -> None:
@@ -328,14 +328,14 @@ if __name__ == "__main__":
         # 转换为测试点Markdown
         output_path = processor.json_to_markdown(
             data=ai_response,
-            output_file="testcase/testpoint.md",
+            output_file=r"D:/AIGeneration/testcase/testpoint.md",
             title="测试点"
         )
         print(f"测试点文件生成成功: {output_path}")
         
         # 转换为测试用例Markdown（使用默认模板）
         testcase_path = processor.json_to_testcase(
-            output_file="testcase/testcase.md",
+            output_file=r"D:/AIGeneration/testcase/testcase.md",
             title="测试用例"
         )
         print(f"测试用例文件生成成功: {testcase_path}")

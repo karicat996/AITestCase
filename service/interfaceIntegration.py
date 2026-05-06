@@ -4,6 +4,9 @@ from common.promptProcessing import fileProcessor
 import os
 import time
 import json
+from utils.logs import LogManager
+from loguru import logger
+LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 class interfaceAITestPoint:
     """
     ai生成测试点接口
@@ -290,26 +293,34 @@ class interfaceAITestCaseXmind:
 
 
 
-"""
-ai生成测试用例接口
-支持手动输入测试点列表
-导出为测试用例xmind
 
-默认模板
-要支持自定义模板
+class interfaceAITestCaseXlsx:
+    """
+    导出为测试用例xlsx
+    """
+    def __init__(self):
+        self.dc = MxindDataProcessor()
+        self.converter =  TestcaseXmindToAIJson()
+        self.to_xlsx = AIJsonToXlsx()
 
-"""
 
+    def get_testcase_xlsx(self,output_json_path,json_file_path, output_xlsx_path):
+        res = self.dc.write_to_json(output_json_path)
 
-"""
-ai生成测试用例接口
-支持手动输入测试点列表
-导出为测试用例xlsx
-
-默认模板
-要支持自定义模板
-
-"""
+        xmind_data = self.converter.read_xmind_json(json_file_path)
+        # 步骤2：转换为测试用例格式
+        testcase_data = self.converter.convert_to_testcase_format(xmind_data)
+        # 步骤3：保存数据
+        self.converter.save_to_json(testcase_data, output_xlsx_path)
+        # 步骤1：读取数据
+        data = self.to_xlsx.read_data()
+        # 步骤2：过滤数据
+        test_cases = self.to_xlsx.filter_data()
+        logger.info(f"共 {len(test_cases)} 条用例")
+        # 步骤3：写入Excel
+        success = self.to_xlsx.write_data(test_cases)
+        if success:
+            logger.info("转换成功！")
 
 
 """
@@ -324,29 +335,22 @@ ai生成测试用例接口
 
 
 
-"""
-管理日志接口
-"""
 
-
-
-"""
-管理配置接口
-"""
-
-
-
-"""
-管理提示词配置接口
-"""
 
 if __name__ == '__main__':
-     interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\测试点.json',
-                                        output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-                                        extract=False,
-                                        storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
-                                        )
-     time.sleep(5)
-     interfaceAITestCaseXmind().get_testcase_xmind()
+     # interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\测试点.json',
+     #                                    output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
+     #                                    extract=False,
+     #                                    storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
+     #                                    )
+     # time.sleep(5)
+     # interfaceAITestCaseXmind().get_testcase_xmind()
 
-    # interfaceAITestPoint().get_test_point(user_input="LCD光固化3D打印机，带Z轴，功能有加热功能，曝光时间，延时打印，中断打印续打，支持多种树脂打印,支持连接app", output_path=r"D:\AIGeneration\testcase\output.xmind", storage_json=r"D:\AIGeneration\testcase\测试点.json")
+     interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
+                                                 json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
+                                                 output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
+                                                 )
+
+    # interfaceAITestPoint().get_test_point(user_input="LCD光固化3D打印机，带Z轴，功能有加热功能，曝光时间，延时打印，中断打印续打，支持多种树脂打印,支持连接app",
+                                            # output_path=r"D:\AIGeneration\testcase\output.xmind",
+                                            # storage_json=r"D:\AIGeneration\testcase\测试点.json")
