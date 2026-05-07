@@ -9,7 +9,7 @@ class DeepSeekAPI:
     def __init__(self):
         fp = fileProcessor()
         # 延迟导入，避免循环依赖
-        self.DEEPSEEK_API_KEY = fp.find_and_read_file("config/userInfo.yaml", type="yaml").get("DEEPSEEK_API_KEY")
+        self.DEEPSEEK_API_KEY = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("DEEPSEEK_API_KEY")
         self.MODEL_NAME = "deepseek-chat"
         self.userName = "user"
         self.language = "Chinese"

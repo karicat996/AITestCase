@@ -333,11 +333,24 @@ class interfaceAITestCaseXlsx:
 
 """
 
+class interfaceAITestCaseMd:
+    """
+    导出为测试用例md
+    """
+    def __init__(self):
+        self.dc = MxindDataProcessor()
+        self.converter =  TestcaseXmindToAIJson()
+
 
 
 
 
 if __name__ == '__main__':
+    #测试点
+    interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
+                                          output_path=r"D:\AIGeneration\testcase\output.xmind",
+                                          storage_json=r"D:\AIGeneration\testcase\测试点.json")
+     #测试用例
      # interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\测试点.json',
      #                                    output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
      #                                    extract=False,
@@ -346,11 +359,12 @@ if __name__ == '__main__':
      # time.sleep(5)
      # interfaceAITestCaseXmind().get_testcase_xmind()
 
-     interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
-                                                 json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
-                                                 output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
-                                                 )
+     #测试用例xlsx
+     # interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
+     #                                             json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
+     #                                             output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
+     #
+     #                                          )
+     #测试用例md
 
-    # interfaceAITestPoint().get_test_point(user_input="LCD光固化3D打印机，带Z轴，功能有加热功能，曝光时间，延时打印，中断打印续打，支持多种树脂打印,支持连接app",
-                                            # output_path=r"D:\AIGeneration\testcase\output.xmind",
-                                            # storage_json=r"D:\AIGeneration\testcase\测试点.json")
+

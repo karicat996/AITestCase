@@ -12,13 +12,18 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 import os
 
-OUTPUT_JSON_PATH = r"D:\AIGeneration\testcase\xmind_output.json"
-TEST_XMIND_PATH = r"D:\AIGeneration\testcase\测试用例.xmind"
-TEMPLATE_XMIND_PATH = r"C:\Users\admin\Desktop\test.xmind"
-TESTCASE_JSON_PATH = r"D:\AIGeneration\testcase\output.json"
-OUTPUT_XLSX_PATH = r"D:\AIGeneration\testcase\AI_Generated_Test_Cases.xlsx"
-CONVERTED_TESTCASES_JSON_PATH = r"D:\AIGeneration\testcase\converted_testcases.json"
+fp = fileProcessor()
+OUTPUT_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_JSON_PATH")
+DEFAULT_TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("DEFAULT_TEMPLATE_PATH")
+TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEMPLATE_PATH")
+TEST_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEST_XMIND_PATH")
+TEMPLATE_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEMPLATE_XMIND_PATH")
+TESTCASE_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TESTCASE_JSON_PATH")
+OUTPUT_XLSX_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_XLSX_PATH")
+CONVERTED_TESTCASES_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("CONVERTED_TESTCASES_JSON_PATH")
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
+
+
 def _build_xmind_topic(xmind_topic, data):
     """
     递归构建 XMind 主题
@@ -342,8 +347,10 @@ class TestcasePointJsonToXmind:
 
     DEFAULT_ROOT_TITLE = "逻辑图"
     DEFAULT_SHEET_TITLE = "测试点"
-    DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
-    BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
+    # DEFAULT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'template.xmind')
+    # BLANK_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), 'blank_template.xmind')
+    DEFAULT_TEMPLATE_PATH = DEFAULT_TEMPLATE_PATH
+    BLANK_TEMPLATE_PATH = TEMPLATE_PATH
     FALLBACK_TEMPLATE_PATH = TEMPLATE_XMIND_PATH
     # 标记是否已经警告过模板残留问题
     _template_warning_shown = False
@@ -354,7 +361,6 @@ class TestcasePointJsonToXmind:
         Args:
             template_file: XMind 模板文件路径，默认使用内置模板
         """
-        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
         self._ensure_blank_template_exists()
         self.template_file = template_file or self.BLANK_TEMPLATE_PATH
 
@@ -388,9 +394,9 @@ class TestcasePointJsonToXmind:
     </meta>'''
                 zf.writestr('meta.xml', meta_xml.encode('utf-8'))
 
-            self.logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
+            logger.info(f"✓ 已自动创建空白模板：{self.BLANK_TEMPLATE_PATH}")
         except Exception as e:
-            self.logger.error(f"创建空白模板失败：{str(e)}")
+            logger.error(f"创建空白模板失败：{str(e)}")
             raise
     def _get_template_file(self, template_file=None):
 
@@ -442,14 +448,14 @@ class TestcasePointJsonToXmind:
 
             # 保存 XMind 文件
             xmind.save(workbook, output_file)
-            self.logger.info(f"XMind 文件已成功生成：{output_file}")
+            logger.info(f"XMind 文件已成功生成：{output_file}")
             return True
 
         except FileNotFoundError as e:
-            self.logger.error(f"模板文件未找到：{str(e)}")
+            logger.error(f"模板文件未找到：{str(e)}")
             return False
         except Exception as e:
-            self.logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
+            logger.error(f"转换 XMind 文件时发生错误：{str(e)}", exc_info=True)
             return False
 
 
@@ -697,10 +703,10 @@ class TestcasePointJsonToXmind:
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False)
 
-            self.logger.info(f"XMind 格式 JSON 已成功保存到: {output_file}")
+            logger.info(f"XMind 格式 JSON 已成功保存到: {output_file}")
             return True
         except Exception as e:
-            self.logger.error(f"保存 JSON 文件时发生错误: {str(e)}", exc_info=True)
+            logger.error(f"保存 JSON 文件时发生错误: {str(e)}", exc_info=True)
             return False
 
     def convert_and_export_to_xmind(self, input_data, output_xmind_file,
@@ -719,7 +725,7 @@ class TestcasePointJsonToXmind:
         success = self.json_to_xmind(xmind_json, output_xmind_file, template_file)
 
         if success:
-            self.logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
+            logger.info(f"XMind 文件已成功生成: {output_xmind_file}")
 
         return success
 
