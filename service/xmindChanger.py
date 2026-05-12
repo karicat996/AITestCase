@@ -5,6 +5,7 @@ import re
 import uuid
 from xmind.core.markerref import MarkerId
 from utils.logs import LogManager
+from common.textRecognition import *
 from loguru import logger
 from common.fileProcessor import *
 import pandas as pd
@@ -21,6 +22,7 @@ TEMPLATE_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="ya
 TESTCASE_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TESTCASE_JSON_PATH")
 OUTPUT_XLSX_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_XLSX_PATH")
 CONVERTED_TESTCASES_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("CONVERTED_TESTCASES_JSON_PATH")
+IMG_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("IMG_PATH")
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 
 
@@ -1798,6 +1800,97 @@ class TestPointToAIJson:
         return res_data
 
 
+#图片识别文字，AI过滤处理
+class TextRecognition:
+    """文本识别与AI过滤工具类"""
+    
+    def __init__(self, image_path=None):
+        """
+        初始化文本识别器
+        
+        Args:
+            image_path: 图片路径，默认为配置文件中的IMG_PATH
+        """
+        self.ocr_img = image_path if image_path else IMG_PATH
+        logger.info(f"TextRecognition初始化完成，图片路径: {self.ocr_img}")
+    
+    def get_ai_point(self, user_input):
+        """
+        公开方法：从图片识别文字并通过AI过滤获取测试点
+        
+        Args:
+            user_input: 用户输入的需求描述
+            
+        Returns:
+            str: AI过滤后的测试结果
+            
+        Raises:
+            ValueError: 当参数为空或无效时抛出
+            FileNotFoundError: 当图片文件不存在时抛出
+        """
+        # 入参校验
+        if not user_input or not isinstance(user_input, str):
+            logger.error("user_input参数不能为空且必须为字符串类型")
+            raise ValueError("user_input参数不能为空且必须为字符串类型")
+        
+        if not self.ocr_img or not isinstance(self.ocr_img, str):
+            logger.error("图片路径不能为空且必须为字符串类型")
+            raise ValueError("图片路径不能为空且必须为字符串类型")
+        
+        try:
+            logger.info(f"开始处理用户输入: {user_input[:50]}...")
+            
+            # 步骤1：从图片中提取文字（直接调用公共函数）
+            ocr_result = ocr_get_text_from_img(self.ocr_img)
+            logger.debug(f"OCR识别完成，共识别到 {len(ocr_result.get('text', []))} 段文字")
+            
+            # 步骤2：通过AI过滤处理
+            filtered_result = self._text_to_filter_ai(ocr_result, user_input)
+            
+            logger.info("AI过滤处理完成")
+            return filtered_result
+            
+        except FileNotFoundError as e:
+            logger.error(f"图片文件不存在: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"处理过程中发生错误: {str(e)}", exc_info=True)
+            raise
+    
+    def _text_to_filter_ai(self, ocr_result: dict, user_input: str) -> str:
+        """
+        私有方法：将OCR识别的文字通过AI进行过滤处理
+        
+        Args:
+            ocr_result: OCR识别结果字典
+            user_input: 用户输入的需求描述
+            
+        Returns:
+            str: AI处理后的结果
+        """
+        logger.debug("开始AI过滤处理")
+        
+        try:
+            # 提取OCR识别的文本内容
+            text_list = ocr_result.get('text', [])
+            if not text_list:
+                logger.warning("OCR未识别到任何文字内容")
+                return ""
+            
+            # 将识别的文字列表拼接为字符串
+            ocr_text = "\n".join(text_list)
+            logger.debug(f"待处理的OCR文本长度: {len(ocr_text)} 字符")
+            
+            # 调用DeepSeek API进行处理
+            ai_api = DeepSeekAPI()
+            ai_result = ai_api.get_ai_point(user_input)
+            
+            logger.info("AI处理成功")
+            return ai_result
+            
+        except Exception as e:
+            logger.error(f"AI过滤处理失败: {str(e)}", exc_info=True)
+            raise
 
 
 

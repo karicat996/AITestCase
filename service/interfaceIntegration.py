@@ -46,8 +46,6 @@ class interfaceAITestPoint:
 
 
 
-
-
 class interfaceAITestInput:
     """
     ai生成测试点接口
@@ -123,7 +121,6 @@ class interfaceAITestInput:
         )
         
         return compact_json
-
 
 
 class interfaceAITestCaseXmind:
@@ -290,10 +287,6 @@ class interfaceAITestCaseXmind:
             print("✗ 转换失败")
 
 
-
-
-
-
 class interfaceAITestCaseXlsx:
     """
     导出为测试用例xlsx
@@ -339,8 +332,31 @@ class interfaceAITestCaseMd:
     """
     def __init__(self):
         self.dc = MxindDataProcessor()
-        self.converter =  TestcaseXmindToAIJson()
+        self.processor = MarkdownProcess()
 
+    def get_testcase_md(self,res_data,output_md_path):
+
+        # 示例1: 从AI响应提取JSON并转换为Markdown
+        ai_response = res_data
+        try:
+            # 转换为测试点Markdown
+            output_path = self.processor.json_to_markdown(
+                data=ai_response,
+                output_file=output_md_path,
+                # output_file=r"D:/AIGeneration/testcase/testpoint.md",
+                title="测试点"
+            )
+            logger.debug(f"测试点文件生成成功: {output_path}")
+
+            # 转换为测试用例Markdown（使用默认模板）
+            testcase_path = self.processor.json_to_testcase(
+                output_file=r"D:/AIGeneration/testcase/testcase.md",
+                title="测试用例"
+            )
+            logger.debug(f"测试用例文件生成成功: {testcase_path}")
+
+        except Exception as e:
+            logger.error(f"处理失败: {str(e)}")
 
 
 

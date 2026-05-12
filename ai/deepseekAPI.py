@@ -52,6 +52,27 @@ class DeepSeekAPI:
         print(f"获取到答案:{result}")
         return result
 
+
+    def get_ai_point(self,user_input):
+        self.requestQuestion = get_point(user_input)
+        client = OpenAI(
+            api_key =self.DEEPSEEK_API_KEY,
+            base_url = "https://api.deepseek.com"
+        )
+        response = client.chat.completions.create(
+            model = self.MODEL_NAME
+            , messages = [
+                {"role": "system", "content": f"You are a helpful assistant. Please respond in {self.language}"},
+                {"role": self.userName, "content": self.requestQuestion}
+            ]
+            , stream = False
+        )
+        result = response.choices[0].message.content
+        print(f"获取到答案:{result}")
+        return result
+
+
+
     def point_to_list(self, data= None):
         """
         将测试点数据转换为列表
