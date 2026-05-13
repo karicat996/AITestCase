@@ -23,6 +23,7 @@ TESTCASE_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yam
 OUTPUT_XLSX_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_XLSX_PATH")
 CONVERTED_TESTCASES_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("CONVERTED_TESTCASES_JSON_PATH")
 IMG_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("IMG_PATH")
+TEST_POINT_XMIND_FILE = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEST_POINT_XMIND_FILE")
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 
 
@@ -302,46 +303,249 @@ class DicToXlsx:
 
 # 测试点的xmind 转化 json
 class XmindPointJson:
+    """
+    XMind测试点数据转换为JSON格式的工具类
+    
+    功能包括：
+    - 读取XMind文件数据
+    - 过滤和提取测试点数据
+    - 将处理后的数据保存为JSON文件
+    """
 
-    def __init__(self):
-        self.xmind_file = r"C:\Users\admin\Desktop\test.xmind"
-
-    def readXmindData(self):
-        workbook = xmind.load(self.xmind_file)
-        sheet = workbook.getData()
-        if not sheet:
-            print("模板文件中没有工作表")
-            return None
-        else:
-            JsonData = sheet[0]
-            print(JsonData)
-        return JsonData
-
-    def extract_test_points_data(self):
+    def __init__(self, xmind_file=None):
         """
-        从给定的数据中提取测试点和其子项，生成新的JSON格式
+        初始化XMind测试点转换器
+        
         Args:
-            data: 包含原始数据的字典
-        Returns:
-            dict: 新的JSON格式数据，格式为 {"测试点1": ["功能可靠", "性能安全", "使用方便"], "测试点2": [...]}
+            xmind_file: XMind文件路径，默认使用配置文件中的TEST_POINT_XMIND_FILE
         """
-        # 创建新的结果字典
-        result = {}
-        data = self.readXmindData()
-        # 遍历主题下的topics获取测试点
-        topics = data.get('topic', {}).get('topics', [])
+        self.xmind_file = xmind_file or TEST_POINT_XMIND_FILE
 
-        for topic in topics:
-            test_point_title = topic.get('title')  # 测试点标题，如"测试点1"
 
-            # 获取该测试点下的所有子主题
-            sub_topics = topic.get('topics', [])
-            sub_titles = [sub_topic.get('title') for sub_topic in sub_topics]
+    def read_xmind_data(self):
+        """
+        读取XMind文件数据
+        
+        Returns:
+            dict: XMind文件的JSON数据，如果读取失败返回None
+        """
+        try:
+            if not os.path.exists(self.xmind_file):
+                logger.error(f"XMind文件不存在: {self.xmind_file}")
+                return None
+            
+            workbook = xmind.load(self.xmind_file)
+            sheet = workbook.getData()
+            
+            if not sheet:
+                logger.warning("模板文件中没有工作表")
+                return None
+            
+            json_data = sheet[0]
+            logger.info(f"成功读取XMind数据，包含 {len(json_data.get('topic', {}).get('topics', []))} 个主题")
+            return json_data
+            
+        except Exception as e:
+            logger.error(f"读取XMind文件失败: {str(e)}", exc_info=True)
+            return None
 
-            # 将测试点作为键，子项列表作为值添加到结果中
-            result[test_point_title] = sub_titles
+    def _extract_test_points_data(self, data=None):
+        """
+        从XMind数据中提取测试点和其子项，生成符合测试点.json格式的深层嵌套JSON
+        Args:
+            data: 包含原始数据的字典，如果为None则自动读取XMind文件
+            
+        Returns:
+            dict: 符合测试点.json格式的深层嵌套JSON数据
+        """
+        # 如果没有提供数据，则自动读取XMind文件
+        if data is None:
+            data = self.read_xmind_data()
+            
+        if not data:
+            logger.error("无法获取有效的XMind数据")
+            return {}
+        
+        try:
+            # 创建结果字典
+            result = {}
+            
+            # 遍历主题下的topics获取顶层产品/需求名称
+            topics = data.get('topic', {}).get('topics', [])
+            
+            if not topics:
+                logger.error("XMind数据中没有找到任何主题节点，请检查XMind文件结构")
+                return {}
+            
+            for topic in topics:
+                # 第一层：产品/需求名称（如"电商下单界面功能"）
+                product_name = topic.get('title')
+                
+                if not product_name:
+                    logger.warning("发现无标题的主题节点，跳过")
+                    continue
+                
+                logger.debug(f"正在处理产品: {product_name}")
+                
+                # 获取该产品的所有模块
+                module_topics = topic.get('topics', [])
+                
+                if not module_topics:
+                    logger.warning(f"产品 '{product_name}' 下没有模块，跳过")
+                    continue
+                
+                # 第二层：模块列表
+                modules_list = []
+                
+                for module_topic in module_topics:
+                    # 第二层：模块名称（如"商品选择模块"）
+                    module_name = module_topic.get('title')
+                    
+                    if not module_name:
+                        logger.warning(f"在产品 '{product_name}' 中发现无标题的模块，跳过")
+                        continue
+                    
+                    logger.debug(f"正在处理模块: {module_name}")
+                    
+                    # 获取该模块下的所有测试点
+                    test_point_topics = module_topic.get('topics', [])
+                    
+                    if not test_point_topics:
+                        logger.warning(f"模块 '{module_name}' 下没有测试点，跳过")
+                        continue
+                    
+                    # 第三层：测试点列表
+                    test_points_list = []
+                    
+                    for test_point_topic in test_point_topics:
+                        # 第三层：测试点名称（如"商品添加与数量修改"）
+                        test_point_name = test_point_topic.get('title')
+                        
+                        if not test_point_name:
+                            logger.warning(f"在模块 '{module_name}' 中发现无标题的测试点，跳过")
+                            continue
+                        
+                        # 获取该测试点下的所有场景
+                        scenario_topics = test_point_topic.get('topics', [])
+                        
+                        if not scenario_topics:
+                            logger.warning(f"测试点 '{test_point_name}' 下没有场景，跳过")
+                            continue
+                        
+                        # 第四层：场景描述列表
+                        scenarios_list = []
+                        
+                        for scenario_topic in scenario_topics:
+                            scenario_title = scenario_topic.get('title')
+                            scenario_note = scenario_topic.get('note', '') or scenario_topic.get('comment', '')
+                            
+                            if not scenario_title:
+                                logger.warning(f"在测试点 '{test_point_name}' 中发现无标题的场景，跳过")
+                                continue
+                            
+                            # 构建场景字典：{场景标题: 场景描述}
+                            scenario_dict = {scenario_title: scenario_note if scenario_note else ""}
+                            scenarios_list.append(scenario_dict)
+                        
+                        if scenarios_list:
+                            # 将测试点和其场景添加到测试点列表
+                            test_points_list.append({test_point_name: scenarios_list})
+                    
+                    if test_points_list:
+                        # 将模块和其测试点添加到模块列表
+                        modules_list.append({module_name: test_points_list})
+                
+                if modules_list:
+                    # 将产品和其模块添加到结果中
+                    result[product_name] = modules_list
+            
+            if not result:
+                logger.error("未能提取到任何有效的测试点数据，请检查XMind文件结构是否符合要求")
+                return {}
+            
+            logger.info(f"成功提取 {len(result)} 个产品，共 {sum(len(modules) for modules in result.values())} 个模块")
+            return result
+            
+        except Exception as e:
+            logger.error(f"提取测试点数据时发生错误: {str(e)}", exc_info=True)
+            return {}
 
-        print(result)
+    def save_to_json(self, data, output_file=None):
+        """
+        将处理后的数据保存为JSON文件
+        
+        Args:
+            data: 要保存的数据字典
+            output_file: 输出文件路径，如果为None则使用默认路径
+            
+        Returns:
+            bool: 保存是否成功
+        """
+        if not data:
+            logger.warning("没有数据需要保存")
+            return False
+        
+        # 确定输出文件路径
+        if output_file is None:
+            # 使用默认输出路径
+            output_dir = os.path.dirname(TEST_POINT_XMIND_FILE)
+            output_file = os.path.join(output_dir, 'test_points_output.json')
+        
+        try:
+            # 确保输出目录存在
+            output_dir = os.path.dirname(output_file)
+            if output_dir and not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+            
+            # 写入JSON文件
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"测试点数据已保存到: {output_file}")
+            print(f"✓ 测试点数据已保存到: {output_file}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"保存JSON文件失败: {str(e)}", exc_info=True)
+            print(f"✗ 保存失败: {str(e)}")
+            return False
+
+    def process_and_save(self, output_file=None):
+        """
+        完整流程：读取XMind -> 提取测试点 -> 保存为JSON
+        
+        Args:
+            output_file: 输出JSON文件路径，可选
+            
+        Returns:
+            dict: 提取的测试点数据，如果失败返回空字典
+        """
+        logger.info("开始处理XMind测试点数据...")
+        
+        # 步骤1: 读取XMind数据
+        xmind_data = self.read_xmind_data()
+        if not xmind_data:
+            logger.error("读取XMind数据失败")
+            return {}
+        
+        # 步骤2: 提取测试点数据
+        test_points_data = self._extract_test_points_data(xmind_data)
+        if not test_points_data:
+            logger.error("提取测试点数据失败")
+            return {}
+        
+        # 步骤3: 保存为JSON文件
+        success = self.save_to_json(test_points_data, output_file)
+        
+        if success:
+            logger.info(f"处理完成！共提取 {len(test_points_data)} 个测试点")
+            print(f"✓ 处理完成！共提取 {len(test_points_data)} 个测试点")
+        else:
+            logger.error("保存JSON文件失败")
+            print("✗ 处理失败")
+        
+        return test_points_data
 
 #将AI给的json数据转化为xmind
 class TestcasePointJsonToXmind:
@@ -1906,7 +2110,8 @@ if __name__ == '__main__':
     #
     # print(f"转换成功！输出文件: {output_path}")
 
-
+    converter = XmindPointJson(xmind_file=r"C:/Users/admin/Desktop/demo.xmind")
+    result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
 
 
 
@@ -1916,18 +2121,18 @@ if __name__ == '__main__':
     # dc = MxindDataProcessor()
     # res = dc.write_to_json()
 
+    # #
+    # converter = TestcaseXmindToAIJson()
     #
-    converter = TestcaseXmindToAIJson()
-
-    # 步骤1：读取XMind JSON
-    xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
-
-    # 步骤2：转换为测试用例格式
-    testcase_data = converter.convert_to_testcase_format(xmind_data)
-
-    # 步骤3：保存
-    converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
-
+    # # 步骤1：读取XMind JSON
+    # xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
+    #
+    # # 步骤2：转换为测试用例格式
+    # testcase_data = converter.convert_to_testcase_format(xmind_data)
+    #
+    # # 步骤3：保存
+    # converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+    #
 
 
 

@@ -361,19 +361,430 @@ class interfaceAITestCaseMd:
 
 
 
+class interfaceAIAnyFlieToXlsx:
+    """
+    导入文案一键生成测试用例xlsx
+    
+    完整流程：
+    1. 读取用户输入的文案（支持文本或文件）
+    2. 调用AI生成测试点JSON
+    3. 将测试点JSON转换为测试转化数据格式
+    4. 调用AI生成测试用例JSON
+    5. 将测试用例JSON转换为XMind格式
+    6. 将XMind转换为测试用例JSON格式
+    7. 最终导出为Excel文件
+    """
+    
+    def __init__(self):
+        """
+        初始化接口集成类
+        """
+        self.deepseek_api = DeepSeekAPI()
+        self.test_point_converter = TestcasePointJsonToXmind()
+        self.test_point_to_ai = TestPointToAIJson()
+        self.testcase_converter = TestcaseJsonToXmind()
+        self.xmind_to_json = TestcaseXmindToAIJson()
+        self.json_to_xlsx = AIJsonToXlsx()
+        self.file_processor = fileProcessor()
+    
+    def generate_testcase_xlsx_from_text(self, user_input, output_dir=None, 
+                                        test_point_file=None, 
+                                        testcase_file=None,
+                                        xmind_file=None,
+                                        xlsx_file=None):
+        """
+        从用户输入文本一键生成测试用例xlsx
+        
+        Args:
+            user_input: 用户输入的需求描述文本
+            output_dir: 输出目录，默认为 D:\AIGeneration\testcase
+            test_point_file: 测试点JSON文件路径（可选）
+            testcase_file: 测试用例JSON文件路径（可选）
+            xmind_file: XMind文件路径（可选）
+            xlsx_file: Excel文件路径（可选）
+            
+        Returns:
+            bool: 是否成功生成
+        """
+        try:
+            # 设置默认输出目录
+            if output_dir is None:
+                output_dir = r"D:\AIGeneration\testcase"
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+            
+            # 步骤1: 调用AI生成测试点
+            logger.info("步骤1: 调用AI生成测试点...")
+            test_point_data = self._generate_test_points(user_input)
+            if not test_point_data:
+                logger.error("生成测试点失败")
+                return False
+            
+            # 保存测试点JSON
+            if test_point_file is None:
+                test_point_file = os.path.join(output_dir, "测试点.json")
+            self.file_processor.write_file(test_point_file, test_point_data, "json")
+            logger.info(f"✓ 测试点已保存到: {test_point_file}")
+            
+            # 步骤2: 将测试点转换为测试转化数据格式
+            logger.info("步骤2: 转换测试点为测试转化数据格式...")
+            converted_data = self._convert_testpoint_to_ai_format(test_point_file)
+            if not converted_data:
+                logger.error("转换测试点格式失败")
+                return False
+            
+            # 步骤3: 调用AI生成测试用例
+            logger.info("步骤3: 调用AI生成测试用例...")
+            testcase_data = self._generate_testcases(converted_data)
+            if not testcase_data:
+                logger.error("生成测试用例失败")
+                return False
+            
+            # 保存测试用例JSON
+            if testcase_file is None:
+                testcase_file = os.path.join(output_dir, "测试用例_output.json")
+            self.file_processor.write_file(testcase_file, testcase_data, "json")
+            logger.info(f"✓ 测试用例已保存到: {testcase_file}")
+            
+            # 步骤4: 将测试用例JSON转换为XMind
+            logger.info("步骤4: 转换测试用例为XMind格式...")
+            if xmind_file is None:
+                xmind_file = os.path.join(output_dir, "测试用例.xmind")
+            success = self._convert_testcase_to_xmind(testcase_data, xmind_file)
+            if not success:
+                self.logger.error("转换XMind失败")
+                return False
+            logger.info(f"✓ XMind文件已生成: {xmind_file}")
+            
+            # 步骤5: 将XMind转换为测试用例JSON格式
+            logger.info("步骤5: 转换XMind为测试用例JSON格式...")
+            final_testcase_data = self._convert_xmind_to_testcase_json(xmind_file)
+            if not final_testcase_data:
+                self.logger.error("转换测试用例JSON格式失败")
+                return False
+            
+            # 步骤6: 导出为Excel
+            logger.info("步骤6: 导出为Excel文件...")
+            if xlsx_file is None:
+                xlsx_file = os.path.join(output_dir, "测试用例.xlsx")
+            success = self._export_to_xlsx(final_testcase_data, xlsx_file)
+            if not success:
+                self.logger.error("导出Excel失败")
+                return False
+            
+            logger.info(f"✓ 测试用例Excel已生成: {xlsx_file}")
+            print(f"\n✓ 完成！测试用例Excel文件已生成: {xlsx_file}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"✗ 生成测试用例Excel失败: {str(e)}", exc_info=True)
+            print(f"✗ 生成失败: {str(e)}")
+            return False
+    
+    def _generate_test_points(self, user_input):
+        """
+        调用AI生成测试点
+        
+        Args:
+            user_input: 用户输入的需求描述
+            
+        Returns:
+            dict: 测试点数据字典
+        """
+        try:
+            ds_res = self.deepseek_api.get_test_point_answer(user_input)
+            
+            # 解析AI返回的JSON
+            if isinstance(ds_res, str):
+                try:
+                    test_data = json.loads(ds_res)
+                except json.JSONDecodeError:
+                    self.logger.error(f"AI返回的内容不是有效的JSON格式: {ds_res[:100]}...")
+                    return None
+            else:
+                test_data = ds_res
+            
+            logger.info(f"✓ 成功生成测试点，包含 {len(test_data)} 个产品/模块")
+            return test_data
+            
+        except Exception as e:
+            logger.error(f"生成测试点时发生错误: {str(e)}", exc_info=True)
+            return None
+    
+    def _convert_testpoint_to_ai_format(self, test_point_file):
+        """
+        将测试点JSON转换为AI友好的格式
+        
+        Args:
+            test_point_file: 测试点JSON文件路径
+            
+        Returns:
+            str: AI友好的JSON字符串
+        """
+        try:
+            # 使用TestPointToAIJson转换器
+            converter = TestPointToAIJson()
+            
+            # 转换并获取数据（不保存到文件）
+            output_file = test_point_file.replace('.json', '_converted.json')
+            converted_data = converter.convert_and_save(
+                input_file=test_point_file,
+                output_file=output_file,
+                extract=False  # 不保存，直接返回数据
+            )
+            
+            if not converted_data:
+                self.logger.error("转换测试点数据失败")
+                return None
+            
+            # 转换为AI友好的紧凑格式
+            ai_string = json.dumps(
+                converted_data,
+                ensure_ascii=False,
+                separators=(',', ':'),
+                sort_keys=False
+            )
+            
+            logger.info(f"✓ 测试点转换完成，长度: {len(ai_string)} 字符")
+            return ai_string
+            
+        except Exception as e:
+            logger.error(f"转换测试点格式时发生错误: {str(e)}", exc_info=True)
+            return None
+    
+    def _generate_testcases(self, test_point_data):
+        """
+        调用AI生成测试用例
+        
+        Args:
+            test_point_data: 测试点数据（字符串或字典）
+            
+        Returns:
+            dict: 测试用例数据字典
+        """
+        try:
+            # 如果传入的是字典，转换为字符串
+            if isinstance(test_point_data, dict):
+                test_point_str = json.dumps(test_point_data, ensure_ascii=False)
+            else:
+                test_point_str = test_point_data
+            
+            # 调用AI生成测试用例
+            ds_res = self.deepseek_api.get_testcase_answer(test_point_str)
+            if not ds_res:
+                logger.error("AI未返回数据")
+                return None
+            
+            logger.info(f"✓ AI返回测试用例数据，长度: {len(ds_res)} 字符")
+            
+            # 清理和解析AI返回的数据
+            cleaned_data = self._clean_ai_json_response(ds_res)
+            if not cleaned_data:
+                logger.error("无法解析AI返回的JSON数据")
+                return None
+            
+            logger.info(f"✓ JSON数据解析成功，类型: {type(cleaned_data).__name__}")
+            return cleaned_data
+            
+        except Exception as e:
+            logger.error(f"生成测试用例时发生错误: {str(e)}", exc_info=True)
+            return None
+    
+    def _clean_ai_json_response(self, ai_response):
+        """
+        清理和解析AI返回的JSON数据
+        
+        Args:
+            ai_response: AI返回的原始字符串
+            
+        Returns:
+            dict or list: 解析后的JSON对象
+        """
+        if not ai_response or not isinstance(ai_response, str):
+            logger.warning("AI返回数据为空或不是字符串")
+            return None
+        
+        ai_response = ai_response.strip()
+        
+        # 方法1：尝试直接解析
+        try:
+            data = json.loads(ai_response)
+            return data
+        except json.JSONDecodeError:
+            pass
+        
+        # 方法2：提取代码块
+        import re
+        patterns = [
+            r'```json\s*([\s\S]*?)\s*```',
+            r'```\s*([\s\S]*?)\s*```',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, ai_response, re.DOTALL)
+            if match:
+                json_str = match.group(1).strip()
+                try:
+                    data = json.loads(json_str)
+                    return data
+                except json.JSONDecodeError:
+                    continue
+        
+        # 方法3：查找JSON对象边界
+        start_idx = ai_response.find('{')
+        end_idx = ai_response.rfind('}')
+        
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx+1]
+            try:
+                data = json.loads(json_str)
+                return data
+            except json.JSONDecodeError:
+                pass
+        
+        # 方法4：查找JSON数组边界
+        start_idx = ai_response.find('[')
+        end_idx = ai_response.rfind(']')
+        
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx+1]
+            try:
+                data = json.loads(json_str)
+                return data
+            except json.JSONDecodeError:
+                pass
+        
+        logger.error("无法从AI响应中提取有效的JSON数据")
+        return None
+    
+    def _convert_testcase_to_xmind(self, testcase_data, xmind_file):
+        """
+        将测试用例JSON转换为XMind文件
+        
+        Args:
+            testcase_data: 测试用例数据字典
+            xmind_file: 输出的XMind文件路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            converter = TestcaseJsonToXmind()
+            success = converter.convert_and_export_to_xmind(
+                input_data=testcase_data,
+                output_xmind_file=xmind_file,
+                root_title="测试用例",
+                sheet_title="功能测试用例"
+            )
+            return success
+            
+        except Exception as e:
+            self.logger.error(f"转换XMind时发生错误: {str(e)}", exc_info=True)
+            return False
+    
+    def _convert_xmind_to_testcase_json(self, xmind_file):
+        """
+        将XMind文件转换为测试用例JSON格式
+        
+        Args:
+            xmind_file: XMind文件路径
+            
+        Returns:
+            dict: 测试用例数据字典
+        """
+        try:
+            # 首先将XMind转换为JSON
+            processor = MxindDataProcessor()
+            temp_json_file = xmind_file.replace('.xmind', '.json')
+            processor.xmind_file = xmind_file
+            xmind_json = processor.xmind_to_json()
+            
+            if not xmind_json:
+                self.logger.error("读取XMind数据失败")
+                return None
+            
+            # 转换为测试用例格式
+            converter = TestcaseXmindToAIJson()
+            testcase_data = converter.convert_to_testcase_format(xmind_json)
+            
+            if not testcase_data or '测试用例' not in testcase_data:
+                logger.error("转换测试用例格式失败")
+                return None
+            
+            logger.info(f"✓ 成功转换 {len(testcase_data.get('测试用例', []))} 条测试用例")
+            return testcase_data
+            
+        except Exception as e:
+            logger.error(f"转换XMind为JSON时发生错误: {str(e)}", exc_info=True)
+            return None
+    
+    def _export_to_xlsx(self, testcase_data, xlsx_file):
+        """
+        将测试用例数据导出为Excel文件
+        
+        Args:
+            testcase_data: 测试用例数据字典
+            xlsx_file: 输出的Excel文件路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 临时保存测试用例JSON
+            temp_json_file = xlsx_file.replace('.xlsx', '.json')
+            self.file_processor.write_file(temp_json_file, testcase_data, "json")
+            
+            # 使用AIJsonToXlsx导出
+            exporter = AIJsonToXlsx()
+            exporter.file_path = temp_json_file
+            exporter.output_file = xlsx_file
+            
+            # 过滤数据
+            test_cases = exporter.filter_data()
+            if not test_cases:
+                self.logger.error("没有可导出的测试用例数据")
+                return False
+            
+            logger.info(f"共找到 {len(test_cases)} 条测试用例")
+            
+            # 写入Excel
+            success = exporter.write_data(test_cases)
+            
+            # 清理临时文件
+            if os.path.exists(temp_json_file):
+                os.remove(temp_json_file)
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"导出Excel时发生错误: {str(e)}", exc_info=True)
+            return False
+
+
+
+class interfaceAITestCaseXlsxOneKey:
+    """
+    导入测试点xmind一键生成测试用例xlsx
+    """
+
+
+
+
 if __name__ == '__main__':
-    #测试点
-    interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
-                                          output_path=r"D:\AIGeneration\testcase\output.xmind",
-                                          storage_json=r"D:\AIGeneration\testcase\测试点.json")
+    # #测试点
+    # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
+    #                                       output_path=r"D:\AIGeneration\testcase\output.xmind",
+    #                                       storage_json=r"D:\AIGeneration\testcase\测试点.json")
      #测试用例
-     # interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\测试点.json',
-     #                                    output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-     #                                    extract=False,
-     #                                    storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
-     #                                    )
-     # time.sleep(5)
-     # interfaceAITestCaseXmind().get_testcase_xmind()
+     interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
+                                        output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
+                                        extract=False,
+                                        storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
+                                        )
+     time.sleep(5)
+     interfaceAITestCaseXmind().get_testcase_xmind()
 
      #测试用例xlsx
      # interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
@@ -383,4 +794,18 @@ if __name__ == '__main__':
      #                                          )
      #测试用例md
 
+    # 简单用法 - 使用默认路径
+    # converter = interfaceAIAnyFlieToXlsx()
+    # success = converter.generate_testcase_xlsx_from_text(
+    #     user_input="电商下单界面功能，包括商品选择、地址管理、优惠券、订单提交等模块"
+    # )
 
+    # 高级用法 - 自定义所有路径
+    # success = converter.generate_testcase_xlsx_from_text(
+    #     user_input="用户登录注册功能",
+    #     output_dir=r"D:\MyProject\testcases",
+    #     test_point_file=r"D:\MyProject\testpoints.json",
+    #     testcase_file=r"D:\MyProject\testcases.json",
+    #     xmind_file=r"D:\MyProject\testcases.xmind",
+    #     xlsx_file=r"D:\MyProject\final_testcases.xlsx"
+    # )
