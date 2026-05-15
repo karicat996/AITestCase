@@ -1099,14 +1099,30 @@ class TestcaseJsonToXmind:
             root_topic: XMind根主题对象
             test_cases: 测试用例列表
         """
-        # 按模块分组
+        # 按模块分组 - 兼容多种字段名
         modules_dict = {}
-        for testcase in test_cases:
-            if isinstance(testcase, dict):
-                module_name = testcase.get('测试模块', '未分类模块')
+        for item in test_cases:
+            if isinstance(item, dict):
+                # 兼容多种字段名："模块"、"测试模块"、"module"
+                module_name = item.get('模块') or item.get('测试模块') or item.get('module', '未分类模块')
+                
+                # 获取用例列表 - 兼容多种字段名
+                cases_list = item.get('用例') or item.get('testcases') or []
+                
+                if not cases_list:
+                    logger.warning(f"模块 '{module_name}' 下没有找到用例列表")
+                    continue
+                
                 if module_name not in modules_dict:
                     modules_dict[module_name] = []
-                modules_dict[module_name].append(testcase)
+                
+                # 将该模块下的所有用例添加到列表
+                for case in cases_list:
+                    if isinstance(case, dict):
+                        # 将模块名称注入到每个用例中，方便后续使用
+                        case_copy = case.copy()
+                        case_copy['测试模块'] = module_name
+                        modules_dict[module_name].append(case_copy)
 
         # 为每个模块创建节点
         for module_name, cases in modules_dict.items():
@@ -2109,9 +2125,9 @@ if __name__ == '__main__':
     # )
     #
     # print(f"转换成功！输出文件: {output_path}")
-
-    converter = XmindPointJson(xmind_file=r"C:/Users/admin/Desktop/demo.xmind")
-    result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
+    #
+    # converter = XmindPointJson(xmind_file=r"C:/Users/admin/Desktop/demo.xmind")
+    # result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
 
 
 
@@ -2195,24 +2211,24 @@ if __name__ == '__main__':
 
 
     # 测试用例JSON转XMind示例
-    # print("\n=== 测试用例JSON转XMind ===")
-    # testcase_converter = TestcaseJsonToXmind()
-    #
-    # # 读取测试用例JSON文件
-    # testcase_json_path = r"D:\AIGeneration\testcase\测试用例.json"
-    # get_json = fileProcessor()
-    # testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
-    #
-    # # 转换并导出
-    # output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
-    # success = testcase_converter.convert_and_export_to_xmind(
-    #     input_data=testcase_data,
-    #     output_xmind_file=output_xmind,
-    #     root_title="测试用例",
-    #     sheet_title="功能测试用例"
-    # )
-    #
-    # if success:
-    #     print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
-    # else:
-    #     print("✗ 转换失败")
+    print("\n=== 测试用例JSON转XMind ===")
+    testcase_converter = TestcaseJsonToXmind()
+
+    # 读取测试用例JSON文件
+    testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
+    get_json = fileProcessor()
+    testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
+
+    # 转换并导出
+    output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+    success = testcase_converter.convert_and_export_to_xmind(
+        input_data=testcase_data,
+        output_xmind_file=output_xmind,
+        root_title="测试用例",
+        sheet_title="功能测试用例"
+    )
+
+    if success:
+        print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
+    else:
+        print("✗ 转换失败")

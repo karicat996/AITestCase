@@ -228,6 +228,11 @@ class interfaceAITestCaseXmind:
                     return data
                 except json.JSONDecodeError as e:
                     logger.warning(f"提取的JSON解析失败: {str(e)}")
+                    # 尝试修复后再解析
+                    fixed_data = self._try_fix_json(json_str)
+                    if fixed_data is not None:
+                        logger.debug("修复后解析成功")
+                        return fixed_data
                     continue
         
         # 方法3：尝试找到第一个 { 和最后一个 }
@@ -245,6 +250,11 @@ class interfaceAITestCaseXmind:
                 return data
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON对象解析失败: {str(e)}")
+                # 尝试修复后再解析
+                fixed_data = self._try_fix_json(json_str)
+                if fixed_data is not None:
+                    logger.debug("修复后解析成功")
+                    return fixed_data
         
         # 方法4：尝试找到第一个 [ 和最后一个 ]（数组格式）
         logger.debug("尝试查找JSON数组边界")
@@ -261,11 +271,102 @@ class interfaceAITestCaseXmind:
                 return data
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON数组解析失败: {str(e)}")
+                # 尝试修复后再解析
+                fixed_data = self._try_fix_json(json_str)
+                if fixed_data is not None:
+                    logger.debug("修复后解析成功")
+                    return fixed_data
         
         # 所有方法都失败
         logger.error("无法从AI响应中提取有效的JSON数据")
         logger.debug(f"AI响应前200字符: {ai_response[:200]}")
+        logger.debug(f"AI响应后200字符: {ai_response[-200:]}")
         return None
+    
+    def _try_fix_json(self, json_str: str):
+        """
+        尝试修复常见的JSON格式错误
+        
+        Args:
+            json_str: 可能有错误的JSON字符串
+        Returns:
+            dict or list or None: 修复并解析后的对象，失败返回None
+        """
+        import re
+        
+        if not json_str or not isinstance(json_str, str):
+            return None
+        
+        original = json_str
+        fixes_applied = []
+        
+        try:
+            # 尝试1: 移除尾部逗号 (在 } 或 ] 之前的逗号)
+            json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+            if json_str != original:
+                fixes_applied.append("移除尾部逗号")
+            
+            try:
+                data = json.loads(json_str)
+                logger.debug(f"修复成功 ({', '.join(fixes_applied)})")
+                return data
+            except json.JSONDecodeError:
+                pass
+            
+            # 尝试2: 补全缺失的逗号 (在 } 或 ] 之后，" 或 { 或 [ 之前)
+            json_str_fixed = re.sub(r'([}\]])\s*(?=["\{\[])', r'\1,', json_str)
+            if json_str_fixed != json_str:
+                fixes_applied.append("补全缺失逗号")
+                try:
+                    data = json.loads(json_str_fixed)
+                    logger.debug(f"修复成功 ({', '.join(fixes_applied)})")
+                    return data
+                except json.JSONDecodeError:
+                    pass
+            
+            # 尝试3: 处理未闭合的字符串 - 查找可能被截断的位置
+            # 如果JSON被截断，尝试找到最后一个完整的元素
+            if json_str.rstrip().endswith(','):
+                json_str = json_str.rstrip(',')
+                fixes_applied.append("移除末尾逗号")
+                try:
+                    data = json.loads(json_str + '}' if '{' in original else json_str + ']')
+                    logger.debug(f"修复成功 ({', '.join(fixes_applied)})")
+                    return data
+                except json.JSONDecodeError:
+                    pass
+            
+            # 尝试4: 如果是对象但被截断，尝试补全
+            if original.strip().startswith('{') and not original.strip().endswith('}'):
+                # 找到最后一个完整的键值对
+                last_brace = original.rfind('}')
+                if last_brace > 0:
+                    truncated = original[:last_brace+1]
+                    try:
+                        data = json.loads(truncated)
+                        logger.debug("使用截断的部分JSON解析成功")
+                        return data
+                    except json.JSONDecodeError:
+                        pass
+            
+            # 尝试5: 如果是数组但被截断
+            if original.strip().startswith('[') and not original.strip().endswith(']'):
+                last_bracket = original.rfind(']')
+                if last_bracket > 0:
+                    truncated = original[:last_bracket+1]
+                    try:
+                        data = json.loads(truncated)
+                        logger.debug("使用截断的部分JSON解析成功")
+                        return data
+                    except json.JSONDecodeError:
+                        pass
+            
+            logger.debug(f"所有修复尝试均失败 (已尝试: {', '.join(fixes_applied) if fixes_applied else '无'})")
+            return None
+            
+        except Exception as e:
+            logger.debug(f"修复JSON时出错: {str(e)}")
+            return None
 
     def get_testcase_xmind(self):
         print("\n=== 测试用例JSON转化成xmind")
@@ -397,7 +498,7 @@ class interfaceAIAnyFlieToXlsx:
         
         Args:
             user_input: 用户输入的需求描述文本
-            output_dir: 输出目录，默认为 D:\AIGeneration\testcase
+            output_dir: 输出目录,默认为 D:\\AIGeneration\\testcase
             test_point_file: 测试点JSON文件路径（可选）
             testcase_file: 测试用例JSON文件路径（可选）
             xmind_file: XMind文件路径（可选）
@@ -764,10 +865,12 @@ class interfaceAIAnyFlieToXlsx:
 
 
 
-class interfaceAITestCaseXlsxOneKey:
-    """
-    导入测试点xmind一键生成测试用例xlsx
-    """
+# class interfaceAITestCaseXlsxOneKey:
+#     """
+#     导入测试点xmind一键生成测试用例xlsx
+#     """
+
+
 
 
 
@@ -777,10 +880,10 @@ if __name__ == '__main__':
     # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
     #                                       output_path=r"D:\AIGeneration\testcase\output.xmind",
     #                                       storage_json=r"D:\AIGeneration\testcase\测试点.json")
-     #测试用例
+    #  #测试用例
      interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
                                         output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-                                        extract=False,
+                                        extract=True,
                                         storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
                                         )
      time.sleep(5)
