@@ -8,11 +8,13 @@ import json
 from utils.logs import LogManager
 from loguru import logger
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
+
+
 class interfaceAITestPoint:
     """
-    ai生成测试点接口
-    支持手动输入内容
-    导出为测试点json
+        ai生成测试点接口
+        支持手动输入内容
+        导出为测试点json
     """
     def __init__(self):
         self.DS = DeepSeekAPI()
@@ -45,16 +47,10 @@ class interfaceAITestPoint:
             sheet_title="功能测试用例"
         )
 
-
-
 class interfaceAITestInput:
     """
     ai生成测试点接口
-    支持手动输入内容
     导出为测试点xmind
-    默认模板
-    要支持自定义模板
-
     """
     def __init__(self):
         self.converter = TestPointToAIJson()
@@ -391,7 +387,7 @@ class interfaceAITestCaseXmind:
 
 class interfaceAITestCaseXlsx:
     """
-    导出为测试用例xlsx
+    Xmind导出为测试用例xlsx
     """
     def __init__(self):
         self.dc = MxindDataProcessor()
@@ -418,19 +414,9 @@ class interfaceAITestCaseXlsx:
             logger.info("转换成功！")
 
 
-"""
-测试用例xmind导出为xlsx
-支持手动上传xmind文件
-导出为测试用例xlsx
-
-默认模板
-要支持自定义模板
-
-"""
-
 class interfaceAITestCaseMd:
     """
-    导出为测试用例md
+    Xmind导出为测试用例md
     """
     def __init__(self):
         self.dc = MxindDataProcessor()
@@ -461,20 +447,9 @@ class interfaceAITestCaseMd:
             logger.error(f"处理失败: {str(e)}")
 
 
-
-
 class interfaceAIAnyFlieToXlsx:
     """
     导入文案一键生成测试用例xlsx
-    
-    完整流程：
-    1. 读取用户输入的文案（支持文本或文件）
-    2. 调用AI生成测试点JSON
-    3. 将测试点JSON转换为测试转化数据格式
-    4. 调用AI生成测试用例JSON
-    5. 将测试用例JSON转换为XMind格式
-    6. 将XMind转换为测试用例JSON格式
-    7. 最终导出为Excel文件
     """
     
     def __init__(self):
@@ -868,12 +843,6 @@ class interfaceAIAnyFlieToXlsx:
 class TestPointXmindToTestcaseXlsx:
     """
     导入测试点XMind文件，一键生成测试用例XLSX文件
-
-    流程：
-    1. 读取测试点XMind文件并转换为JSON
-    2. 将测试点数据转换为AI可理解的格式
-    3. 调用AI生成测试用例
-    4. 将AI返回的测试用例JSON转换为XLSX
     """
 
 
@@ -1239,11 +1208,652 @@ class TestPointXmindToTestcaseXlsx:
             return False
 
 
+
+class interfaceTestPointToTestCaseXmind:
+    """
+    从测试点XMind一键生成测试用例XMind
+    
+    流程：
+    1. AI生成测试点并保存为XMind和JSON
+    2. XMind转JSON格式
+    3. AI生成测试用例
+    4. 测试用例转XMind
+    """
+    
+    def __init__(self):
+        """
+        初始化转换器
+        """
+        self.test_point_interface = interfaceAITestPoint()
+        self.xmind_converter = XmindPointJson()
+        self.testcase_interface = interfaceAITestCaseXmind()
+        self.file_processor = fileProcessor()
+        logger.info("interfacePointToTestCaseXmind初始化完成")
+    
+    def generate_testcase_from_point(
+        self,
+        user_input: str,
+        output_dir: str = None,
+        xmind_output: str = None,
+        test_point_json: str = None,
+        xmind_json_output: str = None,
+        testcase_json_output: str = None,
+        testcase_xmind_output: str = None,
+        storage_test_points: bool = True,
+        extract_ai_format: bool = True,
+        sleep_time: int = 5
+    ) -> bool:
+        """
+        公开方法：从用户输入一键生成测试用例XMind
+        
+        Args:
+            user_input: 用户输入的需求描述（必填）
+            output_dir: 输出目录（可选，默认 D:\\AIGeneration\\testcase）
+            xmind_output: 测试点XMind输出路径（可选）
+            test_point_json: 测试点JSON保存路径（可选）
+            xmind_json_output: XMind转JSON输出路径（可选）
+            testcase_json_output: 测试用例JSON输出路径（可选）
+            testcase_xmind_output: 测试用例XMind输出路径（可选）
+            storage_test_points: 是否保存测试点到JSON文件（默认True）
+            extract_ai_format: 是否提取为AI友好格式（默认True）
+            sleep_time: AI调用间隔时间（秒，默认5秒）
+            
+        Returns:
+            bool: 转换是否成功
+            
+        Raises:
+            ValueError: 当参数无效时抛出
+            Exception: 其他异常
+        """
+        # 入参校验
+        if not user_input or not isinstance(user_input, str):
+            logger.error("user_input参数不能为空且必须为字符串类型")
+            raise ValueError("user_input参数不能为空且必须为字符串类型")
+        
+        if len(user_input.strip()) < 5:
+            logger.error("user_input参数内容过短，至少需要5个字符")
+            raise ValueError("user_input参数内容过短，至少需要5个字符")
+        
+        try:
+            logger.info(f"{'='*60}")
+            logger.info(f"开始执行测试点到测试用例的转换流程")
+            logger.info(f"用户输入: {user_input[:50]}...")
+            logger.info(f"{'='*60}")
+            
+            # 设置默认输出目录
+            if not output_dir:
+                output_dir = r"D:\AIGeneration\testcase"
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+            
+            # 设置默认文件路径
+            if not xmind_output:
+                xmind_output = os.path.join(output_dir, "output.xmind")
+            if not test_point_json:
+                test_point_json = os.path.join(output_dir, "测试点.json")
+            if not xmind_json_output:
+                xmind_json_output = os.path.join(output_dir, "output.json")
+            if not testcase_json_output:
+                testcase_json_output = os.path.join(output_dir, "测试用例_output.json")
+            if not testcase_xmind_output:
+                testcase_xmind_output = os.path.join(output_dir, "测试用例.xmind")
+            
+            # 步骤1: AI生成测试点
+            logger.info(f"\n步骤1/4: AI生成测试点...")
+            success = self._step1_generate_test_points(
+                user_input=user_input,
+                output_path=xmind_output,
+                storage_json=test_point_json,
+                storage_test_points=storage_test_points
+            )
+            if not success:
+                logger.error("步骤1失败：AI生成测试点失败")
+                return False
+            
+            # 步骤2: XMind转JSON
+            logger.info(f"\n步骤2/4: 将测试点XMind转换为JSON...")
+            test_point_data = self._step2_xmind_to_json(
+                xmind_file=xmind_output,
+                output_json=xmind_json_output
+            )
+            if not test_point_data:
+                logger.error("步骤2失败：XMind转JSON失败")
+                return False
+            
+            # 步骤3: AI生成测试用例
+            logger.info(f"\n步骤3/4: AI生成测试用例（可能需要几分钟）...")
+            success = self._step3_generate_testcases(
+                input_file=xmind_json_output,
+                output_path=testcase_json_output,
+                extract=extract_ai_format,
+                storage_file_path=testcase_json_output
+            )
+            if not success:
+                logger.error("步骤3失败：AI生成测试用例失败")
+                return False
+            
+            # 等待AI响应稳定
+            if sleep_time > 0:
+                logger.info(f"等待 {sleep_time} 秒...")
+                time.sleep(sleep_time)
+            
+            # 步骤4: 测试用例转XMind
+            logger.info(f"\n步骤4/4: 将测试用例JSON转换为XMind...")
+            success = self._step4_testcase_to_xmind(
+                testcase_json=testcase_json_output,
+                output_xmind=testcase_xmind_output
+            )
+            if not success:
+                logger.error("步骤4失败：测试用例转XMind失败")
+                return False
+            
+            logger.info(f"\n{'='*60}")
+            logger.info(f"✓ 转换完成！")
+            logger.info(f"测试点XMind: {xmind_output}")
+            logger.info(f"测试用例XMind: {testcase_xmind_output}")
+            logger.info(f"{'='*60}")
+            print(f"\n✓ 测试用例XMind文件已成功生成: {testcase_xmind_output}")
+            return True
+            
+        except ValueError as e:
+            logger.error(f"参数错误: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"转换过程中发生错误: {str(e)}", exc_info=True)
+            raise
+    
+    def _step1_generate_test_points(
+        self,
+        user_input: str,
+        output_path: str,
+        storage_json: str,
+        storage_test_points: bool
+    ) -> bool:
+        """
+        私有方法：步骤1 - 调用AI生成测试点并保存
+        
+        Args:
+            user_input: 用户输入
+            output_path: XMind输出路径
+            storage_json: JSON保存路径
+            storage_test_points: 是否保存JSON
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            self.test_point_interface.get_test_point(
+                user_input=user_input,
+                output_path=output_path,
+                storage_json=storage_json,
+                Storage_test_points=storage_test_points
+            )
+            
+            # 验证文件是否生成
+            if not os.path.exists(output_path):
+                logger.error(f"测试点XMind文件未生成: {output_path}")
+                return False
+            
+            logger.info(f"✓ 测试点XMind已生成: {output_path}")
+            if storage_test_points and os.path.exists(storage_json):
+                logger.info(f"✓ 测试点JSON已保存: {storage_json}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"生成测试点失败: {str(e)}", exc_info=True)
+            return False
+    
+    def _step2_xmind_to_json(
+        self,
+        xmind_file: str,
+        output_json: str
+    ) -> dict:
+        """
+        私有方法：步骤2 - 将XMind文件转换为JSON格式
+        
+        Args:
+            xmind_file: XMind文件路径
+            output_json: JSON输出路径
+            
+        Returns:
+            dict: 转换后的JSON数据，失败返回空字典
+        """
+        try:
+            # 验证XMind文件存在
+            if not os.path.exists(xmind_file):
+                logger.error(f"XMind文件不存在: {xmind_file}")
+                return {}
+            
+            # 创建转换器并执行转换
+            converter = XmindPointJson(xmind_file=xmind_file)
+            result = converter.process_and_save(output_file=output_json)
+            
+            if not result:
+                logger.error("XMind转JSON返回空结果")
+                return {}
+            
+            logger.info(f"✓ XMind转JSON成功: {output_json}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"XMind转JSON失败: {str(e)}", exc_info=True)
+            return {}
+    
+    def _step3_generate_testcases(
+        self,
+        input_file: str,
+        output_path: str,
+        extract: bool,
+        storage_file_path: str
+    ) -> bool:
+        """
+        私有方法：步骤3 - 调用AI生成测试用例
+        
+        Args:
+            input_file: 输入文件路径（测试点JSON）
+            output_path: 输出路径
+            extract: 是否提取为AI友好格式
+            storage_file_path: 存储文件路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 验证输入文件存在
+            if not os.path.exists(input_file):
+                logger.error(f"输入文件不存在: {input_file}")
+                return False
+            
+            success = self.testcase_interface.get_ai_testcase_write_json(
+                user_input=input_file,
+                output_path=output_path,
+                extract=extract,
+                storage_file_path=storage_file_path
+            )
+            
+            if not success:
+                logger.error("AI生成测试用例返回失败")
+                return False
+            
+            # 验证输出文件是否生成
+            if not os.path.exists(storage_file_path):
+                logger.error(f"测试用例JSON文件未生成: {storage_file_path}")
+                return False
+            
+            logger.info(f"✓ 测试用例JSON已生成: {storage_file_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"生成测试用例失败: {str(e)}", exc_info=True)
+            return False
+    
+    def _step4_testcase_to_xmind(
+        self,
+        testcase_json: str,
+        output_xmind: str
+    ) -> bool:
+        """
+        私有方法：步骤4 - 将测试用例JSON转换为XMind
+        
+        Args:
+            testcase_json: 测试用例JSON文件路径
+            output_xmind: XMind输出路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 验证JSON文件存在
+            if not os.path.exists(testcase_json):
+                logger.error(f"测试用例JSON文件不存在: {testcase_json}")
+                return False
+            
+            # 读取JSON数据
+            testcase_data = self.file_processor.find_and_read_file(testcase_json, type="json")
+            if not testcase_data:
+                logger.error("读取测试用例JSON数据失败")
+                return False
+            
+            # 转换并导出
+            success = self.testcase_interface.converter.convert_and_export_to_xmind(
+                input_data=testcase_data,
+                output_xmind_file=output_xmind,
+                root_title="测试用例",
+                sheet_title="功能测试用例"
+            )
+            
+            if not success:
+                logger.error("转换XMind失败")
+                return False
+            
+            # 验证XMind文件是否生成
+            if not os.path.exists(output_xmind):
+                logger.error(f"测试用例XMind文件未生成: {output_xmind}")
+                return False
+            
+            logger.info(f"✓ 测试用例XMind已生成: {output_xmind}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"测试用例转XMind失败: {str(e)}", exc_info=True)
+            return False
+
+
+
+
+class interfaceTestPointToAITestCaseXmind:
+    """
+    从测试点XMind文件一键生成测试用例XMind
+    
+    流程：
+    1. XMind转JSON格式
+    2. AI生成测试用例
+    3. 测试用例转XMind
+    """
+    
+    def __init__(self):
+        """
+        初始化转换器
+        """
+        self.xmind_converter = XmindPointJson()
+        self.testcase_interface = interfaceAITestCaseXmind()
+        self.file_processor = fileProcessor()
+        logger.info("interfaceTestPointToAITestCaseXmind初始化完成")
+    
+    def convert_testpoint_to_testcase_xmind(
+        self,
+        xmind_file: str,
+        output_dir: str = None,
+        xmind_json_output: str = None,
+        testcase_json_output: str = None,
+        testcase_xmind_output: str = None,
+        extract_ai_format: bool = True,
+        sleep_time: int = 5
+    ) -> bool:
+        """
+        公开方法：从测试点XMind文件一键生成测试用例XMind
+        
+        Args:
+            xmind_file: 输入的测试点XMind文件路径（必填）
+            output_dir: 输出目录（可选，默认与xmind_file同目录）
+            xmind_json_output: XMind转JSON输出路径（可选）
+            testcase_json_output: 测试用例JSON输出路径（可选）
+            testcase_xmind_output: 测试用例XMind输出路径（可选）
+            extract_ai_format: 是否提取为AI友好格式（默认True）
+            sleep_time: AI调用间隔时间（秒，默认5秒）
+            
+        Returns:
+            bool: 转换是否成功
+            
+        Raises:
+            ValueError: 当参数无效时抛出
+            FileNotFoundError: 当文件不存在时抛出
+            Exception: 其他异常
+        """
+        # 入参校验
+        if not xmind_file or not isinstance(xmind_file, str):
+            logger.error("xmind_file参数不能为空且必须为字符串类型")
+            raise ValueError("xmind_file参数不能为空且必须为字符串类型")
+        
+        if not os.path.exists(xmind_file):
+            logger.error(f"XMind文件不存在: {xmind_file}")
+            raise FileNotFoundError(f"XMind文件不存在: {xmind_file}")
+        
+        # 验证文件扩展名
+        if not xmind_file.lower().endswith('.xmind'):
+            logger.warning(f"输入文件可能不是XMind格式: {xmind_file}")
+        
+        try:
+            logger.info(f"{'='*60}")
+            logger.info(f"开始执行测试点XMind到测试用例XMind的转换")
+            logger.info(f"输入文件: {xmind_file}")
+            logger.info(f"{'='*60}")
+            
+            # 设置默认输出目录
+            if not output_dir:
+                output_dir = os.path.dirname(xmind_file)
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+            
+            # 设置默认文件路径
+            base_name = os.path.splitext(os.path.basename(xmind_file))[0]
+            if not xmind_json_output:
+                xmind_json_output = os.path.join(output_dir, f"{base_name}.json")
+            if not testcase_json_output:
+                testcase_json_output = os.path.join(output_dir, "测试用例_output.json")
+            if not testcase_xmind_output:
+                testcase_xmind_output = os.path.join(output_dir, "测试用例.xmind")
+            
+            # 步骤1: XMind转JSON
+            logger.info(f"\n步骤1/3: 将测试点XMind转换为JSON...")
+            test_point_data = self._step1_xmind_to_json(
+                xmind_file=xmind_file,
+                output_json=xmind_json_output
+            )
+            if not test_point_data:
+                logger.error("步骤1失败：XMind转JSON失败")
+                return False
+            
+            # 步骤2: AI生成测试用例
+            logger.info(f"\n步骤2/3: AI生成测试用例（可能需要几分钟）...")
+            success = self._step2_generate_testcases(
+                input_file=xmind_json_output,
+                output_path=testcase_json_output,
+                extract=extract_ai_format,
+                storage_file_path=testcase_json_output
+            )
+            if not success:
+                logger.error("步骤2失败：AI生成测试用例失败")
+                return False
+            
+            # 等待AI响应稳定
+            if sleep_time > 0:
+                logger.info(f"等待 {sleep_time} 秒...")
+                time.sleep(sleep_time)
+            
+            # 步骤3: 测试用例转XMind
+            logger.info(f"\n步骤3/3: 将测试用例JSON转换为XMind...")
+            success = self._step3_testcase_to_xmind(
+                testcase_json=testcase_json_output,
+                output_xmind=testcase_xmind_output
+            )
+            if not success:
+                logger.error("步骤3失败：测试用例转XMind失败")
+                return False
+            
+            logger.info(f"\n{'='*60}")
+            logger.info(f"✓ 转换完成！")
+            logger.info(f"输入: {xmind_file}")
+            logger.info(f"输出: {testcase_xmind_output}")
+            logger.info(f"{'='*60}")
+            print(f"\n✓ 测试用例XMind文件已成功生成: {testcase_xmind_output}")
+            return True
+            
+        except (ValueError, FileNotFoundError) as e:
+            logger.error(f"参数或文件错误: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"转换过程中发生错误: {str(e)}", exc_info=True)
+            raise
+    
+    def _step1_xmind_to_json(
+        self,
+        xmind_file: str,
+        output_json: str
+    ) -> dict:
+        """
+        私有方法：步骤1 - 将XMind文件转换为JSON格式
+        
+        Args:
+            xmind_file: XMind文件路径
+            output_json: JSON输出路径
+            
+        Returns:
+            dict: 转换后的JSON数据，失败返回空字典
+        """
+        try:
+            # 验证XMind文件存在
+            if not os.path.exists(xmind_file):
+                logger.error(f"XMind文件不存在: {xmind_file}")
+                return {}
+            
+            # 创建转换器并执行转换
+            converter = XmindPointJson(xmind_file=xmind_file)
+            result = converter.process_and_save(output_file=output_json)
+            
+            if not result:
+                logger.error("XMind转JSON返回空结果")
+                return {}
+            
+            # 验证输出文件是否生成
+            if not os.path.exists(output_json):
+                logger.error(f"JSON文件未生成: {output_json}")
+                return {}
+            
+            logger.info(f"✓ XMind转JSON成功: {output_json}")
+            logger.info(f"  提取到 {len(result)} 个产品的测试点数据")
+            return result
+            
+        except Exception as e:
+            logger.error(f"XMind转JSON失败: {str(e)}", exc_info=True)
+            return {}
+    
+    def _step2_generate_testcases(
+        self,
+        input_file: str,
+        output_path: str,
+        extract: bool,
+        storage_file_path: str
+    ) -> bool:
+        """
+        私有方法：步骤2 - 调用AI生成测试用例
+        
+        Args:
+            input_file: 输入文件路径（测试点JSON）
+            output_path: 输出路径
+            extract: 是否提取为AI友好格式
+            storage_file_path: 存储文件路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 验证输入文件存在
+            if not os.path.exists(input_file):
+                logger.error(f"输入文件不存在: {input_file}")
+                return False
+            
+            success = self.testcase_interface.get_ai_testcase_write_json(
+                user_input=input_file,
+                output_path=output_path,
+                extract=extract,
+                storage_file_path=storage_file_path
+            )
+            
+            if not success:
+                logger.error("AI生成测试用例返回失败")
+                return False
+            
+            # 验证输出文件是否生成
+            if not os.path.exists(storage_file_path):
+                logger.error(f"测试用例JSON文件未生成: {storage_file_path}")
+                return False
+            
+            logger.info(f"✓ 测试用例JSON已生成: {storage_file_path}")
+            
+            # 读取并统计用例数量
+            testcase_data = self.file_processor.find_and_read_file(storage_file_path, type="json")
+            if testcase_data and isinstance(testcase_data, dict):
+                test_cases = testcase_data.get('测试用例', [])
+                logger.info(f"  共生成 {len(test_cases)} 条测试用例")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"生成测试用例失败: {str(e)}", exc_info=True)
+            return False
+    
+    def _step3_testcase_to_xmind(
+        self,
+        testcase_json: str,
+        output_xmind: str
+    ) -> bool:
+        """
+        私有方法：步骤3 - 将测试用例JSON转换为XMind
+        
+        Args:
+            testcase_json: 测试用例JSON文件路径
+            output_xmind: XMind输出路径
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 验证JSON文件存在
+            if not os.path.exists(testcase_json):
+                logger.error(f"测试用例JSON文件不存在: {testcase_json}")
+                return False
+            
+            # 读取JSON数据
+            testcase_data = self.file_processor.find_and_read_file(testcase_json, type="json")
+            if not testcase_data:
+                logger.error("读取测试用例JSON数据失败")
+                return False
+            
+            # 转换并导出
+            success = self.testcase_interface.converter.convert_and_export_to_xmind(
+                input_data=testcase_data,
+                output_xmind_file=output_xmind,
+                root_title="测试用例",
+                sheet_title="功能测试用例"
+            )
+            
+            if not success:
+                logger.error("转换XMind失败")
+                return False
+            
+            # 验证XMind文件是否生成
+            if not os.path.exists(output_xmind):
+                logger.error(f"测试用例XMind文件未生成: {output_xmind}")
+                return False
+            
+            logger.info(f"✓ 测试用例XMind已生成: {output_xmind}")
+            
+            # 显示文件大小
+            file_size = os.path.getsize(output_xmind)
+            logger.info(f"  文件大小: {file_size / 1024:.2f} KB")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"测试用例转XMind失败: {str(e)}", exc_info=True)
+            return False
+
+
 if __name__ == '__main__':
-    # #测试点
+
+    converter = interfaceTestPointToAITestCaseXmind()
+
+    # 只需提供XMind文件路径，其他全部使用默认值
+    success = converter.convert_testpoint_to_testcase_xmind(
+        xmind_file=r"D:\AIGeneration\testcase\output.xmind"
+    )
+
+    if success:
+        print("✓ 转换成功！")
+    # 生成测试点xmind和json
     # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
     #                                       output_path=r"D:\AIGeneration\testcase\output.xmind",
     #                                       storage_json=r"D:\AIGeneration\testcase\测试点.json")
+
+    # converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
+    # result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
+
     #  #测试用例
     #  interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
     #                                     output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
@@ -1253,13 +1863,16 @@ if __name__ == '__main__':
     #  time.sleep(5)
     #  interfaceAITestCaseXmind().get_testcase_xmind()
 
-    converter = TestPointXmindToTestcaseXlsx()
 
-    success = converter.convert_xmind_to_testcase_xlsx(
-        xmind_file=r"D:\AIGeneration\testcase\output.xmind",
-        output_xlsx_file=r"D:\AIGeneration\testcase\测试用例.xlsx",
-        temp_json_dir=r"D:\AIGeneration\testcase"
-    )
+
+
+    # converter = TestPointXmindToTestcaseXlsx()
+    #
+    # success = converter.convert_xmind_to_testcase_xlsx(
+    #     xmind_file=r"D:\AIGeneration\testcase\output.xmind",
+    #     output_xlsx_file=r"D:\AIGeneration\testcase\测试用例.xlsx",
+    #     temp_json_dir=r"D:\AIGeneration\testcase"
+    # )
 
      #测试用例xlsx
      # interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
@@ -1275,12 +1888,15 @@ if __name__ == '__main__':
     #     user_input="电商下单界面功能，包括商品选择、地址管理、优惠券、订单提交等模块"
     # )
 
-    # 高级用法 - 自定义所有路径
+
+
+    # converter = interfaceAIAnyFlieToXlsx()
+    # # 高级用法 - 自定义所有路径
     # success = converter.generate_testcase_xlsx_from_text(
     #     user_input="用户登录注册功能",
-    #     output_dir=r"D:\MyProject\testcases",
+    #     output_dir=r"D:\MyProject",
     #     test_point_file=r"D:\MyProject\testpoints.json",
     #     testcase_file=r"D:\MyProject\testcases.json",
     #     xmind_file=r"D:\MyProject\testcases.xmind",
-    #     xlsx_file=r"D:\MyProject\final_testcases.xlsx"
+    #     xlsx_file=r"D:\MyProject\testcases.xlsx"
     # )
