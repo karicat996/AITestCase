@@ -3,7 +3,7 @@ import yaml
 from common.fileProcessor import fileProcessor
 from loguru import logger
 from utils.logs import LogManager
-
+from common.textRecognition import *
 # 初始化日志配置（指定日志输出到文件夹）
 LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 
@@ -46,6 +46,31 @@ def get_testcase(prompt_input):
     except Exception as e:
         logger.error(f"拼接测试用例提示词出错: {str(e)}")
         return None
+
+
+def get_point(image_path):
+    if path.exists(image_path):
+        logger.error("输入地址为空")
+        return None
+    fp = fileProcessor()
+    origin_data = fp.find_and_read_file("config/promptWord.yaml", type="yaml")
+
+    if origin_data is None:
+        logger.error("读取 promptWord.yaml 失败，请检查文件路径或格式")
+        return None
+    try:
+        result = ocr_get_text_from_img(image_path)
+        res = result.get("text")
+        str_input = ''.join(res)
+        template_prompt = str(origin_data.get("testcasePrompt", ""))
+        prompt = " ".join([template_prompt,str_input])
+        return prompt
+    except Exception as e:
+        logger.error(f"拼接测试用例提示词出错: {str(e)}")
+        return None
+
+
+
 
 
 if __name__ == '__main__':

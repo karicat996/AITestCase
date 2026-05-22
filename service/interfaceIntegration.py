@@ -1208,7 +1208,6 @@ class TestPointXmindToTestcaseXlsx:
             return False
 
 
-
 class interfaceTestPointToTestCaseXmind:
     """
     从测试点XMind一键生成测试用例XMind
@@ -1542,8 +1541,6 @@ class interfaceTestPointToTestCaseXmind:
             return False
 
 
-
-
 class interfaceTestPointToAITestCaseXmind:
     """
     从测试点XMind文件一键生成测试用例XMind
@@ -1837,31 +1834,33 @@ class interfaceTestPointToAITestCaseXmind:
 
 if __name__ == '__main__':
 
-    converter = interfaceTestPointToAITestCaseXmind()
+    # converter = interfaceTestPointToAITestCaseXmind()
+    #
+    # # 只需提供XMind文件路径，其他全部使用默认值
+    # success = converter.convert_testpoint_to_testcase_xmind(
+    #     xmind_file=r"D:\AIGeneration\testcase\output.xmind"
+    # )
+    #
+    # if success:
+    #     print("✓ 转换成功！")
 
-    # 只需提供XMind文件路径，其他全部使用默认值
-    success = converter.convert_testpoint_to_testcase_xmind(
-        xmind_file=r"D:\AIGeneration\testcase\output.xmind"
-    )
 
-    if success:
-        print("✓ 转换成功！")
-    # 生成测试点xmind和json
-    # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
-    #                                       output_path=r"D:\AIGeneration\testcase\output.xmind",
-    #                                       storage_json=r"D:\AIGeneration\testcase\测试点.json")
+    #生成测试点xmind和json
+     interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
+                                          output_path=r"D:\AIGeneration\testcase\output.xmind",
+                                          storage_json=r"D:\AIGeneration\testcase\测试点.json")
 
-    # converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
-    # result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
+     converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
+     result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
 
-    #  #测试用例
-    #  interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
-    #                                     output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-    #                                     extract=True,
-    #                                     storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
-    #                                     )
-    #  time.sleep(5)
-    #  interfaceAITestCaseXmind().get_testcase_xmind()
+     #测试用例
+     interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
+                                        output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
+                                        extract=True,
+                                        storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
+                                        )
+     time.sleep(5)
+     interfaceAITestCaseXmind().get_testcase_xmind()
 
 
 
