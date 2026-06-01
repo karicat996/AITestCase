@@ -1,5 +1,6 @@
 # 拼接提示词
 import yaml
+from os import path
 from common.fileProcessor import fileProcessor
 from loguru import logger
 from utils.logs import LogManager
@@ -49,8 +50,8 @@ def get_testcase(prompt_input):
 
 
 def get_point(image_path):
-    if path.exists(image_path):
-        logger.error("输入地址为空")
+    if image_path is None or not path.exists(image_path):
+        logger.error("输入地址为空或文件不存在")
         return None
     fp = fileProcessor()
     origin_data = fp.find_and_read_file("config/promptWord.yaml", type="yaml")
@@ -62,7 +63,7 @@ def get_point(image_path):
         result = ocr_get_text_from_img(image_path)
         res = result.get("text")
         str_input = ''.join(res)
-        template_prompt = str(origin_data.get("testcasePrompt", ""))
+        template_prompt = str(origin_data.get("testpointPrompt", ""))
         prompt = " ".join([template_prompt,str_input])
         return prompt
     except Exception as e:
@@ -74,4 +75,4 @@ def get_point(image_path):
 
 
 if __name__ == '__main__':
-    print(get_testcase(prompt_input))
+    print(get_point(image_path=r"D:\AIGeneration\config\de.png"))

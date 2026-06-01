@@ -120,6 +120,120 @@ class interfaceAITestInput:
         return compact_json
 
 
+class interfaceImageAITestPointXmind:
+    """
+    从图像一键生成测试点XMind
+    
+    流程：
+    1. OCR识别图像文本
+    2. AI生成测试点
+    3. 测试点转XMind
+    """
+    
+    def __init__(self):
+        """
+        初始化转换器
+        """
+        self.deepseek_api = DeepSeekAPI()
+        self.test_point_converter = TestcasePointJsonToXmind()
+        self.file_processor = fileProcessor()
+        logger.info("interfaceImageAITestPointXmind初始化完成")
+    
+    def get_test_points_from_image(self, image_path, output_dir=None, 
+                                   test_point_json=None, xmind_output=None,
+                                   root_title="测试大纲", sheet_title="功能测试用例"):
+        """
+        从图像提取文本并生成测试点XMind
+        
+        Args:
+            image_path: 输入的图像文件路径（必填）
+            output_dir: 输出目录（可选，默认 D:\\AIGeneration\\testcase）
+            test_point_json: 测试点JSON保存路径（可选）
+            xmind_output: XMind输出路径（可选）
+            root_title: XMind根节点标题（默认"测试大纲"）
+            sheet_title: XMind工作表标题（默认"功能测试用例"）
+            
+        Returns:
+            dict or None: 测试点数据字典，失败返回None
+        """
+        # 入参校验
+        if not image_path or not isinstance(image_path, str):
+            logger.error("image_path参数不能为空且必须为字符串类型")
+            return None
+        
+        if not os.path.exists(image_path):
+            logger.error(f"图像文件不存在: {image_path}")
+            return None
+        
+        try:
+            logger.info(f"开始从图像生成测试点: {image_path}")
+            
+            # 设置默认输出目录
+            if not output_dir:
+                output_dir = r"D:\AIGeneration\testcase"
+            
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+            
+            # 设置默认文件路径
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            if not test_point_json:
+                test_point_json = os.path.join(output_dir, f"{base_name}_测试点.json")
+            if not xmind_output:
+                xmind_output = os.path.join(output_dir, f"{base_name}_测试点.xmind")
+            
+            # 步骤1: 调用DeepSeek API从图像生成测试点
+            logger.info("步骤1: 从图像提取文本并生成测试点...")
+            ai_response = self.deepseek_api.get_test_points_from_image(image_path)
+            
+            if not ai_response:
+                logger.error("AI返回结果为空")
+                return None
+            
+            logger.info(f"✓ AI生成完成，返回内容长度: {len(ai_response)} 字符")
+            
+            # 解析AI返回的JSON
+            try:
+                test_point_data = json.loads(ai_response) if isinstance(ai_response, str) else ai_response
+                logger.info(f"✓ 成功解析测试点数据，包含 {len(test_point_data)} 个产品/模块")
+            except json.JSONDecodeError as e:
+                logger.error(f"AI返回的内容不是有效的JSON格式: {str(e)}")
+                return None
+            
+            # 保存测试点JSON
+            self.file_processor.write_file(test_point_json, test_point_data, "json")
+            logger.info(f"✓ 测试点JSON已保存: {test_point_json}")
+            
+            # 步骤2: 将测试点JSON转换为XMind
+            logger.info("步骤2: 将测试点JSON转换为XMind...")
+            success = self.test_point_converter.convert_and_export_to_xmind(
+                input_data=test_point_data,
+                output_xmind_file=xmind_output,
+                root_title=root_title,
+                sheet_title=sheet_title
+            )
+            
+            if not success:
+                logger.error("转换XMind失败")
+                return None
+            
+            # 验证XMind文件是否生成
+            if not os.path.exists(xmind_output):
+                logger.error(f"XMind文件未生成: {xmind_output}")
+                return None
+            
+            file_size = os.path.getsize(xmind_output)
+            logger.info(f"✓ XMind文件已生成: {xmind_output} ({file_size / 1024:.2f} KB)")
+            print(f"\n✓ 测试点XMind文件已成功生成: {xmind_output}")
+            
+            return test_point_data
+            
+        except Exception as e:
+            logger.error(f"从图像生成测试点失败: {str(e)}", exc_info=True)
+            return None
+
+
 class interfaceAITestCaseXmind:
     """
     ai生成测试用例xmind

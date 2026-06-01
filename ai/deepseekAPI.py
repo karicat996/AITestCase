@@ -1,9 +1,11 @@
 #调用deepseekAPI接口
 import os
 from openai import OpenAI
-from common.promptProcessing import get_prompt,get_testcase
+from utils.logs import LogManager
+from loguru import logger
+from common.promptProcessing import get_prompt,get_testcase,get_point
 from common.fileProcessor import fileProcessor
-
+LogManager(log_dir=r"D:\AIGeneration\utils\logs")
 class DeepSeekAPI:
 
     def __init__(self):
@@ -53,8 +55,18 @@ class DeepSeekAPI:
         return result
 
 
-    def get_ai_point(self,user_input):
-        self.requestQuestion = get_point(user_input)
+    def get_ai_point(self,image_path):
+        """
+        从图像中提取文本并生成测试点
+        :param image_path: 图像文件路径
+        :return: AI生成的测试点结果
+        """
+        self.requestQuestion = get_point(image_path)
+        if self.requestQuestion is None:
+            logger.error("获取图像测试点提示词失败")
+            return None
+        
+        print("已发送测试点请求，等待生成....")
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -70,6 +82,7 @@ class DeepSeekAPI:
         result = response.choices[0].message.content
         print(f"获取到答案:{result}")
         return result
+
 
 
 
@@ -99,5 +112,5 @@ class DeepSeekAPI:
         return test_points
 
 if __name__ == '__main__':
-    print(DeepSeekAPI().get_testcase_answer())
+    api = DeepSeekAPI()
 
