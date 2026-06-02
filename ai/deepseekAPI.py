@@ -1,5 +1,6 @@
 #调用deepseekAPI接口
 import os
+import json
 from openai import OpenAI
 from utils.logs import LogManager
 from loguru import logger
@@ -57,16 +58,16 @@ class DeepSeekAPI:
 
     def get_ai_point(self,image_path):
         """
-        从图像中提取文本并生成测试点
+        从图像中提取文本并生成测试关键词（第一步：图片→关键词）
         :param image_path: 图像文件路径
-        :return: AI生成的测试点结果
+        :return: AI生成的测试关键词结果
         """
         self.requestQuestion = get_point(image_path)
         if self.requestQuestion is None:
             logger.error("获取图像测试点提示词失败")
             return None
         
-        print("已发送测试点请求，等待生成....")
+        print("已发送关键词提取请求，等待生成....")
         client = OpenAI(
             api_key =self.DEEPSEEK_API_KEY,
             base_url = "https://api.deepseek.com"
@@ -80,7 +81,7 @@ class DeepSeekAPI:
             , stream = False
         )
         result = response.choices[0].message.content
-        print(f"获取到答案:{result}")
+        print(f"获取到关键词:{result}")
         return result
 
 

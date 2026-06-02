@@ -125,9 +125,10 @@ class interfaceImageAITestPointXmind:
     从图像一键生成测试点XMind
     
     流程：
-    1. OCR识别图像文本
-    2. AI生成测试点
-    3. 测试点转XMind
+    1. OCR识别图像文本 + AI生成测试关键词
+    2. 关键词喂给AI生成测试点JSON
+    3. 解析测试点JSON
+    4. JSON转XMind导出
     """
     
     def __init__(self):
@@ -183,37 +184,47 @@ class interfaceImageAITestPointXmind:
             if not xmind_output:
                 xmind_output = os.path.join(output_dir, f"{base_name}_测试点.xmind")
             
-            # 步骤1: 调用DeepSeek API从图像生成测试点
-            logger.info("步骤1: 从图像提取文本并生成测试点...")
-            ai_response = self.deepseek_api.get_test_points_from_image(image_path)
-            
-            if not ai_response:
-                logger.error("AI返回结果为空")
+            # 步骤1: OCR识别图像文本 + AI生成测试关键词
+            logger.info("步骤1: OCR识别图像文本并生成测试关键词...")
+            keywords = self.deepseek_api.get_ai_point(image_path)
+            if not keywords:
+                logger.error("获取测试关键词失败")
                 return None
+            logger.info(f"✓ 测试关键词获取成功: {keywords[:100]}...")
             
-            logger.info(f"✓ AI生成完成，返回内容长度: {len(ai_response)} 字符")
+            # 步骤2: 关键词喂给AI生成测试点JSON
+            logger.info("步骤2: 根据关键词生成测试点JSON...")
+            test_points_json_str = self.deepseek_api.get_test_point_answer(keywords)
+            if not test_points_json_str:
+                logger.error("生成测试点JSON失败")
+                return None
+            logger.info(f"✓ 测试点JSON生成完成，长度: {len(test_points_json_str)} 字符")
             
-            # 解析AI返回的JSON
+            # 步骤3: 解析JSON
+            logger.info("步骤3: 解析测试点JSON...")
             try:
-                test_point_data = json.loads(ai_response) if isinstance(ai_response, str) else ai_response
+                test_point_data = json.loads(test_points_json_str) if isinstance(test_points_json_str, str) else test_points_json_str
                 logger.info(f"✓ 成功解析测试点数据，包含 {len(test_point_data)} 个产品/模块")
             except json.JSONDecodeError as e:
                 logger.error(f"AI返回的内容不是有效的JSON格式: {str(e)}")
+                return None
+            
+            if not test_point_data:
+                logger.error("测试点数据为空")
                 return None
             
             # 保存测试点JSON
             self.file_processor.write_file(test_point_json, test_point_data, "json")
             logger.info(f"✓ 测试点JSON已保存: {test_point_json}")
             
-            # 步骤2: 将测试点JSON转换为XMind
-            logger.info("步骤2: 将测试点JSON转换为XMind...")
+            # 步骤4: 将测试点JSON转换为XMind
+            logger.info("步骤4: 将测试点JSON转换为XMind...")
             success = self.test_point_converter.convert_and_export_to_xmind(
                 input_data=test_point_data,
                 output_xmind_file=xmind_output,
                 root_title=root_title,
                 sheet_title=sheet_title
             )
-            
             if not success:
                 logger.error("转换XMind失败")
                 return None
@@ -1960,22 +1971,24 @@ if __name__ == '__main__':
 
 
     #生成测试点xmind和json
-     interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
-                                          output_path=r"D:\AIGeneration\testcase\output.xmind",
-                                          storage_json=r"D:\AIGeneration\testcase\测试点.json")
+     # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
+     #                                      output_path=r"D:\AIGeneration\testcase\output.xmind",
+     #                                      storage_json=r"D:\AIGeneration\testcase\测试点.json")
+     #
+     # converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
+     # result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
+     #
+     # #测试用例
+     # interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
+     #                                    output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
+     #                                    extract=True,
+     #                                    storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
+     #                                    )
+     # time.sleep(5)
+     # interfaceAITestCaseXmind().get_testcase_xmind()
 
-     converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
-     result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
-
-     #测试用例
-     interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
-                                        output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-                                        extract=True,
-                                        storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
-                                        )
-     time.sleep(5)
-     interfaceAITestCaseXmind().get_testcase_xmind()
-
+    converter = interfaceImageAITestPointXmind()
+    converter.get_test_points_from_image(image_path=r"D:\AIGeneration\config\de.png",xmind_output=r"D:\AIGeneration\testcase\测试点.xmind")
 
 
 
