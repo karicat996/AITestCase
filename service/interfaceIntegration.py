@@ -1959,15 +1959,15 @@ class interfaceTestPointToAITestCaseXmind:
 
 if __name__ == '__main__':
 
-    # converter = interfaceTestPointToAITestCaseXmind()
-    #
-    # # 只需提供XMind文件路径，其他全部使用默认值
-    # success = converter.convert_testpoint_to_testcase_xmind(
-    #     xmind_file=r"D:\AIGeneration\testcase\output.xmind"
-    # )
-    #
-    # if success:
-    #     print("✓ 转换成功！")
+    converter = interfaceTestPointToAITestCaseXmind()
+
+    # 只需提供XMind文件路径，其他全部使用默认值
+    success = converter.convert_testpoint_to_testcase_xmind(
+        xmind_file=r"D:\AIGeneration\testcase\测试点.xmind"
+    )
+
+    if success:
+        print("✓ 转换成功！")
 
 
     #生成测试点xmind和json
@@ -1987,8 +1987,9 @@ if __name__ == '__main__':
      # time.sleep(5)
      # interfaceAITestCaseXmind().get_testcase_xmind()
 
-    converter = interfaceImageAITestPointXmind()
-    converter.get_test_points_from_image(image_path=r"D:\AIGeneration\config\de.png",xmind_output=r"D:\AIGeneration\testcase\测试点.xmind")
+
+    # converter = interfaceImageAITestPointXmind()
+    # converter.get_test_points_from_image(image_path=r"D:\AIGeneration\config\de.png",xmind_output=r"D:\AIGeneration\testcase\测试点.xmind")
 
 
 
