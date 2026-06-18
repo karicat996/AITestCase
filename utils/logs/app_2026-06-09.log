@@ -1,0 +1,138 @@
+2026-06-09 14:21:35 | INFO     | __main__:__init__:1686 - interfaceTestPointToAITestCaseXmind初始化完成
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1732 - ============================================================
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1733 - 开始执行测试点XMind到测试用例XMind的转换
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1734 - 输入文件: D:\AIGeneration\testcase\测试点.xmind
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1735 - ============================================================
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1755 - 
+步骤1/3: 将测试点XMind转换为JSON...
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:process_and_save:524 - 开始处理XMind测试点数据...
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:read_xmind_data:345 - 成功读取XMind数据，包含 3 个主题
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:388 - 正在处理产品: 新增商品详情
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 商品详情
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 打印参数
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 树脂属性详情  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 树脂信息  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 后处理  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 问答
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:388 - 正在处理产品: 与第三方平台数据对齐
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 用户退货
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 货物物流异常
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 货物已派送
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 货物已签收
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 用户申请退款
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:388 - 正在处理产品: 兼容性
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 软件内交互
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 浏览器交互
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:_extract_test_points_data:408 - 正在处理模块: 移动端适配
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:_extract_test_points_data:466 - 成功提取 3 个产品，共 14 个模块
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:save_to_json:505 - 测试点数据已保存到: D:\AIGeneration\testcase\测试点.json
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:process_and_save:542 - 处理完成！共提取 3 个测试点
+2026-06-09 14:21:35 | INFO     | __main__:_step1_xmind_to_json:1840 - ✓ XMind转JSON成功: D:\AIGeneration\testcase\测试点.json
+2026-06-09 14:21:35 | INFO     | __main__:_step1_xmind_to_json:1841 -   提取到 3 个产品的测试点数据
+2026-06-09 14:21:35 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1765 - 
+步骤2/3: AI生成测试用例（可能需要几分钟）...
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_and_save:2017 - 开始读取测试点文件: D:\AIGeneration\testcase\测试点.json
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_and_save:2028 - 开始转换数据...
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_testpoint_to_simple_format:1879 - 正在处理产品: 新增商品详情
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 商品详情
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '关于商品标题，详情': 2 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '商品详情UI适配': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 打印参数
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '选择打印机类型': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '选择相应树脂材料': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '修改打印参数': 2 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 树脂属性详情  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '介绍树脂信息': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 树脂信息  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '介绍树脂信息': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 后处理  
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '介绍后处理步骤': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 问答
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '介绍用户常见问题和解答': 1 个场景
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_testpoint_to_simple_format:1879 - 正在处理产品: 与第三方平台数据对齐
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 用户退货
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '用户购买商品后退货': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 货物物流异常
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '物流异常处理同步': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 货物已派送
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '货物已派送数据对齐': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 货物已签收
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '货物已签收数据对齐': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 用户申请退款
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '用户申请退款数据对齐': 1 个场景
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_testpoint_to_simple_format:1879 - 正在处理产品: 兼容性
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 软件内交互
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 'ios平台访问交互': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 'win平台访问交互': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 浏览器交互
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 'chrome浏览器交互': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 'edge浏览器交互': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 'firefox浏览器交互': 1 个场景
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1891 - 正在处理模块: 移动端适配
+2026-06-09 14:21:35 | DEBUG    | service.xmindChanger:convert_testpoint_to_simple_format:1914 - 提取测试点 '移动设备访问交互': 1 个场景
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_testpoint_to_simple_format:1918 - 转换完成，共提取 19 个测试点
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_and_save:2032 - 保存转换结果到: D:\AIGeneration\testcase\测试用例_output.json
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:save_to_json:1991 - JSON文件保存成功: D:\AIGeneration\testcase\测试用例_output.json
+2026-06-09 14:21:35 | INFO     | service.xmindChanger:convert_and_save:2038 - 转换完成！共 19 个测试点，21 个场景
+2026-06-09 14:22:00 | INFO     | __main__:get_ai_testcase_write_json:278 - ✓ AI返回数据，长度: 4205 字符
+2026-06-09 14:22:00 | DEBUG    | __main__:clean_ai_json_response:329 - 直接解析失败，尝试提取代码块
+2026-06-09 14:22:00 | DEBUG    | __main__:clean_ai_json_response:344 - 通过正则提取到JSON字符串，长度: 4057
+2026-06-09 14:22:00 | DEBUG    | __main__:clean_ai_json_response:349 - 解析提取的JSON成功
+2026-06-09 14:22:00 | INFO     | __main__:get_ai_testcase_write_json:286 - ✓ JSON数据解析成功，类型: list
+2026-06-09 14:22:00 | INFO     | common.fileProcessor:write_file:65 - JSON 文件已成功写入: D:\AIGeneration\testcase\测试用例_output.json
+2026-06-09 14:22:00 | INFO     | __main__:get_ai_testcase_write_json:291 - ✓ 测试用例已保存到: D:\AIGeneration\testcase\测试用例_output.json
+2026-06-09 14:22:00 | INFO     | __main__:_step2_generate_testcases:1889 - ✓ 测试用例JSON已生成: D:\AIGeneration\testcase\测试用例_output.json
+2026-06-09 14:22:01 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1778 - 等待 5 秒...
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1782 - 
+步骤3/3: 将测试用例JSON转换为XMind...
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '关于商品标题，详情' 的用例: 展示中英文标题
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '关于商品标题，详情' 的用例: 展示中英文文章详情
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '商品详情UI适配' 的用例: 查看商品详情页面展示
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '选择打印机类型' 的用例: 选择打印类型后点击应用
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '选择相应树脂材料' 的用例: 选择相应树脂后点击应用
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '修改打印参数' 的用例: 修改打印参数后点击应用
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '修改打印参数' 的用例: 修改打印参数后点击收藏
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '介绍树脂信息' 的用例: 查看树脂信息是否显示
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '介绍后处理步骤' 的用例: 查看后处理步骤信息是否显示
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '介绍用户常见问题和解答' 的用例: 查看问答信息是否显示
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '用户购买商品后退货' 的用例: 用户购物退货对齐第三方平台校验
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '物流异常处理同步' 的用例: 物流异常处理信息对齐第三方平台校验
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '货物已派送数据对齐' 的用例: 货物已派送数据对齐第三方平台校验
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '货物已签收数据对齐' 的用例: 货物已签收信息对齐第三数据校验
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '用户申请退款数据对齐' 的用例: 用户商店申请退款三方数据金额对齐校验
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 'ios平台访问交互' 的用例: ios平台访问交互验证
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 'win平台访问交互' 的用例: win平台访问交互验证
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 'chrome浏览器交互' 的用例: chrome浏览器交互验证
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 'edge浏览器交互' 的用例: edge浏览器交互验证
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 'firefox浏览器交互' 的用例: firefox浏览器交互验证
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1134 - 检测到扁平格式，处理模块 '移动设备访问交互' 的用例: 移动设备访问交互验证
+2026-06-09 14:22:06 | INFO     | service.xmindChanger:_build_from_standard_format:1146 - 共提取 19 个模块，21 条测试用例
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '关于商品标题，详情' 创建 2 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '商品详情UI适配' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '选择打印机类型' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '选择相应树脂材料' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '修改打印参数' 创建 2 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '介绍树脂信息' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '介绍后处理步骤' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '介绍用户常见问题和解答' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '用户购买商品后退货' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '物流异常处理同步' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '货物已派送数据对齐' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '货物已签收数据对齐' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '用户申请退款数据对齐' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 'ios平台访问交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 'win平台访问交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 'chrome浏览器交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 'edge浏览器交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 'firefox浏览器交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | DEBUG    | service.xmindChanger:_build_from_standard_format:1153 - 正在为模块 '移动设备访问交互' 创建 1 条用例节点
+2026-06-09 14:22:06 | INFO     | service.xmindChanger:json_to_xmind:1052 - XMind 文件已成功生成：D:\AIGeneration\testcase\测试用例.xmind
+2026-06-09 14:22:06 | INFO     | service.xmindChanger:convert_and_export_to_xmind:1364 - XMind 文件已成功生成: D:\AIGeneration\testcase\测试用例.xmind
+2026-06-09 14:22:06 | INFO     | __main__:_step3_testcase_to_xmind:1947 - ✓ 测试用例XMind已生成: D:\AIGeneration\testcase\测试用例.xmind
+2026-06-09 14:22:06 | INFO     | __main__:_step3_testcase_to_xmind:1951 -   文件大小: 20.67 KB
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1791 - 
+============================================================
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1792 - ✓ 转换完成！
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1793 - 输入: D:\AIGeneration\testcase\测试点.xmind
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1794 - 输出: D:\AIGeneration\testcase\测试用例.xmind
+2026-06-09 14:22:06 | INFO     | __main__:convert_testpoint_to_testcase_xmind:1795 - ============================================================

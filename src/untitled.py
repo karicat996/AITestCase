@@ -207,7 +207,7 @@ class Ui_TestPointTab(QWidget):
         
         self.imagePreviewLabel = QLabel("预览:")
         self.imagePreviewArea = QLabel("暂无预览")
-        self.imagePreviewArea.setStyleSheet("border: 1px solid gray; background-color: white;")
+        self.imagePreviewArea.setObjectName("imagePreviewArea")
         self.imagePreviewArea.setMinimumSize(400, 200)
         self.imagePreviewArea.setAlignment(Qt.AlignCenter)
         self.imageLayout.addWidget(self.imagePreviewLabel)
@@ -406,6 +406,7 @@ class Ui_OtherTab(QWidget):
         self.logLayout = QVBoxLayout()
         
         self.logText = QPlainTextEdit()
+        self.logText.setObjectName("logText")
         self.logText.setReadOnly(True)
         self.logLayout.addWidget(self.logText)
         
@@ -425,11 +426,6 @@ class Ui_MainWindow(object):
         MainWindow.setEnabled(True)
         MainWindow.resize(1200, 700)
         
-        # 创建主窗口（必须使用QMainWindow）
-        if not isinstance(MainWindow, QMainWindow):
-            MainWindow = QMainWindow()
-        MainWindow.resize(1200, 700)
-        
         # 创建菜单栏
         self.menubar = MainWindow.menuBar()
         self.fileMenu = self.menubar.addMenu("文件")
@@ -442,9 +438,9 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         
         # 创建主TabWidget
-        self.tabWidget = QTabWidget(MainWindow)
+        self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setGeometry(QRect(0, 30, 1180, 650))
+        self.tabWidget.setGeometry(QRect(0, 0, 1200, 650))
         self.tabWidget.setTabsClosable(False)
         
         # 创建4个Tab页面
@@ -470,6 +466,7 @@ class Ui_MainWindow(object):
         self.tabWidget.addTab(self.testCaseWidget, "测试用例")
         self.tabWidget.addTab(self.otherWidget, "其他功能")
         
+        # 设置中心部件
         MainWindow.setCentralWidget(self.centralwidget)
         
         self.retranslateUi(MainWindow)
@@ -484,7 +481,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.testPointWidget), QCoreApplication.translate("MainWindow", u"测试点功能", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.testCaseWidget), QCoreApplication.translate("MainWindow", u"测试用例", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.otherWidget), QCoreApplication.translate("MainWindow", u"其他功能", None))
-    # retranslateUi
+        # retranslateUi
 
 
 if __name__ == "__main__":
