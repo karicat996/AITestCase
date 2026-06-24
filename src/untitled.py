@@ -25,7 +25,7 @@ class Ui_ConfigTab(QWidget):
     """配置项页面"""
     def setupUi(self, parent):
         # 创建主布局
-        self.mainLayout = QVBoxLayout(parent)
+        mainLayout = QVBoxLayout(parent)
         
         # 创建滚动区域
         self.scrollArea = QScrollArea(parent)
@@ -33,31 +33,31 @@ class Ui_ConfigTab(QWidget):
         self.scrollArea.setFrameShape(QFrame.NoFrame)
         
         # 创建滚动内容的容器widget
-        self.scrollContent = QWidget()
-        self.scrollLayout = QVBoxLayout(self.scrollContent)
+        scrollContent = QWidget()
+        scrollLayout = QVBoxLayout(scrollContent)
         
         # API配置分组
-        self.apiGroup = QGroupBox("API配置")
-        self.apiLayout = QVBoxLayout()
+        apiGroup = QGroupBox("API配置")
+        apiLayout = QVBoxLayout()
         
         self.apiKeyLabel = QLabel("DeepSeek API Key:")
         self.apiKeyInput = QLineEdit()
         self.apiKeyInput.setEchoMode(QLineEdit.Password)
-        self.apiLayout.addWidget(self.apiKeyLabel)
-        self.apiLayout.addWidget(self.apiKeyInput)
+        apiLayout.addWidget(self.apiKeyLabel)
+        apiLayout.addWidget(self.apiKeyInput)
         
         self.modelLabel = QLabel("模型选择:")
         self.modelCombo = QComboBox()
         self.modelCombo.addItems(["deepseek-chat", "chatgpt","Gemining3.0"])
-        self.apiLayout.addWidget(self.modelLabel)
-        self.apiLayout.addWidget(self.modelCombo)
+        apiLayout.addWidget(self.modelLabel)
+        apiLayout.addWidget(self.modelCombo)
         
-        self.apiGroup.setLayout(self.apiLayout)
-        self.scrollLayout.addWidget(self.apiGroup)
+        apiGroup.setLayout(apiLayout)
+        scrollLayout.addWidget(apiGroup)
         
         # 测试点路径配置分组
-        self.pointPathGroup = QGroupBox("测试点配置")
-        self.pointPathLayout = QVBoxLayout()
+        pointPathGroup = QGroupBox("测试点配置")
+        pointPathLayout = QVBoxLayout()
         
         self.pointJsonPathLabel = QLabel("输出JSON路径:")
         self.pointJsonPathInput = QLineEdit()
@@ -65,8 +65,8 @@ class Ui_ConfigTab(QWidget):
         pointJsonPathLayout = QHBoxLayout()
         pointJsonPathLayout.addWidget(self.pointJsonPathInput)
         pointJsonPathLayout.addWidget(self.pointJsonPathBrowseBtn)
-        self.pointPathLayout.addWidget(self.pointJsonPathLabel)
-        self.pointPathLayout.addLayout(pointJsonPathLayout)
+        pointPathLayout.addWidget(self.pointJsonPathLabel)
+        pointPathLayout.addLayout(pointJsonPathLayout)
         
         self.pointTemplatePathLabel = QLabel("模板路径:")
         self.pointTemplatePathInput = QLineEdit()
@@ -74,8 +74,8 @@ class Ui_ConfigTab(QWidget):
         pointTemplatePathLayout = QHBoxLayout()
         pointTemplatePathLayout.addWidget(self.pointTemplatePathInput)
         pointTemplatePathLayout.addWidget(self.pointTemplatePathBrowseBtn)
-        self.pointPathLayout.addWidget(self.pointTemplatePathLabel)
-        self.pointPathLayout.addLayout(pointTemplatePathLayout)
+        pointPathLayout.addWidget(self.pointTemplatePathLabel)
+        pointPathLayout.addLayout(pointTemplatePathLayout)
         
         self.pointImgPathLabel = QLabel("图片路径:")
         self.pointImgPathInput = QLineEdit()
@@ -83,15 +83,15 @@ class Ui_ConfigTab(QWidget):
         pointImgPathLayout = QHBoxLayout()
         pointImgPathLayout.addWidget(self.pointImgPathInput)
         pointImgPathLayout.addWidget(self.pointImgPathBrowseBtn)
-        self.pointPathLayout.addWidget(self.pointImgPathLabel)
-        self.pointPathLayout.addLayout(pointImgPathLayout)
+        pointPathLayout.addWidget(self.pointImgPathLabel)
+        pointPathLayout.addLayout(pointImgPathLayout)
         
-        self.pointPathGroup.setLayout(self.pointPathLayout)
-        self.scrollLayout.addWidget(self.pointPathGroup)
+        pointPathGroup.setLayout(pointPathLayout)
+        scrollLayout.addWidget(pointPathGroup)
         
         # 测试用例路径配置分组
-        self.casePathGroup = QGroupBox("测试用例配置")
-        self.casePathLayout = QVBoxLayout()
+        casePathGroup = QGroupBox("测试用例配置")
+        casePathLayout = QVBoxLayout()
 
         self.caseJsonPathLabel = QLabel("输出JSON路径:")
         self.caseJsonPathInput = QLineEdit()
@@ -99,8 +99,8 @@ class Ui_ConfigTab(QWidget):
         caseJsonPathLayout = QHBoxLayout()
         caseJsonPathLayout.addWidget(self.caseJsonPathInput)
         caseJsonPathLayout.addWidget(self.caseJsonPathBrowseBtn)
-        self.casePathLayout.addWidget(self.caseJsonPathLabel)
-        self.casePathLayout.addLayout(caseJsonPathLayout)
+        casePathLayout.addWidget(self.caseJsonPathLabel)
+        casePathLayout.addLayout(caseJsonPathLayout)
 
         self.caseXmindPathLabel = QLabel("XMind保存路径:")
         self.caseXmindPathInput = QLineEdit()
@@ -108,8 +108,8 @@ class Ui_ConfigTab(QWidget):
         caseXmindPathLayout = QHBoxLayout()
         caseXmindPathLayout.addWidget(self.caseXmindPathInput)
         caseXmindPathLayout.addWidget(self.caseXmindPathBrowseBtn)
-        self.casePathLayout.addWidget(self.caseXmindPathLabel)
-        self.casePathLayout.addLayout(caseXmindPathLayout)
+        casePathLayout.addWidget(self.caseXmindPathLabel)
+        casePathLayout.addLayout(caseXmindPathLayout)
 
         self.caseExeclPathLabel = QLabel("Excel保存路径:")
         self.caseExeclPathInput = QLineEdit()
@@ -117,15 +117,15 @@ class Ui_ConfigTab(QWidget):
         caseExeclPathLayout = QHBoxLayout()
         caseExeclPathLayout.addWidget(self.caseExeclPathInput)
         caseExeclPathLayout.addWidget(self.caseExeclPathBrowseBtn)
-        self.casePathLayout.addWidget(self.caseExeclPathLabel)
-        self.casePathLayout.addLayout(caseExeclPathLayout)
+        casePathLayout.addWidget(self.caseExeclPathLabel)
+        casePathLayout.addLayout(caseExeclPathLayout)
 
-        self.casePathGroup.setLayout(self.casePathLayout)
-        self.scrollLayout.addWidget(self.casePathGroup)
+        casePathGroup.setLayout(casePathLayout)
+        scrollLayout.addWidget(casePathGroup)
 
         # 其他功能路径配置
-        self.otherPathGroup = QGroupBox("其他功能配置")
-        self.otherPathLayout = QVBoxLayout()
+        otherPathGroup = QGroupBox("其他功能配置")
+        otherPathLayout = QVBoxLayout()
 
         self.otherJsonPathLabel = QLabel("输出JSON路径:")
         self.otherJsonPathInput = QLineEdit()
@@ -133,8 +133,8 @@ class Ui_ConfigTab(QWidget):
         otherJsonPathLayout = QHBoxLayout()
         otherJsonPathLayout.addWidget(self.otherJsonPathInput)
         otherJsonPathLayout.addWidget(self.otherJsonPathBrowseBtn)
-        self.otherPathLayout.addWidget(self.otherJsonPathLabel)
-        self.otherPathLayout.addLayout(otherJsonPathLayout)
+        otherPathLayout.addWidget(self.otherJsonPathLabel)
+        otherPathLayout.addLayout(otherJsonPathLayout)
 
         self.otherTemplatePathLabel = QLabel("模板路径:")
         self.otherTemplatePathInput = QLineEdit()
@@ -142,8 +142,8 @@ class Ui_ConfigTab(QWidget):
         otherTemplatePathLayout = QHBoxLayout()
         otherTemplatePathLayout.addWidget(self.otherTemplatePathInput)
         otherTemplatePathLayout.addWidget(self.otherTemplatePathBrowseBtn)
-        self.otherPathLayout.addWidget(self.otherTemplatePathLabel)
-        self.otherPathLayout.addLayout(otherTemplatePathLayout)
+        otherPathLayout.addWidget(self.otherTemplatePathLabel)
+        otherPathLayout.addLayout(otherTemplatePathLayout)
 
         self.otherImgPathLabel = QLabel("图片路径:")
         self.otherImgPathInput = QLineEdit()
@@ -151,26 +151,26 @@ class Ui_ConfigTab(QWidget):
         otherImgPathLayout = QHBoxLayout()
         otherImgPathLayout.addWidget(self.otherImgPathInput)
         otherImgPathLayout.addWidget(self.otherImgPathBrowseBtn)
-        self.otherPathLayout.addWidget(self.otherImgPathLabel)
-        self.otherPathLayout.addLayout(otherImgPathLayout)
+        otherPathLayout.addWidget(self.otherImgPathLabel)
+        otherPathLayout.addLayout(otherImgPathLayout)
 
-        self.otherPathGroup.setLayout(self.otherPathLayout)
-        self.scrollLayout.addWidget(self.otherPathGroup)
+        otherPathGroup.setLayout(otherPathLayout)
+        scrollLayout.addWidget(otherPathGroup)
 
         # 操作按钮
-        self.buttonLayout = QHBoxLayout()
+        buttonLayout = QHBoxLayout()
         self.saveBtn = QPushButton("保存配置")
         self.loadBtn = QPushButton("初始化")
-        self.buttonLayout.addWidget(self.saveBtn)
-        self.buttonLayout.addWidget(self.loadBtn)
-        self.buttonLayout.addStretch()
-        self.scrollLayout.addLayout(self.buttonLayout)
+        buttonLayout.addWidget(self.saveBtn)
+        buttonLayout.addWidget(self.loadBtn)
+        buttonLayout.addStretch()
+        scrollLayout.addLayout(buttonLayout)
 
-        self.scrollLayout.addStretch()
+        scrollLayout.addStretch()
         
         # 设置滚动内容
-        self.scrollArea.setWidget(self.scrollContent)
-        self.mainLayout.addWidget(self.scrollArea)
+        self.scrollArea.setWidget(scrollContent)
+        mainLayout.addWidget(self.scrollArea)
 
 
 
@@ -178,24 +178,24 @@ class Ui_ConfigTab(QWidget):
 class Ui_TestPointTab(QWidget):
     """测试点功能页面"""
     def setupUi(self, parent):
-        self.layout = QVBoxLayout(parent)
+        layout = QVBoxLayout(parent)
         
         # 输入方式选择
-        self.inputGroup = QGroupBox("输入方式")
-        self.inputLayout = QHBoxLayout()
+        inputGroup = QGroupBox("输入方式")
+        inputLayout = QHBoxLayout()
         
         self.imageRadio = QRadioButton("图片识别")
-        self.textRadio = QRadioButton("文本输入")
+        self.tp_textRadio = QRadioButton("文本输入")
         self.imageRadio.setChecked(True)
-        self.inputLayout.addWidget(self.imageRadio)
-        self.inputLayout.addWidget(self.textRadio)
-        self.inputLayout.addStretch()
-        self.inputGroup.setLayout(self.inputLayout)
-        self.layout.addWidget(self.inputGroup)
+        inputLayout.addWidget(self.imageRadio)
+        inputLayout.addWidget(self.tp_textRadio)
+        inputLayout.addStretch()
+        inputGroup.setLayout(inputLayout)
+        layout.addWidget(inputGroup)
         
         # 图片输入区域
         self.imageGroup = QGroupBox("图片输入")
-        self.imageLayout = QVBoxLayout()
+        imageLayout = QVBoxLayout()
         
         self.imagePathLabel = QLabel("图片路径:")
         self.imagePathInput = QLineEdit()
@@ -203,77 +203,77 @@ class Ui_TestPointTab(QWidget):
         imagePathLayout = QHBoxLayout()
         imagePathLayout.addWidget(self.imagePathInput)
         imagePathLayout.addWidget(self.imageBrowseBtn)
-        self.imageLayout.addLayout(imagePathLayout)
+        imageLayout.addLayout(imagePathLayout)
         
         self.imagePreviewLabel = QLabel("预览:")
         self.imagePreviewArea = QLabel("暂无预览")
         self.imagePreviewArea.setObjectName("imagePreviewArea")
         self.imagePreviewArea.setMinimumSize(400, 200)
         self.imagePreviewArea.setAlignment(Qt.AlignCenter)
-        self.imageLayout.addWidget(self.imagePreviewLabel)
-        self.imageLayout.addWidget(self.imagePreviewArea)
+        imageLayout.addWidget(self.imagePreviewLabel)
+        imageLayout.addWidget(self.imagePreviewArea)
         
-        self.imageGroup.setLayout(self.imageLayout)
-        self.layout.addWidget(self.imageGroup)
+        self.imageGroup.setLayout(imageLayout)
+        layout.addWidget(self.imageGroup)
         
         # 文本输入区域
-        self.textGroup = QGroupBox("文本输入")
-        self.textLayout = QVBoxLayout()
+        self.tp_textGroup = QGroupBox("文本输入")
+        tp_textLayout = QVBoxLayout()
         
         self.testPointTextInput = QTextEdit()
-        self.textLayout.addWidget(self.testPointTextInput)
+        tp_textLayout.addWidget(self.testPointTextInput)
         
-        self.textGroup.setLayout(self.textLayout)
-        self.textGroup.setVisible(False)
-        self.layout.addWidget(self.textGroup)
+        self.tp_textGroup.setLayout(tp_textLayout)
+        self.tp_textGroup.setVisible(False)
+        layout.addWidget(self.tp_textGroup)
         
         # 选项设置
-        self.optionGroup = QGroupBox("生成选项")
-        self.optionLayout = QVBoxLayout()
+        optionGroup = QGroupBox("生成选项")
+        optionLayout = QVBoxLayout()
         
         self.strictCheck = QCheckBox("严格模式")
         self.detailedCheck = QCheckBox("详细输出")
-        self.optionLayout.addWidget(self.strictCheck)
-        self.optionLayout.addWidget(self.detailedCheck)
+        optionLayout.addWidget(self.strictCheck)
+        optionLayout.addWidget(self.detailedCheck)
         
-        self.optionGroup.setLayout(self.optionLayout)
-        self.layout.addWidget(self.optionGroup)
+        optionGroup.setLayout(optionLayout)
+        layout.addWidget(optionGroup)
         
         # 操作按钮
-        self.buttonLayout = QHBoxLayout()
-        self.generateBtn = QPushButton("生成测试点")
-        self.clearBtn = QPushButton("清空")
+        buttonLayout = QHBoxLayout()
+        self.tp_generateBtn = QPushButton("生成测试点")
+        self.tp_clearBtn = QPushButton("清空")
         self.exportBtn = QPushButton("导出XMind")
-        self.buttonLayout.addWidget(self.generateBtn)
-        self.buttonLayout.addWidget(self.clearBtn)
-        self.buttonLayout.addWidget(self.exportBtn)
-        self.buttonLayout.addStretch()
-        self.layout.addLayout(self.buttonLayout)
+        buttonLayout.addWidget(self.tp_generateBtn)
+        buttonLayout.addWidget(self.tp_clearBtn)
+        buttonLayout.addWidget(self.exportBtn)
+        buttonLayout.addStretch()
+        layout.addLayout(buttonLayout)
         
-        self.layout.addStretch()
+        layout.addStretch()
 
 
 class Ui_TestCaseTab(QWidget):
     """测试用例页面"""
     def setupUi(self, parent):
-        self.layout = QVBoxLayout(parent)
+        layout = QVBoxLayout(parent)
         
         # 输入方式选择
-        self.inputGroup = QGroupBox("输入方式")
-        self.inputLayout = QHBoxLayout()
+        inputGroup = QGroupBox("输入方式")
+        inputLayout = QHBoxLayout()
         
         self.xmindRadio = QRadioButton("XMind导入")
-        self.textRadio = QRadioButton("文本输入")
+        self.tc_textRadio = QRadioButton("文本输入")
         self.xmindRadio.setChecked(True)
-        self.inputLayout.addWidget(self.xmindRadio)
-        self.inputLayout.addWidget(self.textRadio)
-        self.inputLayout.addStretch()
-        self.inputGroup.setLayout(self.inputLayout)
-        self.layout.addWidget(self.inputGroup)
+        inputLayout.addWidget(self.xmindRadio)
+        inputLayout.addWidget(self.tc_textRadio)
+        inputLayout.addStretch()
+        inputGroup.setLayout(inputLayout)
+        layout.addWidget(inputGroup)
         
         # XMind输入区域
         self.xmindGroup = QGroupBox("XMind输入")
-        self.xmindLayout = QVBoxLayout()
+        xmindLayout = QVBoxLayout()
         
         self.xmindPathLabel = QLabel("测试点XMind路径:")
         self.xmindPathInput = QLineEdit()
@@ -281,7 +281,7 @@ class Ui_TestCaseTab(QWidget):
         xmindPathLayout = QHBoxLayout()
         xmindPathLayout.addWidget(self.xmindPathInput)
         xmindPathLayout.addWidget(self.xmindBrowseBtn)
-        self.xmindLayout.addLayout(xmindPathLayout)
+        xmindLayout.addLayout(xmindPathLayout)
         
         self.templateLabel = QLabel("模板文件:")
         self.templateInput = QLineEdit()
@@ -289,25 +289,25 @@ class Ui_TestCaseTab(QWidget):
         templateLayout = QHBoxLayout()
         templateLayout.addWidget(self.templateInput)
         templateLayout.addWidget(self.templateBrowseBtn)
-        self.xmindLayout.addLayout(templateLayout)
+        xmindLayout.addLayout(templateLayout)
         
-        self.xmindGroup.setLayout(self.xmindLayout)
-        self.layout.addWidget(self.xmindGroup)
+        self.xmindGroup.setLayout(xmindLayout)
+        layout.addWidget(self.xmindGroup)
         
         # 文本输入区域
-        self.textGroup = QGroupBox("文本输入")
-        self.textLayout = QVBoxLayout()
+        self.tc_textGroup = QGroupBox("文本输入")
+        tc_textLayout = QVBoxLayout()
         
         self.testCaseTextInput = QTextEdit()
-        self.textLayout.addWidget(self.testCaseTextInput)
+        tc_textLayout.addWidget(self.testCaseTextInput)
         
-        self.textGroup.setLayout(self.textLayout)
-        self.textGroup.setVisible(False)
-        self.layout.addWidget(self.textGroup)
+        self.tc_textGroup.setLayout(tc_textLayout)
+        self.tc_textGroup.setVisible(False)
+        layout.addWidget(self.tc_textGroup)
         
         # 输出设置
-        self.outputGroup = QGroupBox("输出设置")
-        self.outputLayout = QVBoxLayout()
+        outputGroup = QGroupBox("输出设置")
+        outputLayout = QVBoxLayout()
         
         self.outputPathLabel = QLabel("输出路径:")
         self.outputPathInput = QLineEdit()
@@ -315,40 +315,40 @@ class Ui_TestCaseTab(QWidget):
         outputPathLayout = QHBoxLayout()
         outputPathLayout.addWidget(self.outputPathInput)
         outputPathLayout.addWidget(self.outputBrowseBtn)
-        self.outputLayout.addWidget(self.outputPathLabel)
-        self.outputLayout.addLayout(outputPathLayout)
+        outputLayout.addWidget(self.outputPathLabel)
+        outputLayout.addLayout(outputPathLayout)
         
-        self.outputGroup.setLayout(self.outputLayout)
-        self.layout.addWidget(self.outputGroup)
+        outputGroup.setLayout(outputLayout)
+        layout.addWidget(outputGroup)
         
         # 操作按钮
-        self.buttonLayout = QHBoxLayout()
-        self.generateBtn = QPushButton("生成测试用例")
-        self.clearBtn = QPushButton("清空")
+        buttonLayout = QHBoxLayout()
+        self.tc_generateBtn = QPushButton("生成测试用例")
+        self.tc_clearBtn = QPushButton("清空")
         self.exportXmindBtn = QPushButton("导出XMind")
         self.exportXlsxBtn = QPushButton("导出Excel")
-        self.buttonLayout.addWidget(self.generateBtn)
-        self.buttonLayout.addWidget(self.clearBtn)
-        self.buttonLayout.addWidget(self.exportXmindBtn)
-        self.buttonLayout.addWidget(self.exportXlsxBtn)
-        self.buttonLayout.addStretch()
-        self.layout.addLayout(self.buttonLayout)
+        buttonLayout.addWidget(self.tc_generateBtn)
+        buttonLayout.addWidget(self.tc_clearBtn)
+        buttonLayout.addWidget(self.exportXmindBtn)
+        buttonLayout.addWidget(self.exportXlsxBtn)
+        buttonLayout.addStretch()
+        layout.addLayout(buttonLayout)
         
-        self.layout.addStretch()
+        layout.addStretch()
 
 
 class Ui_OtherTab(QWidget):
     """其他功能页面"""
     def setupUi(self, parent):
-        self.layout = QVBoxLayout(parent)
+        layout = QVBoxLayout(parent)
         
         # 格式转换工具分组
-        self.convertGroup = QGroupBox("格式转换工具")
-        self.convertLayout = QVBoxLayout()
+        convertGroup = QGroupBox("格式转换工具")
+        convertLayout = QVBoxLayout()
         
         # XMind转XLSX
-        self.xmindToXlsxGroup = QGroupBox("XMind转XLSX")
-        self.xmindToXlsxLayout = QVBoxLayout()
+        xmindToXlsxGroup = QGroupBox("XMind转XLSX")
+        xmindToXlsxLayout = QVBoxLayout()
         
         self.inputXmindLabel = QLabel("输入XMind:")
         self.inputXmindInput = QLineEdit()
@@ -356,7 +356,7 @@ class Ui_OtherTab(QWidget):
         inputXmindLayout = QHBoxLayout()
         inputXmindLayout.addWidget(self.inputXmindInput)
         inputXmindLayout.addWidget(self.inputXmindBrowse)
-        self.xmindToXlsxLayout.addLayout(inputXmindLayout)
+        xmindToXlsxLayout.addLayout(inputXmindLayout)
         
         self.outputXlsxLabel = QLabel("输出Excel:")
         self.outputXlsxInput = QLineEdit()
@@ -364,17 +364,17 @@ class Ui_OtherTab(QWidget):
         outputXlsxLayout = QHBoxLayout()
         outputXlsxLayout.addWidget(self.outputXlsxInput)
         outputXlsxLayout.addWidget(self.outputXlsxBrowse)
-        self.xmindToXlsxLayout.addLayout(outputXlsxLayout)
+        xmindToXlsxLayout.addLayout(outputXlsxLayout)
         
         self.xmindToXlsxBtn = QPushButton("开始转换")
-        self.xmindToXlsxLayout.addWidget(self.xmindToXlsxBtn)
+        xmindToXlsxLayout.addWidget(self.xmindToXlsxBtn)
         
-        self.xmindToXlsxGroup.setLayout(self.xmindToXlsxLayout)
-        self.convertLayout.addWidget(self.xmindToXlsxGroup)
+        xmindToXlsxGroup.setLayout(xmindToXlsxLayout)
+        convertLayout.addWidget(xmindToXlsxGroup)
         
         # 测试点转XLSX
-        self.testPointToXlsxGroup = QGroupBox("测试点XMind转XLSX")
-        self.testPointToXlsxLayout = QVBoxLayout()
+        testPointToXlsxGroup = QGroupBox("测试点XMind转XLSX")
+        testPointToXlsxLayout = QVBoxLayout()
         
         self.testPointInputLabel = QLabel("测试点XMind:")
         self.testPointInput = QLineEdit()
@@ -382,7 +382,7 @@ class Ui_OtherTab(QWidget):
         testPointLayout = QHBoxLayout()
         testPointLayout.addWidget(self.testPointInput)
         testPointLayout.addWidget(self.testPointBrowse)
-        self.testPointToXlsxLayout.addLayout(testPointLayout)
+        testPointToXlsxLayout.addLayout(testPointLayout)
         
         self.testPointOutputLabel = QLabel("输出Excel:")
         self.testPointOutput = QLineEdit()
@@ -390,33 +390,33 @@ class Ui_OtherTab(QWidget):
         testPointOutputLayout = QHBoxLayout()
         testPointOutputLayout.addWidget(self.testPointOutput)
         testPointOutputLayout.addWidget(self.testPointOutputBrowse)
-        self.testPointToXlsxLayout.addLayout(testPointOutputLayout)
+        testPointToXlsxLayout.addLayout(testPointOutputLayout)
         
         self.testPointToXlsxBtn = QPushButton("开始转换")
-        self.testPointToXlsxLayout.addWidget(self.testPointToXlsxBtn)
+        testPointToXlsxLayout.addWidget(self.testPointToXlsxBtn)
         
-        self.testPointToXlsxGroup.setLayout(self.testPointToXlsxLayout)
-        self.convertLayout.addWidget(self.testPointToXlsxGroup)
+        testPointToXlsxGroup.setLayout(testPointToXlsxLayout)
+        convertLayout.addWidget(testPointToXlsxGroup)
         
-        self.convertGroup.setLayout(self.convertLayout)
-        self.layout.addWidget(self.convertGroup)
+        convertGroup.setLayout(convertLayout)
+        layout.addWidget(convertGroup)
         
         # 日志输出区域
-        self.logGroup = QGroupBox("执行日志")
-        self.logLayout = QVBoxLayout()
+        logGroup = QGroupBox("执行日志")
+        logLayout = QVBoxLayout()
         
         self.logText = QPlainTextEdit()
         self.logText.setObjectName("logText")
         self.logText.setReadOnly(True)
-        self.logLayout.addWidget(self.logText)
+        logLayout.addWidget(self.logText)
         
         self.clearLogBtn = QPushButton("清空日志")
-        self.logLayout.addWidget(self.clearLogBtn)
+        logLayout.addWidget(self.clearLogBtn)
         
-        self.logGroup.setLayout(self.logLayout)
-        self.layout.addWidget(self.logGroup)
+        logGroup.setLayout(logLayout)
+        layout.addWidget(logGroup)
         
-        self.layout.addStretch()
+        layout.addStretch()
 
 
 class Ui_MainWindow(object):
@@ -443,7 +443,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setGeometry(QRect(0, 0, 1200, 650))
         self.tabWidget.setTabsClosable(False)
         
-        # 创建4个Tab页面
+        # 创建4个Tab页面 - 存储Tab实例供Controller使用
         self.configTab = Ui_ConfigTab()
         self.configTabWidget = QWidget()
         self.configTab.setupUi(self.configTabWidget)
