@@ -1956,74 +1956,74 @@ class interfaceTestPointToAITestCaseXmind:
             logger.error(f"测试用例转XMind失败: {str(e)}", exc_info=True)
             return False
 
-
-if __name__ == '__main__':
-
-    converter = interfaceTestPointToAITestCaseXmind()
-
-    # 只需提供XMind文件路径，其他全部使用默认值
-    success = converter.convert_testpoint_to_testcase_xmind(
-        xmind_file=r"D:\AIGeneration\testcase\测试点.xmind"
-    )
-
-    if success:
-        print("✓ 转换成功！")
-
-
-    #生成测试点xmind和json
-     # interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
-     #                                      output_path=r"D:\AIGeneration\testcase\output.xmind",
-     #                                      storage_json=r"D:\AIGeneration\testcase\测试点.json")
-     #
-     # converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
-     # result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
-     #
-     # #测试用例
-     # interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
-     #                                    output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
-     #                                    extract=True,
-     #                                    storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
-     #                                    )
-     # time.sleep(5)
-     # interfaceAITestCaseXmind().get_testcase_xmind()
-
-
-    # converter = interfaceImageAITestPointXmind()
-    # converter.get_test_points_from_image(image_path=r"D:\AIGeneration\config\de.png",xmind_output=r"D:\AIGeneration\testcase\测试点.xmind")
-
-
-
-    # converter = TestPointXmindToTestcaseXlsx()
-    #
-    # success = converter.convert_xmind_to_testcase_xlsx(
-    #     xmind_file=r"D:\AIGeneration\testcase\output.xmind",
-    #     output_xlsx_file=r"D:\AIGeneration\testcase\测试用例.xlsx",
-    #     temp_json_dir=r"D:\AIGeneration\testcase"
-    # )
-
-     #测试用例xlsx
-     # interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
-     #                                             json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
-     #                                             output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
-     #
-     #                                          )
-     #测试用例md
-
-    # 简单用法 - 使用默认路径
-    # converter = interfaceAIAnyFlieToXlsx()
-    # success = converter.generate_testcase_xlsx_from_text(
-    #     user_input="电商下单界面功能，包括商品选择、地址管理、优惠券、订单提交等模块"
-    # )
-
-
-
-    # converter = interfaceAIAnyFlieToXlsx()
-    # # 高级用法 - 自定义所有路径
-    # success = converter.generate_testcase_xlsx_from_text(
-    #     user_input="用户登录注册功能",
-    #     output_dir=r"D:\MyProject",
-    #     test_point_file=r"D:\MyProject\testpoints.json",
-    #     testcase_file=r"D:\MyProject\testcases.json",
-    #     xmind_file=r"D:\MyProject\testcases.xmind",
-    #     xlsx_file=r"D:\MyProject\testcases.xlsx"
-    # )
+#
+# if __name__ == '__main__':
+#
+#     converter = interfaceTestPointToAITestCaseXmind()
+#
+#     # 只需提供XMind文件路径，其他全部使用默认值
+#     success = converter.convert_testpoint_to_testcase_xmind(
+#         xmind_file=r"D:\AIGeneration\testcase\测试点.xmind"
+#     )
+#
+#     if success:
+#         print("✓ 转换成功！")
+#
+#
+#     生成测试点xmind和json
+#      interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
+#                                           output_path=r"D:\AIGeneration\testcase\output.xmind",
+#                                           storage_json=r"D:\AIGeneration\testcase\测试点.json")
+#
+#      converter = XmindPointJson(xmind_file=r"D:/AIGeneration/testcase/output.xmind")
+#      result = converter.process_and_save(output_file=r"D:/AIGeneration/testcase/output.json")
+#
+#      #测试用例
+#      interfaceAITestCaseXmind().get_ai_testcase_write_json(user_input=r'D:\AIGeneration\testcase\output.json',
+#                                         output_path=r'D:\AIGeneration\testcase\测试转化数据.json',
+#                                         extract=True,
+#                                         storage_file_path=r'D:\AIGeneration\testcase\测试用例_output.json'
+#                                         )
+#      time.sleep(5)
+#      interfaceAITestCaseXmind().get_testcase_xmind()
+#
+#
+#     converter = interfaceImageAITestPointXmind()
+#     converter.get_test_points_from_image(image_path=r"D:\AIGeneration\config\de.png",xmind_output=r"D:\AIGeneration\testcase\测试点.xmind")
+#
+#
+#
+#     converter = TestPointXmindToTestcaseXlsx()
+#
+#     success = converter.convert_xmind_to_testcase_xlsx(
+#         xmind_file=r"D:\AIGeneration\testcase\output.xmind",
+#         output_xlsx_file=r"D:\AIGeneration\testcase\测试用例.xlsx",
+#         temp_json_dir=r"D:\AIGeneration\testcase"
+#     )
+#
+#      测试用例xlsx
+#      interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
+#                                                  json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
+#                                                  output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
+#
+#                                               )
+#      测试用例md
+#
+#     简单用法 - 使用默认路径
+#     converter = interfaceAIAnyFlieToXlsx()
+#     success = converter.generate_testcase_xlsx_from_text(
+#         user_input="电商下单界面功能，包括商品选择、地址管理、优惠券、订单提交等模块"
+#     )
+#
+#
+#
+#     converter = interfaceAIAnyFlieToXlsx()
+#     # 高级用法 - 自定义所有路径
+#     success = converter.generate_testcase_xlsx_from_text(
+#         user_input="用户登录注册功能",
+#         output_dir=r"D:\MyProject",
+#         test_point_file=r"D:\MyProject\testpoints.json",
+#         testcase_file=r"D:\MyProject\testcases.json",
+#         xmind_file=r"D:\MyProject\testcases.xmind",
+#         xlsx_file=r"D:\MyProject\testcases.xlsx"
+#     )

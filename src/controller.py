@@ -1,203 +1,39 @@
-from src.untitled import Ui_MainWindow
-from PySide6.QtGui import QPixmap, QPainter, QColor, QIcon
-from PySide6.QtWidgets import QMessageBox, QFileDialog
-from PySide6.QtCore import Qt, Signal
+# -*- coding: utf-8 -*-
+"""
+控制器模块 - 业务逻辑层
+Controller 继承 CommonTool，只负责业务逻辑槽函数
+所有UI工具、配置管理、日志、Worker线程均在 commonTool.py 中定义
+"""
 import os
-import yaml
 
-class Controller:
-    def __init__(self, ui: Ui_MainWindow, main_window):
-        """初始化控制器，引用Ui_MainWindow中的Tab实例"""
-        self.ui = ui
-        self.main_window = main_window
-        
-        # 引用各Tab实例，通过它们访问各自的控件
-        self.configTab = ui.configTab
-        self.testPointTab = ui.testPointTab
-        self.testCaseTab = ui.testCaseTab
-        self.otherTab = ui.otherTab
-        
-        # 配置文件路径
-        self.config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config', 'systemConfig.yaml')
-        
-        # 连接信号与槽
-        self.init_ui()
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QMessageBox
 
-    def init_ui(self):
-        """连接所有信号和槽"""
-        # ==================== 配置页面 ====================
-        self.configTab.apiKeyInput.textChanged.connect(self.api_key_changed)
-        self.configTab.modelCombo.currentIndexChanged.connect(self.model_changed)
-        self.configTab.pointJsonPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.pointJsonPathInput))
-        self.configTab.pointTemplatePathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.pointTemplatePathInput))
-        self.configTab.pointImgPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.pointImgPathInput))
-        self.configTab.caseJsonPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.caseJsonPathInput))
-        self.configTab.caseXmindPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.caseXmindPathInput))
-        self.configTab.caseExeclPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.caseExeclPathInput))
-        self.configTab.otherJsonPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.otherJsonPathInput))
-        self.configTab.otherTemplatePathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.otherTemplatePathInput))
-        self.configTab.otherImgPathBrowseBtn.clicked.connect(lambda: self.browse_file(self.configTab.otherImgPathInput))
-        # 保存配置和初始化按钮
-        self.configTab.saveBtn.clicked.connect(self.save_config)
-        self.configTab.loadBtn.clicked.connect(self.load_config)
+from src.commonTool import (
+    CommonTool,
+    GenerateTestPointWorker,
+    ExportTestPointWorker,
+    GenerateTestCaseWorker,
+    GenerateTextCaseWorker,
+    ExportTestCaseXmindWorker,
+    XmindToXlsxWorker,
+)
 
-        # ==================== 测试点功能页面 ====================
-        self.testPointTab.imageRadio.toggled.connect(self.toggle_input_method)
-        self.testPointTab.tp_textRadio.toggled.connect(self.toggle_input_method)
-        self.testPointTab.imageBrowseBtn.clicked.connect(self.select_image)
-        self.testPointTab.tp_generateBtn.clicked.connect(self.generate_test_points)
-        self.testPointTab.tp_clearBtn.clicked.connect(self.clear_test_points)
-        self.testPointTab.exportBtn.clicked.connect(self.export_test_points)
 
-        # ==================== 测试用例功能页面 ====================
-        self.testCaseTab.xmindRadio.toggled.connect(self.toggle_case_input_method)
-        self.testCaseTab.tc_textRadio.toggled.connect(self.toggle_case_input_method)
-        self.testCaseTab.xmindBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.xmindPathInput))
-        self.testCaseTab.templateBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.templateInput))
-        self.testCaseTab.outputBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.outputPathInput))
-        self.testCaseTab.tc_generateBtn.clicked.connect(self.generate_test_cases)
-        self.testCaseTab.tc_clearBtn.clicked.connect(self.clear_test_cases)
-        self.testCaseTab.exportXmindBtn.clicked.connect(self.export_to_xmind)
-        self.testCaseTab.exportXlsxBtn.clicked.connect(self.export_to_xlsx)
+class Controller(CommonTool):
+    """
+    业务逻辑控制器
+    继承 CommonTool 获得：init_ui、browse_file、select_image、toggle_*、
+    save_config、load_config、append_log、clear_log、_start_worker 等工具方法
+    本类只实现各按钮对应的业务逻辑槽函数
+    """
 
-        # ==================== 其他功能页面 ====================
-        self.otherTab.inputXmindBrowse.clicked.connect(lambda: self.browse_file(self.otherTab.inputXmindInput))
-        self.otherTab.outputXlsxBrowse.clicked.connect(lambda: self.browse_file(self.otherTab.outputXlsxInput))
-        self.otherTab.xmindToXlsxBtn.clicked.connect(self.convert_xmind_to_xlsx)
-        self.otherTab.testPointBrowse.clicked.connect(lambda: self.browse_file(self.otherTab.testPointInput))
-        self.otherTab.testPointOutputBrowse.clicked.connect(lambda: self.browse_file(self.otherTab.testPointOutput))
-        self.otherTab.testPointToXlsxBtn.clicked.connect(self.convert_testpoint_to_xlsx)
-        self.otherTab.clearLogBtn.clicked.connect(self.clear_log)
+    def __init__(self, ui, main_window):
+        # CommonTool.__init__ 会完成 UI 引用绑定、信号槽连接和配置加载
+        super().__init__(ui, main_window)
 
-        # 加载已有配置
-        self.load_config()
+    # ==================== 配置变更处理 ====================
 
-    # ==================== 工具方法 ====================
-    def browse_file(self, line_edit):
-        """打开文件选择对话框"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self.main_window,
-            "选择文件",
-            line_edit.text() or "",
-            "所有文件 (*.*);;JSON文件 (*.json);;XMind文件 (*.xmind);;Excel文件 (*.xlsx)"
-        )
-        if file_path:
-            line_edit.setText(file_path)
-
-    def select_image(self):
-        """选择图片并显示预览"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self.main_window,
-            "选择图片",
-            "",
-            "图片文件 (*.png *.jpg *.jpeg *.bmp)"
-        )
-        if file_path:
-            self.current_image_path = file_path
-            self.testPointTab.imagePathInput.setText(file_path)
-
-            # 显示图片预览
-            pixmap = QPixmap(file_path)
-            if not pixmap.isNull():
-                scaled_pixmap = pixmap.scaled(
-                    400, 200,
-                    Qt.KeepAspectRatio,
-                    Qt.SmoothTransformation
-                )
-                self.testPointTab.imagePreviewArea.setPixmap(scaled_pixmap)
-                self.testPointTab.imagePreviewArea.setAlignment(Qt.AlignCenter)
-
-    def toggle_input_method(self):
-        """切换测试点输入方式"""
-        if self.testPointTab.imageRadio.isChecked():
-            self.testPointTab.imageGroup.setVisible(True)
-            self.testPointTab.tp_textGroup.setVisible(False)
-        else:
-            self.testPointTab.imageGroup.setVisible(False)
-            self.testPointTab.tp_textGroup.setVisible(True)
-
-    def toggle_case_input_method(self):
-        """切换测试用例输入方式"""
-        if self.testCaseTab.xmindRadio.isChecked():
-            self.testCaseTab.xmindGroup.setVisible(True)
-            self.testCaseTab.tc_textGroup.setVisible(False)
-        else:
-            self.testCaseTab.xmindGroup.setVisible(False)
-            self.testCaseTab.tc_textGroup.setVisible(True)
-
-    def save_config(self):
-        """保存配置到YAML文件"""
-        try:
-            config = {
-                'DEEPSEEK_API_KEY': self.configTab.apiKeyInput.text(),
-                'OUTPUT_JSON_PATH': self.configTab.pointJsonPathInput.text(),
-                'DEFAULT_TEMPLATE_PATH': self.configTab.pointTemplatePathInput.text(),
-                'IMG_PATH': self.configTab.pointImgPathInput.text(),
-                'TEST_XMIND_PATH': self.configTab.caseJsonPathInput.text(),
-                'TEMPLATE_XMIND_PATH': self.configTab.caseXmindPathInput.text(),
-                'TESTCASE_JSON_PATH': self.configTab.caseExeclPathInput.text(),
-                'CONVERTED_TESTCASES_JSON_PATH': self.configTab.otherJsonPathInput.text(),
-                'TEMPLATE_PATH': self.configTab.otherTemplatePathInput.text(),
-                'TEST_POINT_XMIND_FILE': self.configTab.otherImgPathInput.text()
-            }
-
-            os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                yaml.dump(config, f, allow_unicode=True, default_flow_style=False)
-
-            self.append_log("配置保存成功！")
-            QMessageBox.information(self.main_window, "成功", "配置保存成功！")
-        except Exception as e:
-            error_msg = f"保存配置失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
-
-    def load_config(self):
-        """从YAML文件加载配置"""
-        try:
-            if not os.path.exists(self.config_path):
-                self.append_log("配置文件不存在，使用默认配置")
-                return
-
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-
-            if config:
-                self.configTab.apiKeyInput.setText(config.get('DEEPSEEK_API_KEY', ''))
-                self.configTab.pointJsonPathInput.setText(config.get('OUTPUT_JSON_PATH', ''))
-                self.configTab.pointTemplatePathInput.setText(config.get('DEFAULT_TEMPLATE_PATH', ''))
-                self.configTab.pointImgPathInput.setText(config.get('IMG_PATH', ''))
-                self.configTab.caseJsonPathInput.setText(config.get('TEST_XMIND_PATH', ''))
-                self.configTab.caseXmindPathInput.setText(config.get('TEMPLATE_XMIND_PATH', ''))
-                self.configTab.caseExeclPathInput.setText(config.get('TESTCASE_JSON_PATH', ''))
-                self.configTab.otherJsonPathInput.setText(config.get('CONVERTED_TESTCASES_JSON_PATH', ''))
-                self.configTab.otherTemplatePathInput.setText(config.get('TEMPLATE_PATH', ''))
-                self.configTab.otherImgPathInput.setText(config.get('TEST_POINT_XMIND_FILE', ''))
-
-                self.append_log("配置加载成功！")
-        except Exception as e:
-            error_msg = f"加载配置失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
-
-    # ==================== 日志方法 ====================
-    def append_log(self, message):
-        """追加日志输出到OtherTab的日志区域"""
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        try:
-            self.otherTab.logText.appendPlainText(f"[{timestamp}] {message}")
-        except Exception as e:
-            print(f"[{timestamp}] {message} - Log error: {e}")
-
-    def clear_log(self):
-        """清空日志"""
-        try:
-            self.otherTab.logText.clear()
-        except Exception as e:
-            print(f"Clear log error: {e}")
-
-    # ==================== 业务逻辑方法 ====================
     def api_key_changed(self, text):
         """API Key变化时的处理"""
         pass
@@ -207,40 +43,43 @@ class Controller:
         model_name = self.configTab.modelCombo.currentText()
         self.append_log(f"模型切换为：{model_name}")
 
+    # ==================== 测试点业务逻辑 ====================
+
     def generate_test_points(self):
-        """生成测试点"""
+        """生成测试点（支持图片识别 / 文本输入两种模式）"""
         try:
-            self.append_log("开始生成测试点...")
+            output_dir = self._get_output_dir()
+            output_json = self.configTab.pointJsonPathInput.text() or os.path.join(output_dir, "测试点.json")
+            output_xmind = os.path.join(output_dir, "测试点.xmind")
 
             if self.testPointTab.imageRadio.isChecked():
+                # ---- 图片识别模式 ----
                 img_path = self.testPointTab.imagePathInput.text()
                 if not img_path:
                     QMessageBox.warning(self.main_window, "警告", "请先选择图片")
                     return
-                self.append_log(f"识别图片：{img_path}")
+                worker = GenerateTestPointWorker(
+                    image_path=img_path,
+                    output_json=output_json,
+                    output_xmind=output_xmind
+                )
+                self._start_worker(worker, f"开始从图片生成测试点：{img_path}")
             else:
+                # ---- 文本输入模式 ----
                 text = self.testPointTab.testPointTextInput.toPlainText()
                 if not text:
                     QMessageBox.warning(self.main_window, "警告", "请输入测试点内容")
                     return
-                self.append_log("处理文本输入")
-
-            # 检查选项
-            options = []
-            if self.testPointTab.strictCheck.isChecked():
-                options.append("严格模式")
-            if self.testPointTab.detailedCheck.isChecked():
-                options.append("详细输出")
-            if options:
-                self.append_log(f"选项：{', '.join(options)}")
-
-            self.append_log("测试点生成完成（示例）")
-            QMessageBox.information(self.main_window, "成功", "测试点生成完成（示例）")
+                worker = GenerateTestPointWorker(
+                    text_input=text,
+                    output_json=output_json,
+                    output_xmind=output_xmind
+                )
+                self._start_worker(worker, "开始从文本生成测试点...")
 
         except Exception as e:
-            error_msg = f"生成测试点失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
+            self.append_log(f"启动测试点生成失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     def clear_test_points(self):
         """清空测试点输入"""
@@ -254,54 +93,73 @@ class Controller:
         self.append_log("已清空测试点输入")
 
     def export_test_points(self):
-        """导出测试点到XMind"""
+        """导出测试点JSON到XMind"""
         try:
-            output_path = self.configTab.pointJsonPathInput.text()
-            if not output_path:
-                QMessageBox.warning(self.main_window, "警告", "请先配置输出JSON路径")
+            json_path = self.configTab.pointJsonPathInput.text()
+            if not json_path or not os.path.exists(json_path):
+                QMessageBox.warning(self.main_window, "警告", "测试点JSON文件不存在，请先生成测试点")
                 return
 
-            self.append_log(f"导出测试点到：{output_path}")
-            QMessageBox.information(self.main_window, "成功", "导出功能待实现")
+            output_dir = self._get_output_dir()
+            output_xmind = os.path.join(output_dir, "测试点.xmind")
+
+            worker = ExportTestPointWorker(json_path, output_xmind)
+            self._start_worker(worker, f"导出测试点XMind：{output_xmind}")
 
         except Exception as e:
-            error_msg = f"导出测试点失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
+            self.append_log(f"启动导出失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
+
+    # ==================== 测试用例业务逻辑 ====================
 
     def generate_test_cases(self):
-        """生成测试用例"""
+        """从测试点XMind文件生成测试用例XMind（或从文本走全链路）"""
         try:
-            self.append_log("开始生成测试用例...")
+            output_dir = self._get_output_dir()
 
-            # 检查输入
             if self.testCaseTab.xmindRadio.isChecked():
+                # ---- XMind导入模式：测试点XMind → AI → 测试用例XMind ----
                 xmind_path = self.testCaseTab.xmindPathInput.text()
                 if not xmind_path:
-                    QMessageBox.warning(self.main_window, "警告", "请先选择XMind文件")
+                    QMessageBox.warning(self.main_window, "警告", "请先选择测试点XMind文件")
                     return
-                self.append_log(f"读取XMind文件：{xmind_path}")
+                if not os.path.exists(xmind_path):
+                    QMessageBox.warning(self.main_window, "警告", f"文件不存在：{xmind_path}")
+                    return
+                worker = GenerateTestCaseWorker(
+                    xmind_path=xmind_path,
+                    output_dir=output_dir
+                )
+                self._start_worker(worker, f"开始从XMind生成测试用例：{xmind_path}")
             else:
+                # ---- 文本输入模式：文本 → 全链路 → XLSX ----
                 text = self.testCaseTab.testCaseTextInput.toPlainText()
                 if not text:
                     QMessageBox.warning(self.main_window, "警告", "请输入测试用例内容")
                     return
-                self.append_log("处理文本输入")
-
-            # 检查输出路径
-            output_path = self.testCaseTab.outputPathInput.text()
-            if not output_path:
-                QMessageBox.warning(self.main_window, "警告", "请先配置输出路径")
-                return
-
-            self.append_log(f"输出路径：{output_path}")
-            self.append_log("测试用例生成完成（示例）")
-            QMessageBox.information(self.main_window, "成功", "测试用例生成完成（示例）")
+                out_dir = self.testCaseTab.outputPathInput.text() or output_dir
+                worker = GenerateTextCaseWorker(text, out_dir)
+                self._start_worker(worker, "开始从文本生成测试用例...")
 
         except Exception as e:
-            error_msg = f"生成测试用例失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
+            self.append_log(f"启动测试用例生成失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
+
+    def generate_text_cases(self):
+        """测试点文本输入 → 一键生成测试用例XLSX（全链路）"""
+        try:
+            text = self.testCaseTab.testCaseTextInput.toPlainText()
+            if not text:
+                QMessageBox.warning(self.main_window, "警告", "请在文本输入区域输入需求描述")
+                return
+
+            output_dir = self.testCaseTab.outputPathInput.text() or self._get_output_dir()
+            worker = GenerateTextCaseWorker(text, output_dir)
+            self._start_worker(worker, "开始从文本一键生成测试用例...")
+
+        except Exception as e:
+            self.append_log(f"启动文本生成用例失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     def clear_test_cases(self):
         """清空测试用例输入"""
@@ -312,17 +170,71 @@ class Controller:
         self.append_log("已清空测试用例输入")
 
     def export_to_xmind(self):
-        """导出为XMind格式"""
-        QMessageBox.information(self.main_window, "提示", "导出XMind功能待实现")
-        self.append_log("导出XMind功能待实现")
+        """测试用例JSON转XMind导出
+        数据流：caseJsonPathInput(测试用例JSON) → TestcaseJsonToXmind → caseXmindPathInput(XMind输出)
+        """
+        try:
+            # 读取测试用例JSON路径（配置页 → 测试用例配置 → 输出JSON路径）
+            json_path = self.configTab.caseJsonPathInput.text()
+            if not json_path or not os.path.exists(json_path):
+                # 尝试使用默认路径
+                json_path = os.path.join(self._get_output_dir(), "测试用例_output.json")
+                if not os.path.exists(json_path):
+                    QMessageBox.warning(self.main_window, "警告",
+                                        "测试用例JSON文件不存在，请先生成测试用例或配置正确的JSON路径")
+                    return
+
+            # XMind输出路径（配置页 → 测试用例配置 → XMind保存路径）
+            output_xmind = self.configTab.caseXmindPathInput.text()
+            if not output_xmind:
+                output_xmind = os.path.join(self._get_output_dir(), "测试用例.xmind")
+
+            worker = ExportTestCaseXmindWorker(json_path, output_xmind)
+            self._start_worker(worker, f"导出测试用例XMind：{json_path} → {output_xmind}")
+
+        except Exception as e:
+            self.append_log(f"启动XMind导出失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     def export_to_xlsx(self):
-        """导出为Excel格式"""
-        QMessageBox.information(self.main_window, "提示", "导出Excel功能待实现")
-        self.append_log("导出Excel功能待实现")
+        """XMind转Excel导出
+        数据流：caseXmindPathInput(XMind文件) → TestPointXmindToTestcaseXlsx → 输出XLSX
+        """
+        try:
+            # 读取XMind路径（配置页 → 测试用例配置 → XMind保存路径）
+            xmind_path = self.configTab.caseXmindPathInput.text()
+            if not xmind_path:
+                # 尝试使用默认路径
+                xmind_path = os.path.join(self._get_output_dir(), "测试用例.xmind")
+            if not os.path.exists(xmind_path):
+                QMessageBox.warning(self.main_window, "警告",
+                                    f"XMind文件不存在：{xmind_path}\n请先生成XMind或配置正确路径")
+                return
+
+            # Excel输出路径（配置页 → 测试用例配置 → Excel保存路径）
+            output_xlsx = self.configTab.caseExeclPathInput.text()
+            if not output_xlsx:
+                output_xlsx = os.path.join(self._get_output_dir(), "测试用例.xlsx")
+            # 确保输出扩展名为xlsx
+            if not output_xlsx.endswith('.xlsx'):
+                output_xlsx = os.path.join(output_xlsx, "测试用例.xlsx")
+
+            worker = XmindToXlsxWorker(xmind_path, output_xlsx)
+            self._start_worker(worker, f"导出Excel：{xmind_path} → {output_xlsx}")
+
+        except Exception as e:
+            self.append_log(f"启动Excel导出失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
+
+
+    def export_xmind_to_xlsx(self):
+
+
+
+    # ==================== 其他功能业务逻辑 ====================
 
     def convert_xmind_to_xlsx(self):
-        """转换XMind到Excel"""
+        """转换XMind到Excel（其他功能页面）"""
         try:
             input_path = self.otherTab.inputXmindInput.text()
             output_path = self.otherTab.outputXlsxInput.text()
@@ -330,21 +242,22 @@ class Controller:
             if not input_path:
                 QMessageBox.warning(self.main_window, "警告", "请选择输入的XMind文件")
                 return
-
+            if not os.path.exists(input_path):
+                QMessageBox.warning(self.main_window, "警告", f"XMind文件不存在：{input_path}")
+                return
             if not output_path:
                 QMessageBox.warning(self.main_window, "警告", "请配置输出的Excel路径")
                 return
 
-            self.append_log(f"转换中：{input_path} -> {output_path}")
-            QMessageBox.information(self.main_window, "成功", "转换功能待实现")
+            worker = XmindToXlsxWorker(input_path, output_path)
+            self._start_worker(worker, f"转换中：{input_path} -> {output_path}")
 
         except Exception as e:
-            error_msg = f"转换失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
+            self.append_log(f"启动转换失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     def convert_testpoint_to_xlsx(self):
-        """转换测试点XMind到Excel"""
+        """转换测试点XMind到Excel（其他功能页面）"""
         try:
             input_path = self.otherTab.testPointInput.text()
             output_path = self.otherTab.testPointOutput.text()
@@ -352,15 +265,16 @@ class Controller:
             if not input_path:
                 QMessageBox.warning(self.main_window, "警告", "请选择测试点XMind文件")
                 return
-
+            if not os.path.exists(input_path):
+                QMessageBox.warning(self.main_window, "警告", f"XMind文件不存在：{input_path}")
+                return
             if not output_path:
                 QMessageBox.warning(self.main_window, "警告", "请配置输出的Excel路径")
                 return
 
-            self.append_log(f"转换测试点：{input_path} -> {output_path}")
-            QMessageBox.information(self.main_window, "成功", "转换功能待实现")
+            worker = XmindToXlsxWorker(input_path, output_path)
+            self._start_worker(worker, f"转换测试点：{input_path} -> {output_path}")
 
         except Exception as e:
-            error_msg = f"转换失败：{str(e)}"
-            self.append_log(error_msg)
-            QMessageBox.critical(self.main_window, "错误", error_msg)
+            self.append_log(f"启动转换失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))

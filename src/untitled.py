@@ -285,7 +285,7 @@ class Ui_TestCaseTab(QWidget):
         
         self.templateLabel = QLabel("模板文件:")
         self.templateInput = QLineEdit()
-        self.templateBrowseBtn = QPushButton("选择文件")
+        self.templateBrowseBtn = QPushButton("选择模板文件")
         templateLayout = QHBoxLayout()
         templateLayout.addWidget(self.templateInput)
         templateLayout.addWidget(self.templateBrowseBtn)
@@ -323,14 +323,16 @@ class Ui_TestCaseTab(QWidget):
         
         # 操作按钮
         buttonLayout = QHBoxLayout()
-        self.tc_generateBtn = QPushButton("生成测试用例")
+        self.tc_text_generateBtn = QPushButton("测试点文本生成测试用例XMind")
+        self.tc_generateBtn = QPushButton("测试点XMind生成测试用例")
         self.tc_clearBtn = QPushButton("清空")
-        self.exportXmindBtn = QPushButton("导出XMind")
-        self.exportXlsxBtn = QPushButton("导出Excel")
+        self.exportXmindBtn = QPushButton("测试用例json转XMind")
+        self.exportXlsxBtn = QPushButton("测试用例XMind转Excel")
+        buttonLayout.addWidget(self.tc_text_generateBtn)
         buttonLayout.addWidget(self.tc_generateBtn)
-        buttonLayout.addWidget(self.tc_clearBtn)
         buttonLayout.addWidget(self.exportXmindBtn)
         buttonLayout.addWidget(self.exportXlsxBtn)
+        buttonLayout.addWidget(self.tc_clearBtn)
         buttonLayout.addStretch()
         layout.addLayout(buttonLayout)
         

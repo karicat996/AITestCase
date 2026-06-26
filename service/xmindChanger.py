@@ -2142,7 +2142,7 @@ class TextRecognition:
 
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
     # converter = TestPointToAIJson()
     #
     # # 一键转换并保存
@@ -2230,25 +2230,25 @@ class TextRecognition:
 
 
 
-    # 测试用例JSON转XMind示例
-    # print("\n=== 测试用例JSON转XMind ===")
-    # testcase_converter = TestcaseJsonToXmind()
-    #
-    # # 读取测试用例JSON文件
-    # testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
-    # get_json = fileProcessor()
-    # testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
-    #
-    # # 转换并导出
-    # output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
-    # success = testcase_converter.convert_and_export_to_xmind(
-    #     input_data=testcase_data,
-    #     output_xmind_file=output_xmind,
-    #     root_title="测试用例",
-    #     sheet_title="功能测试用例"
-    # )
-    #
-    # if success:
-    #     print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
-    # else:
-    #     print("✗ 转换失败")
+   # 测试用例JSON转XMind示例
+    print("\n=== 测试用例JSON转XMind ===")
+    testcase_converter = TestcaseJsonToXmind()
+
+    # 读取测试用例JSON文件
+    testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
+    get_json = fileProcessor()
+    testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
+
+    # 转换并导出
+    output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+    success = testcase_converter.convert_and_export_to_xmind(
+        input_data=testcase_data,
+        output_xmind_file=output_xmind,
+        root_title="测试用例",
+        sheet_title="功能测试用例"
+    )
+
+    if success:
+        print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
+    else:
+        print("✗ 转换失败")
