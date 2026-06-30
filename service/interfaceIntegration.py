@@ -520,14 +520,13 @@ class interfaceAITestCaseXlsx:
         self.to_xlsx = AIJsonToXlsx()
 
 
-    def get_testcase_xlsx(self,output_json_path,json_file_path, output_xlsx_path):
-        res = self.dc.write_to_json(output_json_path)
-
+    def get_testcase_xlsx(self,testcase_xmind_path,json_file_path,testcase_json_path):
+        res = self.dc.write_to_json(testcase_xmind_path)
         xmind_data = self.converter.read_xmind_json(json_file_path)
         # 步骤2：转换为测试用例格式
         testcase_data = self.converter.convert_to_testcase_format(xmind_data)
         # 步骤3：保存数据
-        self.converter.save_to_json(testcase_data, output_xlsx_path)
+        self.converter.save_to_json(testcase_data,testcase_json_path)
         # 步骤1：读取数据
         data = self.to_xlsx.read_data()
         # 步骤2：过滤数据
@@ -1956,8 +1955,8 @@ class interfaceTestPointToAITestCaseXmind:
             logger.error(f"测试用例转XMind失败: {str(e)}", exc_info=True)
             return False
 
-#
-# if __name__ == '__main__':
+
+if __name__ == '__main__':
 #
 #     converter = interfaceTestPointToAITestCaseXmind()
 #
@@ -2001,12 +2000,12 @@ class interfaceTestPointToAITestCaseXmind:
 #         temp_json_dir=r"D:\AIGeneration\testcase"
 #     )
 #
-#      测试用例xlsx
-#      interfaceAITestCaseXlsx().get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
-#                                                  json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
-#                                                  output_xlsx_path=r"D:\AIGeneration\testcase\output.json"
-#
-#                                               )
+    #    测试用例xlsx
+     interfaceAITestCaseXlsx().get_testcase_xlsx(testcase_xmind_path = r"D:\AIGeneration\testcase\xmind_output.json",
+                                                 json_file_path = r"D:\AIGeneration\testcase\xmind_output.json",
+                                                 testcase_json_path = r"D:\AIGeneration\testcase\output.json"
+
+                                              )
 #      测试用例md
 #
 #     简单用法 - 使用默认路径

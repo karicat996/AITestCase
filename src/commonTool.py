@@ -481,9 +481,9 @@ class TestcaseXmindToXlsxWorker(BaseWorker):
     def run(self):
         try:
             converter = interfaceAITestCaseXlsx()
-            success = converter.get_testcase_xlsx(output_json_path=r"D:\AIGeneration\testcase\xmind_output.json",
-                                                             json_file_path=r"D:\AIGeneration\testcase\xmind_output.json",
-                                                             output_xlsx_path=self.output_xlsx
+            success = converter.get_testcase_xlsx(testcase_xmind_path=self.xmind_path,
+                                                             json_file_path=self.json_path,
+                                                             testcase_json_path=r"D:\AIGeneration\testcase\output.json"
                                                           )
             if success:
                 self.finished_signal.emit(True, f"Excel导出成功：{self.output_xlsx}")

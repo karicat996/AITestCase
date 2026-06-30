@@ -14,7 +14,7 @@ from openpyxl.styles import Font, PatternFill
 import os
 
 fp = fileProcessor()
-OUTPUT_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_JSON_PATH")
+OUTPUT_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_TESTCASE_XMIND_PATH")
 DEFAULT_TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("DEFAULT_TEMPLATE_PATH")
 TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEMPLATE_PATH")
 TEST_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEST_XMIND_PATH")
@@ -1627,7 +1627,7 @@ class TestcaseXmindToAIJson:
             self.logger.error(f"转换数据格式失败: {str(e)}", exc_info=True)
             return {'测试用例': []}
 
-    def save_to_json(self, data, output_path=None):
+    def save_to_json(self, data, testcase_json_path=None):
         """
         保存为JSON文件
         Args:
@@ -1637,7 +1637,7 @@ class TestcaseXmindToAIJson:
             bool: 是否保存成功
         """
         try:
-            path = output_path or self.output_json_path
+            path = testcase_json_path or self.output_json_path
 
             # 确保目录存在
             output_dir = os.path.dirname(path)
@@ -2143,6 +2143,9 @@ class TextRecognition:
 
 
 if __name__ == '__main__':
+
+    # converter = MxindDataProcessor()
+    # converter.write_to_json(output_json_path=r'D:\AIGeneration\testcase\output.json')
     # converter = TestPointToAIJson()
     #
     # # 一键转换并保存
@@ -2157,17 +2160,17 @@ if __name__ == '__main__':
     # dc = MxindDataProcessor()
     # res = dc.write_to_json()
 
-    # #
-    # converter = TestcaseXmindToAIJson()
     #
-    # # 步骤1：读取XMind JSON
-    # xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
-    #
-    # # 步骤2：转换为测试用例格式
-    # testcase_data = converter.convert_to_testcase_format(xmind_data)
-    #
-    # # 步骤3：保存
-    # converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+    converter = TestcaseXmindToAIJson()
+
+    # 步骤1：读取XMind JSON
+    xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
+
+    # 步骤2：转换为测试用例格式
+    testcase_data = converter.convert_to_testcase_format(xmind_data)
+
+    # 步骤3：保存
+    converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
     #
 
 
@@ -2230,25 +2233,25 @@ if __name__ == '__main__':
 
 
 
-   # 测试用例JSON转XMind示例
-    print("\n=== 测试用例JSON转XMind ===")
-    testcase_converter = TestcaseJsonToXmind()
-
-    # 读取测试用例JSON文件
-    testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
-    get_json = fileProcessor()
-    testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
-
-    # 转换并导出
-    output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
-    success = testcase_converter.convert_and_export_to_xmind(
-        input_data=testcase_data,
-        output_xmind_file=output_xmind,
-        root_title="测试用例",
-        sheet_title="功能测试用例"
-    )
-
-    if success:
-        print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
-    else:
-        print("✗ 转换失败")
+   # # 测试用例JSON转XMind示例
+   #  print("\n=== 测试用例JSON转XMind ===")
+   #  testcase_converter = TestcaseJsonToXmind()
+   #
+   #  # 读取测试用例JSON文件
+   #  testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
+   #  get_json = fileProcessor()
+   #  testcase_data = get_json.find_and_read_file(testcase_json_path, type="json")
+   #
+   #  # 转换并导出
+   #  output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+   #  success = testcase_converter.convert_and_export_to_xmind(
+   #      input_data=testcase_data,
+   #      output_xmind_file=output_xmind,
+   #      root_title="测试用例",
+   #      sheet_title="功能测试用例"
+   #  )
+   #
+   #  if success:
+   #      print(f"✓ 测试用例XMind文件已生成：{output_xmind}")
+   #  else:
+   #      print("✗ 转换失败")
