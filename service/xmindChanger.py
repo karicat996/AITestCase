@@ -8,23 +8,25 @@ from utils.logs import LogManager
 from common.textRecognition import *
 from loguru import logger
 from common.fileProcessor import *
+from common.pathConfig import path_config, DEFAULT_OUTPUT_DIR
 import pandas as pd
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill
 import os
 
-fp = fileProcessor()
-OUTPUT_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_TESTCASE_XMIND_PATH")
-DEFAULT_TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("DEFAULT_TEMPLATE_PATH")
-TEMPLATE_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEMPLATE_PATH")
-TEST_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEST_XMIND_PATH")
-TEMPLATE_XMIND_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEMPLATE_XMIND_PATH")
-TESTCASE_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TESTCASE_JSON_PATH")
-OUTPUT_XLSX_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("OUTPUT_XLSX_PATH")
-CONVERTED_TESTCASES_JSON_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("CONVERTED_TESTCASES_JSON_PATH")
-IMG_PATH = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("IMG_PATH")
-TEST_POINT_XMIND_FILE = fp.find_and_read_file("config/systemConfig.yaml", type="yaml").get("TEST_POINT_XMIND_FILE")
-LogManager(log_dir=r"D:\AIGeneration\utils\logs")
+# 从单例 PathConfig 一次性读取所有路径配置（避免重复IO）
+_config = path_config.config
+OUTPUT_JSON_PATH = _config.get("OUTPUT_TESTCASE_XMIND_PATH")
+DEFAULT_TEMPLATE_PATH = _config.get("DEFAULT_TEMPLATE_PATH")
+TEMPLATE_PATH = _config.get("TEMPLATE_PATH")
+TEST_XMIND_PATH = _config.get("TEST_XMIND_PATH")
+TEMPLATE_XMIND_PATH = _config.get("TEMPLATE_XMIND_PATH")
+TESTCASE_JSON_PATH = _config.get("TESTCASE_JSON_PATH")
+OUTPUT_XLSX_PATH = _config.get("OUTPUT_XLSX_PATH")
+CONVERTED_TESTCASES_JSON_PATH = _config.get("CONVERTED_TESTCASES_JSON_PATH")
+IMG_PATH = _config.get("IMG_PATH")
+TEST_POINT_XMIND_FILE = _config.get("TEST_POINT_XMIND_FILE")
+# LogManager 已在 pathConfig.py 模块级初始化，无需重复调用
 
 
 def _build_xmind_topic(xmind_topic, data):
@@ -78,8 +80,18 @@ def _build_xmind_topic(xmind_topic, data):
 
 #  xmind数据整理
 class MxindDataProcessor:
-    def __init__(self):
-        self.xmind_file = TEST_XMIND_PATH
+    def __init__(self, xmind_file=None):
+        """
+        初始化XMind数据处理器
+
+        Args:
+            xmind_file: XMind文件路径，优先传参，无则使用配置 TEST_XMIND_PATH
+        Raises:
+            ValueError: 当路径未配置时
+        """
+        self.xmind_file = xmind_file or TEST_XMIND_PATH
+        if not self.xmind_file:
+            raise ValueError("xmind_file未配置，请传入参数或在systemConfig.yaml中设置TEST_XMIND_PATH")
         self.logging = LogManager()
         self.case_dict = {}
     def xmind_to_json(self):
@@ -91,13 +103,13 @@ class MxindDataProcessor:
             data = sheet[0]
             return data
             print(data)
-    def write_to_json(self,output_json_path):
+    def write_to_json(self,xmindJson_to_output_path):
         res = self.xmind_to_json()
         # 获取到数据后写入xmind.json文件
         if res:
-            with open(output_json_path, 'w', encoding='utf-8') as f:
+            with open(xmindJson_to_output_path, 'w', encoding='utf-8') as f:
                 json.dump(res, f, ensure_ascii=False, indent=2)
-            print(f"✓ XMind数据已保存到: {output_json_path}")
+            print(f"✓ XMind数据已保存到: {xmindJson_to_output_path}")
         else:
             print("✗ 未能读取到XMind数据")
 
@@ -239,12 +251,19 @@ class AdvancedTestCaseExtractor:
 
 #字典转化成xlsx
 class DicToXlsx:
-    def __init__(self):
-        self.xlsx_file = r'C:\Users\admin\Desktop\demo.xlsx'
+    def __init__(self, xlsx_file=None, xmind_file=None):
+        """
+        初始化字典转Excel处理器
+
+        Args:
+            xlsx_file: 输出Excel文件路径，默认使用 testcase/demo.xlsx
+            xmind_file: 输入XMind文件路径，传入或从配置读取
+        """
+        self.xlsx_file = xlsx_file or os.path.join(DEFAULT_OUTPUT_DIR, "demo.xlsx")
         file_dir = os.path.dirname(self.xlsx_file)
         if file_dir and not os.path.exists(file_dir):  # 只有当目录不存在时才创建
             os.makedirs(file_dir, exist_ok=True)
-        json_data = MxindDataProcessor().xmind_to_json()
+        json_data = MxindDataProcessor(xmind_file).xmind_to_json()
         extractor = AdvancedTestCaseExtractor(max_depth=10)
         self.data = extractor.extract(json_data)
         statistics = extractor.get_statistics()
@@ -635,7 +654,7 @@ class TestcasePointJsonToXmind:
             sheet = workbook.getPrimarySheet()
 
             if not sheet:
-                self.logger.error("模板文件中没有工作表")
+                logger.error("模板文件中没有工作表")
                 return False
 
             # 设置工作表标题
@@ -1036,7 +1055,7 @@ class TestcaseJsonToXmind:
             sheet = workbook.getPrimarySheet()
 
             if not sheet:
-                self.logger.error("模板文件中没有工作表")
+                logger.error("模板文件中没有工作表")
                 return False
 
             sheet_title = json_data.get('sheet_title', self.DEFAULT_SHEET_TITLE) if isinstance(json_data, dict) else self.DEFAULT_SHEET_TITLE
@@ -1388,10 +1407,21 @@ class TestcaseXmindToAIJson:
     筛选过滤相关数据转化为相关格式json
     """
 
-    def __init__(self):
-        self.xmind_json_path = OUTPUT_JSON_PATH
-        self.output_json_path = CONVERTED_TESTCASES_JSON_PATH
-        self.logger = LogManager().get_logger() if hasattr(LogManager(), 'get_logger') else logger
+    def __init__(self, xmind_json_path=None, output_json_path=None):
+        """
+        初始化测试用例XMind转JSON转换器
+
+        Args:
+            xmind_json_path: XMind JSON中间文件路径，优先传参，无则使用配置 OUTPUT_JSON_PATH
+            output_json_path: 测试用例JSON输出路径，优先传参，无则使用配置 CONVERTED_TESTCASES_JSON_PATH
+        """
+        self.xmind_json_path = path_config.resolve_path(
+            xmind_json_path, "OUTPUT_JSON_PATH", raise_if_missing=False, name="XMind JSON中间文件路径"
+        )
+        self.output_json_path = path_config.resolve_path(
+            output_json_path, "CONVERTED_TESTCASES_JSON_PATH", raise_if_missing=False, name="测试用例JSON路径"
+        )
+        self.logger = logger
 
     def read_xmind_json(self, json_file_path):
         """
@@ -1412,7 +1442,7 @@ class TestcaseXmindToAIJson:
                 # 如果失败，尝试用ast.literal_eval读取Python字典格式
                 self.logger.info("检测到非标准JSON格式，尝试使用ast解析...")
                 import ast
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(json_file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
                 # 将 None 替换为 null，True/False 替换为标准值
@@ -1689,9 +1719,22 @@ class TestcaseXmindToAIJson:
 #AI给出json，转化为execl格式文件
 class AIJsonToXlsx:
 
-    def __init__(self):
-        self.file_path = TESTCASE_JSON_PATH
-        self.output_file = OUTPUT_XLSX_PATH
+    def __init__(self, file_path=None, output_file=None):
+        """
+        初始化AI JSON转Excel处理器
+
+        Args:
+            file_path: 输入JSON文件路径，优先传参，无则使用配置 TESTCASE_JSON_PATH
+            output_file: 输出Excel路径，优先传参，无则使用配置 OUTPUT_XLSX_PATH
+        Raises:
+            ValueError: 当路径未配置时
+        """
+        self.file_path = file_path or TESTCASE_JSON_PATH
+        self.output_file = output_file or OUTPUT_XLSX_PATH
+        if not self.file_path:
+            raise ValueError("file_path未配置，请传入参数或在systemConfig.yaml中设置TESTCASE_JSON_PATH")
+        if not self.output_file:
+            raise ValueError("output_file未配置，请传入参数或在systemConfig.yaml中设置OUTPUT_XLSX_PATH")
         self.sheet_name = "Sheet1"
         self.column_names = []
 
@@ -2050,11 +2093,15 @@ class TextRecognition:
     def __init__(self, image_path=None):
         """
         初始化文本识别器
-        
+
         Args:
-            image_path: 图片路径，默认为配置文件中的IMG_PATH
+            image_path: 图片路径，优先传参，无则使用配置 IMG_PATH
+        Raises:
+            ValueError: 当路径未配置时
         """
-        self.ocr_img = image_path if image_path else IMG_PATH
+        self.ocr_img = image_path or IMG_PATH
+        if not self.ocr_img:
+            raise ValueError("image_path未配置，请传入参数或在systemConfig.yaml中设置IMG_PATH")
         logger.info(f"TextRecognition初始化完成，图片路径: {self.ocr_img}")
     
     def get_ai_point(self, user_input):

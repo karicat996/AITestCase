@@ -16,8 +16,10 @@ from service.interfaceIntegration import (
     interfaceImageAITestPointXmind,
     interfaceTestPointToAITestCaseXmind,
     interfaceAIAnyFlieToXlsx,
+    interfaceAITestCaseXlsx,
     TestPointXmindToTestcaseXlsx,
 )
+from common.pathConfig import path_config, DEFAULT_OUTPUT_DIR
 
 
 # ========================== CommonTool 基类 ==========================
@@ -74,14 +76,16 @@ class CommonTool:
         # ==================== 测试用例功能页面 ====================
         self.testCaseTab.xmindRadio.toggled.connect(self.toggle_case_input_method)
         self.testCaseTab.tc_textRadio.toggled.connect(self.toggle_case_input_method)
+        self.testCaseTab.testcaseRadio.toggled.connect(self.toggle_case_input_method)
         self.testCaseTab.xmindBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.xmindPathInput))
+        self.testCaseTab.testCaseXmindBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.testCaseXmindPathInput))
         self.testCaseTab.templateBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.templateInput))
         self.testCaseTab.outputBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.outputPathInput))
         self.testCaseTab.tc_text_generateBtn.clicked.connect(self.generate_text_cases)
         self.testCaseTab.tc_generateBtn.clicked.connect(self.generate_test_cases)
         self.testCaseTab.tc_clearBtn.clicked.connect(self.clear_test_cases)
         self.testCaseTab.exportXmindBtn.clicked.connect(self.export_to_xmind)
-        self.testCaseTab.exportXlsxBtn.clicked.connect(self.export_to_xlsx)
+        self.testCaseTab.exportXlsxBtn.clicked.connect(self.export_xmind_to_xlsx)
 
         # ==================== 其他功能页面 ====================
         self.otherTab.inputXmindBrowse.clicked.connect(lambda: self.browse_file(self.otherTab.inputXmindInput))
@@ -142,19 +146,40 @@ class CommonTool:
             self.testPointTab.tp_textGroup.setVisible(True)
 
     def toggle_case_input_method(self):
-        """切换测试用例输入方式，同时控制对应操作按钮的可见性"""
+        """切换测试用例输入方式，同时控制对应输入区域和操作按钮的可见性"""
         if self.testCaseTab.xmindRadio.isChecked():
-            # XMind导入模式：显示"XMind生成测试用例"按钮，隐藏"文本生成测试用例XMind"按钮
+            # 测试点XMind导入模式
             self.testCaseTab.xmindGroup.setVisible(True)
             self.testCaseTab.tc_textGroup.setVisible(False)
+            self.testCaseTab.testCaseXmindGroup.setVisible(False)
+            self.testCaseTab.outputGroup.setVisible(True)
             self.testCaseTab.tc_generateBtn.setVisible(True)
             self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            self.testCaseTab.exportXmindBtn.setVisible(True)
+            self.testCaseTab.exportXlsxBtn.setVisible(True)
+            self.testCaseTab.tc_clearBtn.setVisible(True)
+        elif self.testCaseTab.testcaseRadio.isChecked():
+            # 测试用例XMind导入模式：仅显示测试用例XMind输入、输出设置、转Excel和清空按钮
+            self.testCaseTab.xmindGroup.setVisible(False)
+            self.testCaseTab.tc_textGroup.setVisible(False)
+            self.testCaseTab.testCaseXmindGroup.setVisible(True)
+            self.testCaseTab.outputGroup.setVisible(True)
+            self.testCaseTab.tc_generateBtn.setVisible(False)
+            self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            self.testCaseTab.exportXmindBtn.setVisible(False)
+            self.testCaseTab.exportXlsxBtn.setVisible(True)
+            self.testCaseTab.tc_clearBtn.setVisible(True)
         else:
-            # 文本输入模式：显示"文本生成测试用例XMind"按钮，隐藏"XMind生成测试用例"按钮
+            # 文本输入模式
             self.testCaseTab.xmindGroup.setVisible(False)
             self.testCaseTab.tc_textGroup.setVisible(True)
+            self.testCaseTab.testCaseXmindGroup.setVisible(False)
+            self.testCaseTab.outputGroup.setVisible(True)
             self.testCaseTab.tc_generateBtn.setVisible(False)
             self.testCaseTab.tc_text_generateBtn.setVisible(True)
+            self.testCaseTab.exportXmindBtn.setVisible(True)
+            self.testCaseTab.exportXlsxBtn.setVisible(True)
+            self.testCaseTab.tc_clearBtn.setVisible(True)
 
     # ==================== 配置管理 ====================
 
@@ -252,10 +277,10 @@ class CommonTool:
     # ==================== Worker管理工具 ====================
 
     def _get_output_dir(self):
-        """获取默认输出目录"""
+        """获取默认输出目录（UI配置 → PathConfig默认）"""
         output_dir = os.path.dirname(self.configTab.pointJsonPathInput.text())
         if not output_dir:
-            output_dir = r"D:\AIGeneration\testcase"
+            output_dir = path_config.resolve_output_dir()
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
@@ -481,10 +506,10 @@ class TestcaseXmindToXlsxWorker(BaseWorker):
     def run(self):
         try:
             converter = interfaceAITestCaseXlsx()
-            success = converter.get_testcase_xlsx(testcase_xmind_path=self.xmind_path,
-                                                             json_file_path=self.json_path,
-                                                             testcase_json_path=r"D:\AIGeneration\testcase\output.json"
-                                                          )
+            success = converter.get_testcase_xlsx(
+                xmind_file_path=self.xmind_path,
+                output_xlsx_path=self.output_xlsx
+            )
             if success:
                 self.finished_signal.emit(True, f"Excel导出成功：{self.output_xlsx}")
             else:

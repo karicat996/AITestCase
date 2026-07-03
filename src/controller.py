@@ -17,6 +17,7 @@ from src.commonTool import (
     GenerateTextCaseWorker,
     ExportTestCaseXmindWorker,
     XmindToXlsxWorker,
+    TestcaseXmindToXlsxWorker,
 )
 
 
@@ -164,6 +165,7 @@ class Controller(CommonTool):
     def clear_test_cases(self):
         """清空测试用例输入"""
         self.testCaseTab.xmindPathInput.clear()
+        self.testCaseTab.testCaseXmindPathInput.clear()
         self.testCaseTab.templateInput.clear()
         self.testCaseTab.outputPathInput.clear()
         self.testCaseTab.testCaseTextInput.clear()
@@ -208,11 +210,11 @@ class Controller(CommonTool):
                 xmind_path = os.path.join(self._get_output_dir(), "测试用例.xmind")
             if not os.path.exists(xmind_path):
                 QMessageBox.warning(self.main_window, "警告",
-                                    f"XMind文件不存在：{xmind_path}\n请先生成XMind或配置正确路径")
+                                    f"XMind文件不存在：{xmind_path}\n请先选择测试用例XMind文件")
                 return
 
-            # Excel输出路径（配置页 → 测试用例配置 → Excel保存路径）
-            output_xlsx = self.configTab.caseExeclPathInput.text()
+            # Excel输出路径（测试用例页面 → outputPathInput）
+            output_xlsx = self.testCaseTab.outputPathInput.text()
             if not output_xlsx:
                 output_xlsx = os.path.join(self._get_output_dir(), "测试用例.xlsx")
             # 确保输出扩展名为xlsx
@@ -228,8 +230,36 @@ class Controller(CommonTool):
 
 
     def export_xmind_to_xlsx(self):
+        """测试用例XMind转Excel导出（使用 interfaceAITestCaseXlsx 转换器）
+        数据流：testCaseXmindPathInput(测试用例XMind) → interfaceAITestCaseXlsx → outputPathInput(输出XLSX)
+        其他中间路径由配置文件处理
+        """
+        try:
+            # 读取测试用例XMind路径（测试用例页面 → testCaseXmindPathInput）
+            xmind_path = self.testCaseTab.testCaseXmindPathInput.text()
+            if not xmind_path:
+                xmind_path = os.path.join(self._get_output_dir(), "测试用例.xmind")
+            if not os.path.exists(xmind_path):
+                QMessageBox.warning(self.main_window, "警告",
+                                    f"XMind文件不存在：{xmind_path}\n请先选择测试用例XMind文件")
+                return
 
+            # Excel输出路径（测试用例页面 → outputPathInput）
+            output_xlsx = self.testCaseTab.outputPathInput.text()
+            if not output_xlsx:
+                output_xlsx = os.path.join(self._get_output_dir(), "测试用例.xlsx")
+            if not output_xlsx.endswith('.xlsx'):
+                output_xlsx = os.path.join(output_xlsx, "测试用例.xlsx")
 
+            worker = TestcaseXmindToXlsxWorker(
+                xmind_path=xmind_path,
+                output_xlsx=output_xlsx
+            )
+            self._start_worker(worker, f"导出Excel：{xmind_path} → {output_xlsx}")
+
+        except Exception as e:
+            self.append_log(f"启动Excel导出失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     # ==================== 其他功能业务逻辑 ====================
 

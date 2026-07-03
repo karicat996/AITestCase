@@ -2,12 +2,12 @@ from ai.deepseekAPI import DeepSeekAPI
 from service.xmindChanger import *
 from ai.deepseekAPI import *
 from common.promptProcessing import fileProcessor
+from common.pathConfig import path_config, DEFAULT_OUTPUT_DIR
 import os
 import time
 import json
-from utils.logs import LogManager
 from loguru import logger
-LogManager(log_dir=r"D:\AIGeneration\utils\logs")
+# LogManager 已在 pathConfig.py 模块级初始化，无需重复调用
 
 
 class interfaceAITestPoint:
@@ -21,11 +21,26 @@ class interfaceAITestPoint:
         self.converter = TestcasePointJsonToXmind()
         self.get_json = fileProcessor()
 
-    def get_test_point(self, user_input,output_path,storage_json,Storage_test_points = True):
+    def get_test_point(self, user_input, output_path=None, storage_json=None, Storage_test_points=True):
+        """
+        AI生成测试点并导出为XMind/JSON
+    
+        Args:
+            user_input: 用户输入的需求描述（必填）
+            output_path: XMind输出路径，无则使用默认目录
+            storage_json: JSON保存路径，无则使用默认目录
+            Storage_test_points: 是否保存JSON
+        Raises:
+            ValueError: 当user_input为空时
+        """
+        if not user_input or not isinstance(user_input, str):
+            raise ValueError("user_input不能为空且必须为字符串")
+        # 路径回退：传参 → 默认输出目录
+        output_dir = path_config.resolve_output_dir()
         if output_path is None:
-            output_dir = r"D:\AIGeneration\testcase"
-            filename = "output.xmind"
-            output_path = os.path.join(output_dir, filename)
+            output_path = os.path.join(output_dir, "output.xmind")
+        if storage_json is None:
+            storage_json = os.path.join(output_dir, "测试点.json")
         ds_res = self.DS.get_test_point_answer(user_input)
         
         # 先将 AI 返回的字符串解析为字典对象
@@ -148,7 +163,7 @@ class interfaceImageAITestPointXmind:
         
         Args:
             image_path: 输入的图像文件路径（必填）
-            output_dir: 输出目录（可选，默认 D:\\AIGeneration\\testcase）
+            output_dir: 输出目录（可选，默认从配置推导）
             test_point_json: 测试点JSON保存路径（可选）
             xmind_output: XMind输出路径（可选）
             root_title: XMind根节点标题（默认"测试大纲"）
@@ -169,9 +184,9 @@ class interfaceImageAITestPointXmind:
         try:
             logger.info(f"开始从图像生成测试点: {image_path}")
             
-            # 设置默认输出目录
+            # 设置默认输出目录（传参 → 配置 → 默认）
             if not output_dir:
-                output_dir = r"D:\AIGeneration\testcase"
+                output_dir = path_config.resolve_output_dir()
             
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
@@ -490,14 +505,23 @@ class interfaceAITestCaseXmind:
             logger.debug(f"修复JSON时出错: {str(e)}")
             return None
 
-    def get_testcase_xmind(self):
-        print("\n=== 测试用例JSON转化成xmind")
-        # 读取测试用例JSON文件
-        testcase_json_path = r"D:\AIGeneration\testcase\测试用例_output.json"
-        testcase_data = self.get_json.find_and_read_file(testcase_json_path, type="json")
+    def get_testcase_xmind(self, testcase_json_path=None, output_xmind=None):
+        """
+        将测试用例JSON转换为XMind文件
 
-        # 转换并导出
-        output_xmind = r"D:\AIGeneration\testcase\测试用例.xmind"
+        Args:
+            testcase_json_path: 测试用例JSON路径，无则使用默认目录
+            output_xmind: XMind输出路径，无则使用默认目录
+        """
+        print("\n=== 测试用例JSON转化成xmind")
+        # 路径回退：传参 → 默认输出目录
+        output_dir = path_config.resolve_output_dir()
+        if testcase_json_path is None:
+            testcase_json_path = os.path.join(output_dir, "测试用例_output.json")
+        if output_xmind is None:
+            output_xmind = os.path.join(output_dir, "测试用例.xmind")
+        # 读取测试用例JSON文件
+        testcase_data = self.get_json.find_and_read_file(testcase_json_path, type="json")
         success = self.converter.convert_and_export_to_xmind(
             input_data=testcase_data,
             output_xmind_file=output_xmind,
@@ -513,29 +537,91 @@ class interfaceAITestCaseXmind:
 class interfaceAITestCaseXlsx:
     """
     Xmind导出为测试用例xlsx
+    只需传入XMind文件路径和输出xlsx路径，其他中间路径由配置文件处理
     """
-    def __init__(self):
-        self.dc = MxindDataProcessor()
-        self.converter =  TestcaseXmindToAIJson()
-        self.to_xlsx = AIJsonToXlsx()
+    def __init__(self, xmind_file=None, output_xlsx=None):
+        """
+        初始化测试用例XLSX导出器
 
+        Args:
+            xmind_file: XMind文件路径，优先传参，无则使用配置 TEST_XMIND_PATH
+            output_xlsx: 输出Excel路径，优先传参，无则使用默认输出目录
+        """
+        # XMind文件路径：传参 → 配置 TEST_XMIND_PATH
+        self.xmind_file = path_config.resolve_path(
+            xmind_file, "TEST_XMIND_PATH", raise_if_missing=False, name="XMind文件路径"
+        )
+        # 输出xlsx路径：传参 → 配置 OUTPUT_XLSX_PATH → 默认输出目录
+        self.output_xlsx = output_xlsx or path_config.resolve_path(
+            None, "OUTPUT_XLSX_PATH", raise_if_missing=False
+        )
+        if not self.output_xlsx:
+            self.output_xlsx = os.path.join(path_config.resolve_output_dir(), "测试用例.xlsx")
+        # 中间JSON路径：从配置文件读取
+        self.xmind_json_path = path_config.resolve_path(
+            None, "OUTPUT_JSON_PATH", raise_if_missing=False, name="XMind JSON中间文件路径"
+        )
+        self.testcase_json_path = path_config.resolve_path(
+            None, "CONVERTED_TESTCASES_JSON_PATH", raise_if_missing=False, name="测试用例JSON路径"
+        )
+        # 子处理器延迟实例化，在 get_testcase_xlsx 中按需创建
+        self.dc = None
+        self.converter = None
+        self.to_xlsx = None
 
-    def get_testcase_xlsx(self,testcase_xmind_path,json_file_path,testcase_json_path):
-        res = self.dc.write_to_json(testcase_xmind_path)
-        xmind_data = self.converter.read_xmind_json(json_file_path)
-        # 步骤2：转换为测试用例格式
+    def get_testcase_xlsx(self, xmind_file_path=None, output_xlsx_path=None):
+        """
+        将XMind文件转换为测试用例XLSX
+
+        Args:
+            xmind_file_path: 输入XMind文件路径，优先传参，无则使用实例默认或配置
+            output_xlsx_path: 输出Excel路径，优先传参，无则使用实例默认或配置
+
+        Returns:
+            bool: 是否成功
+        """
+        # 路径回退：传参 → 实例默认 → 配置默认
+        xmind_path = xmind_file_path or self.xmind_file
+        if not xmind_path:
+            raise ValueError("xmind_file_path未配置，请传入参数或在systemConfig.yaml中设置TEST_XMIND_PATH")
+
+        xlsx_path = output_xlsx_path or self.output_xlsx
+        if not xlsx_path:
+            xlsx_path = os.path.join(path_config.resolve_output_dir(), "测试用例.xlsx")
+
+        xmind_json_path = self.xmind_json_path
+        if not xmind_json_path:
+            raise ValueError("XMind JSON中间文件路径未配置，请在systemConfig.yaml中设置OUTPUT_JSON_PATH")
+
+        tc_json_path = self.testcase_json_path
+        if not tc_json_path:
+            raise ValueError("测试用例JSON路径未配置，请在systemConfig.yaml中设置CONVERTED_TESTCASES_JSON_PATH")
+
+        # 步骤1：将XMind文件读取并写入JSON中间文件
+        self.dc = MxindDataProcessor(xmind_file=xmind_path)
+        self.dc.write_to_json(xmind_json_path)
+        logger.info(f"✓ XMind数据已写入JSON: {xmind_json_path}")
+
+        # 步骤2：读取XMind JSON并转换为测试用例格式
+        self.converter = TestcaseXmindToAIJson()
+        xmind_data = self.converter.read_xmind_json(xmind_json_path)
+        if not xmind_data:
+            logger.error("读取XMind JSON数据失败")
+            return False
         testcase_data = self.converter.convert_to_testcase_format(xmind_data)
-        # 步骤3：保存数据
-        self.converter.save_to_json(testcase_data,testcase_json_path)
-        # 步骤1：读取数据
-        data = self.to_xlsx.read_data()
-        # 步骤2：过滤数据
+
+        # 步骤3：保存测试用例JSON
+        self.converter.save_to_json(testcase_data, tc_json_path)
+        logger.info(f"✓ 测试用例JSON已保存: {tc_json_path}")
+
+        # 步骤4：读取测试用例JSON并导出为Excel
+        self.to_xlsx = AIJsonToXlsx(file_path=tc_json_path, output_file=xlsx_path)
         test_cases = self.to_xlsx.filter_data()
         logger.info(f"共 {len(test_cases)} 条用例")
-        # 步骤3：写入Excel
         success = self.to_xlsx.write_data(test_cases)
         if success:
-            logger.info("转换成功！")
+            logger.info(f"✓ 转换成功！输出: {xlsx_path}")
+        return success
 
 
 class interfaceAITestCaseMd:
@@ -546,23 +632,35 @@ class interfaceAITestCaseMd:
         self.dc = MxindDataProcessor()
         self.processor = MarkdownProcess()
 
-    def get_testcase_md(self,res_data,output_md_path):
+    def get_testcase_md(self, res_data, output_md_path=None, testcase_md_path=None):
+        """
+        将AI响应数据转换为测试点/测试用例Markdown
 
+        Args:
+            res_data: AI响应数据
+            output_md_path: 测试点Markdown输出路径，无则使用默认目录
+            testcase_md_path: 测试用例Markdown输出路径，无则使用默认目录
+        """
         # 示例1: 从AI响应提取JSON并转换为Markdown
         ai_response = res_data
+        # 路径回退：传参 → 默认输出目录
+        output_dir = path_config.resolve_output_dir()
+        if output_md_path is None:
+            output_md_path = os.path.join(output_dir, "testpoint.md")
+        if testcase_md_path is None:
+            testcase_md_path = os.path.join(output_dir, "testcase.md")
         try:
             # 转换为测试点Markdown
             output_path = self.processor.json_to_markdown(
                 data=ai_response,
                 output_file=output_md_path,
-                # output_file=r"D:/AIGeneration/testcase/testpoint.md",
                 title="测试点"
             )
             logger.debug(f"测试点文件生成成功: {output_path}")
 
             # 转换为测试用例Markdown（使用默认模板）
             testcase_path = self.processor.json_to_testcase(
-                output_file=r"D:/AIGeneration/testcase/testcase.md",
+                output_file=testcase_md_path,
                 title="测试用例"
             )
             logger.debug(f"测试用例文件生成成功: {testcase_path}")
@@ -598,7 +696,7 @@ class interfaceAIAnyFlieToXlsx:
         
         Args:
             user_input: 用户输入的需求描述文本
-            output_dir: 输出目录,默认为 D:\\AIGeneration\\testcase
+            output_dir: 输出目录,默认从配置推导
             test_point_file: 测试点JSON文件路径（可选）
             testcase_file: 测试用例JSON文件路径（可选）
             xmind_file: XMind文件路径（可选）
@@ -655,7 +753,7 @@ class interfaceAIAnyFlieToXlsx:
                 xmind_file = os.path.join(output_dir, "测试用例.xmind")
             success = self._convert_testcase_to_xmind(testcase_data, xmind_file)
             if not success:
-                self.logger.error("转换XMind失败")
+                logger.error("转换XMind失败")
                 return False
             logger.info(f"✓ XMind文件已生成: {xmind_file}")
             
@@ -663,7 +761,7 @@ class interfaceAIAnyFlieToXlsx:
             logger.info("步骤5: 转换XMind为测试用例JSON格式...")
             final_testcase_data = self._convert_xmind_to_testcase_json(xmind_file)
             if not final_testcase_data:
-                self.logger.error("转换测试用例JSON格式失败")
+                logger.error("转换测试用例JSON格式失败")
                 return False
             
             # 步骤6: 导出为Excel
@@ -672,7 +770,7 @@ class interfaceAIAnyFlieToXlsx:
                 xlsx_file = os.path.join(output_dir, "测试用例.xlsx")
             success = self._export_to_xlsx(final_testcase_data, xlsx_file)
             if not success:
-                self.logger.error("导出Excel失败")
+                logger.error("导出Excel失败")
                 return False
             
             logger.info(f"✓ 测试用例Excel已生成: {xlsx_file}")
@@ -702,7 +800,7 @@ class interfaceAIAnyFlieToXlsx:
                 try:
                     test_data = json.loads(ds_res)
                 except json.JSONDecodeError:
-                    self.logger.error(f"AI返回的内容不是有效的JSON格式: {ds_res[:100]}...")
+                    logger.error(f"AI返回的内容不是有效的JSON格式: {ds_res[:100]}...")
                     return None
             else:
                 test_data = ds_res
@@ -737,7 +835,7 @@ class interfaceAIAnyFlieToXlsx:
             )
             
             if not converted_data:
-                self.logger.error("转换测试点数据失败")
+                logger.error("转换测试点数据失败")
                 return None
             
             # 转换为AI友好的紧凑格式
@@ -882,7 +980,7 @@ class interfaceAIAnyFlieToXlsx:
             return success
             
         except Exception as e:
-            self.logger.error(f"转换XMind时发生错误: {str(e)}", exc_info=True)
+            logger.error(f"转换XMind时发生错误: {str(e)}", exc_info=True)
             return False
     
     def _convert_xmind_to_testcase_json(self, xmind_file):
@@ -903,7 +1001,7 @@ class interfaceAIAnyFlieToXlsx:
             xmind_json = processor.xmind_to_json()
             
             if not xmind_json:
-                self.logger.error("读取XMind数据失败")
+                logger.error("读取XMind数据失败")
                 return None
             
             # 转换为测试用例格式
@@ -945,7 +1043,7 @@ class interfaceAIAnyFlieToXlsx:
             # 过滤数据
             test_cases = exporter.filter_data()
             if not test_cases:
-                self.logger.error("没有可导出的测试用例数据")
+                logger.error("没有可导出的测试用例数据")
                 return False
             
             logger.info(f"共找到 {len(test_cases)} 条测试用例")
@@ -1371,7 +1469,7 @@ class interfaceTestPointToTestCaseXmind:
         
         Args:
             user_input: 用户输入的需求描述（必填）
-            output_dir: 输出目录（可选，默认 D:\\AIGeneration\\testcase）
+            output_dir: 输出目录（可选，默认从配置推导）
             xmind_output: 测试点XMind输出路径（可选）
             test_point_json: 测试点JSON保存路径（可选）
             xmind_json_output: XMind转JSON输出路径（可选）
@@ -1403,9 +1501,9 @@ class interfaceTestPointToTestCaseXmind:
             logger.info(f"用户输入: {user_input[:50]}...")
             logger.info(f"{'='*60}")
             
-            # 设置默认输出目录
+            # 设置默认输出目录（传参 → 配置 → 默认）
             if not output_dir:
-                output_dir = r"D:\AIGeneration\testcase"
+                output_dir = path_config.resolve_output_dir()
             
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
@@ -2001,11 +2099,10 @@ if __name__ == '__main__':
 #     )
 #
     #    测试用例xlsx
-     interfaceAITestCaseXlsx().get_testcase_xlsx(testcase_xmind_path = r"D:\AIGeneration\testcase\xmind_output.json",
-                                                 json_file_path = r"D:\AIGeneration\testcase\xmind_output.json",
-                                                 testcase_json_path = r"D:\AIGeneration\testcase\output.json"
-
-                                              )
+     interfaceAITestCaseXlsx().get_testcase_xlsx(
+         xmind_file_path=r"D:\AIGeneration\testcase\测试用例.xmind",
+         output_xlsx_path=r"D:\AIGeneration\testcase\测试用例.xlsx"
+     )
 #      测试用例md
 #
 #     简单用法 - 使用默认路径

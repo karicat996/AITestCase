@@ -262,17 +262,19 @@ class Ui_TestCaseTab(QWidget):
         inputGroup = QGroupBox("输入方式")
         inputLayout = QHBoxLayout()
         
-        self.xmindRadio = QRadioButton("XMind导入")
+        self.xmindRadio = QRadioButton("测试点XMind导入")
         self.tc_textRadio = QRadioButton("文本输入")
+        self.testcaseRadio = QRadioButton("测试用例xmind导入")
         self.xmindRadio.setChecked(True)
         inputLayout.addWidget(self.xmindRadio)
         inputLayout.addWidget(self.tc_textRadio)
+        inputLayout.addWidget(self.testcaseRadio)
         inputLayout.addStretch()
         inputGroup.setLayout(inputLayout)
         layout.addWidget(inputGroup)
         
         # XMind输入区域
-        self.xmindGroup = QGroupBox("XMind输入")
+        self.xmindGroup = QGroupBox("测试点XMind输入")
         xmindLayout = QVBoxLayout()
         
         self.xmindPathLabel = QLabel("测试点XMind路径:")
@@ -304,9 +306,23 @@ class Ui_TestCaseTab(QWidget):
         self.tc_textGroup.setLayout(tc_textLayout)
         self.tc_textGroup.setVisible(False)
         layout.addWidget(self.tc_textGroup)
-        
+
+        #测试用例XMind
+        self.testCaseXmindGroup = QGroupBox("测试用例XMind输入")
+        testCaseXmindLayout = QVBoxLayout()
+        self.testCasexmindPathLabel = QLabel("测试用例XMind路径:")
+        self.testCaseXmindPathInput = QLineEdit()
+        self.testCaseXmindBrowseBtn = QPushButton("选择文件")
+        testCaseXmindPathLayout = QHBoxLayout()
+        testCaseXmindPathLayout.addWidget(self.testCaseXmindPathInput)
+        testCaseXmindPathLayout.addWidget(self.testCaseXmindBrowseBtn)
+        testCaseXmindLayout.addLayout(testCaseXmindPathLayout)
+        self.testCaseXmindGroup.setLayout(testCaseXmindLayout)
+        self.testCaseXmindGroup.setVisible(False)
+        layout.addWidget(self.testCaseXmindGroup)
+
         # 输出设置
-        outputGroup = QGroupBox("输出设置")
+        self.outputGroup = QGroupBox("输出设置")
         outputLayout = QVBoxLayout()
         
         self.outputPathLabel = QLabel("输出路径:")
@@ -318,8 +334,8 @@ class Ui_TestCaseTab(QWidget):
         outputLayout.addWidget(self.outputPathLabel)
         outputLayout.addLayout(outputPathLayout)
         
-        outputGroup.setLayout(outputLayout)
-        layout.addWidget(outputGroup)
+        self.outputGroup.setLayout(outputLayout)
+        layout.addWidget(self.outputGroup)
         
         # 操作按钮
         buttonLayout = QHBoxLayout()
