@@ -4,6 +4,7 @@ from ai.deepseekAPI import *
 from common.promptProcessing import fileProcessor
 from common.pathConfig import path_config, DEFAULT_OUTPUT_DIR
 import os
+import re
 import time
 import json
 from loguru import logger
@@ -668,6 +669,379 @@ class interfaceAITestCaseMd:
         except Exception as e:
             logger.error(f"处理失败: {str(e)}")
 
+class interfaceAIAnyFlieToXmind:
+    """
+    从用户输入文本一键生成测试用例XMind文件
+
+    流程：
+    1. 调用AI生成测试点JSON
+    2. 将测试点转换为AI友好格式
+    3. 调用AI生成测试用例JSON
+    4. 将测试用例JSON转换为XMind文件
+    """
+
+    def __init__(self):
+        """初始化接口集成类"""
+        self.deepseek_api = DeepSeekAPI()
+        self.test_point_to_ai = TestPointToAIJson()
+        self.testcase_converter = TestcaseJsonToXmind()
+        self.file_processor = fileProcessor()
+
+    def generate_testcase_xmind_from_text(self, user_input, output_dir=None,
+                                          test_point_file=None,
+                                          testcase_file=None,
+                                          xmind_file=None):
+        """
+        从用户输入文本一键生成测试用例XMind
+
+        Args:
+            user_input: 用户输入的需求描述文本（必填）
+            output_dir: 输出目录,默认从配置推导
+            test_point_file: 测试点JSON文件路径（可选）
+            testcase_file: 测试用例JSON文件路径（可选）
+            xmind_file: XMind文件路径（可选）
+
+        Returns:
+            bool: 是否成功生成
+
+        Raises:
+            ValueError: 当user_input为空或非字符串时
+        """
+        # 入参校验
+        if not user_input or not isinstance(user_input, str):
+            logger.error("user_input不能为空且必须为字符串")
+            raise ValueError("user_input不能为空且必须为字符串")
+
+        try:
+            # 设置默认输出目录：传参 → 配置推导
+            if output_dir is None:
+                output_dir = path_config.resolve_output_dir()
+
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+                logger.info(f"创建输出目录: {output_dir}")
+
+            # 步骤1: 调用AI生成测试点
+            logger.info("步骤1: 调用AI生成测试点...")
+            test_point_data = self._generate_test_points(user_input)
+            if not test_point_data:
+                logger.error("生成测试点失败")
+                return False
+
+            # 保存测试点JSON
+            if test_point_file is None:
+                test_point_file = os.path.join(output_dir, "测试点.json")
+            self.file_processor.write_file(test_point_file, test_point_data, "json")
+            logger.info(f"✓ 测试点已保存到: {test_point_file}")
+
+            # 步骤2: 将测试点转换为测试转化数据格式
+            logger.info("步骤2: 转换测试点为测试转化数据格式...")
+            converted_data = self._convert_testpoint_to_ai_format(test_point_file)
+            if not converted_data:
+                logger.error("转换测试点格式失败")
+                return False
+
+            # 步骤3: 调用AI生成测试用例
+            logger.info("步骤3: 调用AI生成测试用例...")
+            testcase_data = self._generate_testcases(converted_data)
+            if not testcase_data:
+                logger.error("生成测试用例失败")
+                return False
+
+            # 保存测试用例JSON
+            if testcase_file is None:
+                testcase_file = os.path.join(output_dir, "测试用例_output.json")
+            self.file_processor.write_file(testcase_file, testcase_data, "json")
+            logger.info(f"✓ 测试用例已保存到: {testcase_file}")
+
+            # 步骤4: 将测试用例JSON转换为XMind
+            logger.info("步骤4: 转换测试用例为XMind格式...")
+            if xmind_file is None:
+                xmind_file = os.path.join(output_dir, "测试用例.xmind")
+            success = self._convert_testcase_to_xmind(testcase_data, xmind_file)
+            if not success:
+                logger.error("转换XMind失败")
+                return False
+            logger.info(f"✓ XMind文件已生成: {xmind_file}")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"✗ 生成测试用例XMind失败: {str(e)}", exc_info=True)
+            print(f"✗ 生成失败: {str(e)}")
+            return False
+
+    def _generate_test_points(self, user_input):
+        """
+        调用AI生成测试点
+
+        Args:
+            user_input: 用户输入的需求描述
+
+        Returns:
+            dict: 测试点数据字典
+        """
+        try:
+            ds_res = self.deepseek_api.get_test_point_answer(user_input)
+
+            # 解析AI返回的JSON
+            if isinstance(ds_res, str):
+                try:
+                    test_data = json.loads(ds_res)
+                except json.JSONDecodeError:
+                    logger.error(f"AI返回的内容不是有效的JSON格式: {ds_res[:100]}...")
+                    return None
+            else:
+                test_data = ds_res
+
+            logger.info(f"✓ 成功生成测试点，包含 {len(test_data)} 个产品/模块")
+            return test_data
+
+        except Exception as e:
+            logger.error(f"生成测试点时发生错误: {str(e)}", exc_info=True)
+            return None
+
+    def _convert_testpoint_to_ai_format(self, test_point_file):
+        """
+        将测试点JSON转换为AI友好的格式
+
+        Args:
+            test_point_file: 测试点JSON文件路径
+
+        Returns:
+            str: AI友好的JSON字符串
+        """
+        try:
+            # 复用实例中的转换器，避免重复创建
+            output_file = test_point_file.replace('.json', '_converted.json')
+            converted_data = self.test_point_to_ai.convert_and_save(
+                input_file=test_point_file,
+                output_file=output_file,
+                extract=False  # 不保存，直接返回数据
+            )
+
+            if not converted_data:
+                logger.error("转换测试点数据失败")
+                return None
+
+            # 转换为AI友好的紧凑格式
+            ai_string = json.dumps(
+                converted_data,
+                ensure_ascii=False,
+                separators=(',', ':'),
+                sort_keys=False
+            )
+
+            logger.info(f"✓ 测试点转换完成，长度: {len(ai_string)} 字符")
+            return ai_string
+
+        except Exception as e:
+            logger.error(f"转换测试点格式时发生错误: {str(e)}", exc_info=True)
+            return None
+
+    def _generate_testcases(self, test_point_data):
+        """
+        调用AI生成测试用例
+
+        Args:
+            test_point_data: 测试点数据（字符串或字典）
+
+        Returns:
+            dict: 测试用例数据字典
+        """
+        try:
+            # 如果传入的是字典，转换为字符串
+            if isinstance(test_point_data, dict):
+                test_point_str = json.dumps(test_point_data, ensure_ascii=False)
+            else:
+                test_point_str = test_point_data
+
+            # 调用AI生成测试用例
+            ds_res = self.deepseek_api.get_testcase_answer(test_point_str)
+            if not ds_res:
+                logger.error("AI未返回数据")
+                return None
+
+            logger.info(f"✓ AI返回测试用例数据，长度: {len(ds_res)} 字符")
+
+            # 清理和解析AI返回的数据
+            cleaned_data = self._clean_ai_json_response(ds_res)
+            if not cleaned_data:
+                logger.error("无法解析AI返回的JSON数据")
+                return None
+
+            logger.info(f"✓ JSON数据解析成功，类型: {type(cleaned_data).__name__}")
+            return cleaned_data
+
+        except Exception as e:
+            logger.error(f"生成测试用例时发生错误: {str(e)}", exc_info=True)
+            return None
+
+    def _clean_ai_json_response(self, ai_response):
+        """
+        清理和解析AI返回的JSON数据，兼容多种格式
+
+        支持的格式：
+        1. 纯JSON字符串
+        2. 带```json标记的代码块
+        3. 带```标记的代码块
+        4. 前后有额外文本的JSON对象/数组
+
+        Args:
+            ai_response: AI返回的原始字符串
+
+        Returns:
+            dict or list: 解析后的JSON对象
+        """
+        if not ai_response or not isinstance(ai_response, str):
+            logger.warning("AI返回数据为空或不是字符串")
+            return None
+
+        ai_response = ai_response.strip()
+
+        # 方法1：尝试直接解析
+        try:
+            data = json.loads(ai_response)
+            return data
+        except json.JSONDecodeError:
+            pass
+
+        # 方法2：提取代码块
+        patterns = [
+            r'```json\s*([\s\S]*?)\s*```',
+            r'```\s*([\s\S]*?)\s*```',
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, ai_response, re.DOTALL)
+            if match:
+                json_str = match.group(1).strip()
+                try:
+                    data = json.loads(json_str)
+                    return data
+                except json.JSONDecodeError:
+                    # 尝试修复后解析
+                    fixed_data = self._try_fix_json(json_str)
+                    if fixed_data is not None:
+                        return fixed_data
+                    continue
+
+        # 方法3：查找JSON对象边界
+        start_idx = ai_response.find('{')
+        end_idx = ai_response.rfind('}')
+
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx + 1]
+            try:
+                data = json.loads(json_str)
+                return data
+            except json.JSONDecodeError:
+                fixed_data = self._try_fix_json(json_str)
+                if fixed_data is not None:
+                    return fixed_data
+
+        # 方法4：查找JSON数组边界
+        start_idx = ai_response.find('[')
+        end_idx = ai_response.rfind(']')
+
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = ai_response[start_idx:end_idx + 1]
+            try:
+                data = json.loads(json_str)
+                return data
+            except json.JSONDecodeError:
+                fixed_data = self._try_fix_json(json_str)
+                if fixed_data is not None:
+                    return fixed_data
+
+        logger.error("无法从AI响应中提取有效的JSON数据")
+        return None
+
+    def _try_fix_json(self, json_str):
+        """
+        尝试修复常见的JSON格式错误（尾部逗号、缺失逗号、截断等）
+
+        Args:
+            json_str: 可能有错误的JSON字符串
+
+        Returns:
+            dict or list or None: 修复并解析后的对象，失败返回None
+        """
+        if not json_str or not isinstance(json_str, str):
+            return None
+
+        original = json_str
+
+        try:
+            # 尝试1: 移除尾部逗号 (在 } 或 ] 之前的逗号)
+            json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+            if json_str != original:
+                logger.debug("JSON修复: 移除尾部逗号")
+                try:
+                    return json.loads(json_str)
+                except json.JSONDecodeError:
+                    pass
+
+            # 尝试2: 补全缺失的逗号 (在 } 或 ] 之后，" 或 { 或 [ 之前)
+            json_str_fixed = re.sub(r'([}\]])\s*(?=["{\[])', r'\1,', json_str)
+            if json_str_fixed != json_str:
+                logger.debug("JSON修复: 补全缺失逗号")
+                try:
+                    return json.loads(json_str_fixed)
+                except json.JSONDecodeError:
+                    pass
+
+            # 尝试3: 处理被截断的JSON对象
+            if original.strip().startswith('{') and not original.strip().endswith('}'):
+                last_brace = original.rfind('}')
+                if last_brace > 0:
+                    truncated = original[:last_brace + 1]
+                    try:
+                        return json.loads(truncated)
+                    except json.JSONDecodeError:
+                        pass
+
+            # 尝试4: 处理被截断的JSON数组
+            if original.strip().startswith('[') and not original.strip().endswith(']'):
+                last_bracket = original.rfind(']')
+                if last_bracket > 0:
+                    truncated = original[:last_bracket + 1]
+                    try:
+                        return json.loads(truncated)
+                    except json.JSONDecodeError:
+                        pass
+
+            return None
+
+        except Exception as e:
+            logger.debug(f"修复JSON时出错: {str(e)}")
+            return None
+
+    def _convert_testcase_to_xmind(self, testcase_data, xmind_file):
+        """
+        将测试用例JSON转换为XMind文件
+
+        Args:
+            testcase_data: 测试用例数据字典
+            xmind_file: 输出的XMind文件路径
+
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            # 复用实例中的转换器，避免重复创建
+            success = self.testcase_converter.convert_and_export_to_xmind(
+                input_data=testcase_data,
+                output_xmind_file=xmind_file,
+                root_title="测试用例",
+                sheet_title="功能测试用例"
+            )
+            return success
+
+        except Exception as e:
+            logger.error(f"转换XMind时发生错误: {str(e)}", exc_info=True)
+            return False
+
 
 class interfaceAIAnyFlieToXlsx:
     """
@@ -679,7 +1053,6 @@ class interfaceAIAnyFlieToXlsx:
         初始化接口集成类
         """
         self.deepseek_api = DeepSeekAPI()
-        self.test_point_converter = TestcasePointJsonToXmind()
         self.test_point_to_ai = TestPointToAIJson()
         self.testcase_converter = TestcaseJsonToXmind()
         self.xmind_to_json = TestcaseXmindToAIJson()
@@ -1060,7 +1433,6 @@ class interfaceAIAnyFlieToXlsx:
         except Exception as e:
             logger.error(f"导出Excel时发生错误: {str(e)}", exc_info=True)
             return False
-
 
 class TestPointXmindToTestcaseXlsx:
     """
@@ -2066,6 +2438,14 @@ if __name__ == '__main__':
 #     if success:
 #         print("✓ 转换成功！")
 #
+    converter = interfaceAIAnyFlieToXmind()
+    success = converter.generate_testcase_xmind_from_text(
+        user_input="用户登录注册功能",
+        output_dir=r"D:\MyProject\testcases",
+        test_point_file=r"D:\MyProject\testcases\testpoints.json",
+        testcase_file=r"D:\MyProject\testcases\testcases.json",
+        xmind_file=r"D:\MyProject\testcases\testcases.xmind"
+    )
 #
 #     生成测试点xmind和json
 #      interfaceAITestPoint().get_test_point(user_input="电商下单界面功能",
@@ -2099,12 +2479,13 @@ if __name__ == '__main__':
 #     )
 #
     #    测试用例xlsx
-     interfaceAITestCaseXlsx().get_testcase_xlsx(
-         xmind_file_path=r"D:\AIGeneration\testcase\测试用例.xmind",
-         output_xlsx_path=r"D:\AIGeneration\testcase\测试用例.xlsx"
-     )
+    #  interfaceAITestCaseXlsx().get_testcase_xlsx(
+    #      xmind_file_path=r"D:\AIGeneration\testcase\测试用例.xmind",
+    #      output_xlsx_path=r"D:\AIGeneration\testcase\测试用例.xlsx"
+    #  )
 #      测试用例md
-#
+#      converter = interfaceAIAnyFlieToXmind()
+#      success = converter.
 #     简单用法 - 使用默认路径
 #     converter = interfaceAIAnyFlieToXlsx()
 #     success = converter.generate_testcase_xlsx_from_text(

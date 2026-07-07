@@ -15,6 +15,7 @@ from service.interfaceIntegration import (
     interfaceAITestPoint,
     interfaceImageAITestPointXmind,
     interfaceTestPointToAITestCaseXmind,
+    interfaceAIAnyFlieToXmind,
     interfaceAIAnyFlieToXlsx,
     interfaceAITestCaseXlsx,
     TestPointXmindToTestcaseXlsx,
@@ -81,9 +82,10 @@ class CommonTool:
         self.testCaseTab.testCaseXmindBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.testCaseXmindPathInput))
         self.testCaseTab.templateBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.templateInput))
         self.testCaseTab.outputBrowseBtn.clicked.connect(lambda: self.browse_file(self.testCaseTab.outputPathInput))
-        self.testCaseTab.tc_text_generateBtn.clicked.connect(self.generate_text_cases)
+        # self.testCaseTab.tc_text_generateBtn.clicked.connect(self.generate_text_cases)
         self.testCaseTab.tc_generateBtn.clicked.connect(self.generate_test_cases)
         self.testCaseTab.tc_clearBtn.clicked.connect(self.clear_test_cases)
+        self.testCaseTab.exportXBtn.clicked.connect(self.text_to_testcaseXmind)
         self.testCaseTab.exportXmindBtn.clicked.connect(self.export_to_xmind)
         self.testCaseTab.exportXlsxBtn.clicked.connect(self.export_xmind_to_xlsx)
 
@@ -154,7 +156,8 @@ class CommonTool:
             self.testCaseTab.testCaseXmindGroup.setVisible(False)
             self.testCaseTab.outputGroup.setVisible(True)
             self.testCaseTab.tc_generateBtn.setVisible(True)
-            self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            # self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            self.testCaseTab.exportXBtn.setVisible(False)
             self.testCaseTab.exportXmindBtn.setVisible(True)
             self.testCaseTab.exportXlsxBtn.setVisible(True)
             self.testCaseTab.tc_clearBtn.setVisible(True)
@@ -165,7 +168,8 @@ class CommonTool:
             self.testCaseTab.testCaseXmindGroup.setVisible(True)
             self.testCaseTab.outputGroup.setVisible(True)
             self.testCaseTab.tc_generateBtn.setVisible(False)
-            self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            # self.testCaseTab.tc_text_generateBtn.setVisible(False)
+            self.testCaseTab.exportXBtn.setVisible(False)
             self.testCaseTab.exportXmindBtn.setVisible(False)
             self.testCaseTab.exportXlsxBtn.setVisible(True)
             self.testCaseTab.tc_clearBtn.setVisible(True)
@@ -176,7 +180,8 @@ class CommonTool:
             self.testCaseTab.testCaseXmindGroup.setVisible(False)
             self.testCaseTab.outputGroup.setVisible(True)
             self.testCaseTab.tc_generateBtn.setVisible(False)
-            self.testCaseTab.tc_text_generateBtn.setVisible(True)
+            # self.testCaseTab.tc_text_generateBtn.setVisible(True)
+            self.testCaseTab.exportXBtn.setVisible(True)
             self.testCaseTab.exportXmindBtn.setVisible(True)
             self.testCaseTab.exportXlsxBtn.setVisible(True)
             self.testCaseTab.tc_clearBtn.setVisible(True)
@@ -411,6 +416,30 @@ class GenerateTestCaseWorker(BaseWorker):
                 self.finished_signal.emit(False, "测试用例XMind生成失败")
         except Exception as e:
             self.finished_signal.emit(False, f"生成测试用例失败：{str(e)}")
+
+
+class TextToXmindWorker(BaseWorker):
+    """从文本输入一键生成测试用例XMind（全链路：文本→测试点→测试用例→XMind）"""
+
+    def __init__(self, text_input, output_dir=None, parent=None):
+        super().__init__(parent)
+        self.text_input = text_input
+        self.output_dir = output_dir
+
+    def run(self):
+        try:
+            self.log_signal.emit("文本输入一键生成测试用例XMind...")
+            converter = interfaceAIAnyFlieToXmind()
+            success = converter.generate_testcase_xmind_from_text(
+                user_input=self.text_input,
+                output_dir=self.output_dir
+            )
+            if success:
+                self.finished_signal.emit(True, "测试用例XMind生成成功")
+            else:
+                self.finished_signal.emit(False, "测试用例XMind生成失败")
+        except Exception as e:
+            self.finished_signal.emit(False, f"生成测试用例XMind失败：{str(e)}")
 
 
 class GenerateTextCaseWorker(BaseWorker):

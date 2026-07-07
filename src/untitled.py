@@ -339,13 +339,15 @@ class Ui_TestCaseTab(QWidget):
         
         # 操作按钮
         buttonLayout = QHBoxLayout()
-        self.tc_text_generateBtn = QPushButton("测试点文本生成测试用例XMind")
+        # self.tc_text_generateBtn = QPushButton("测试点文本生成测试用例XMind")
         self.tc_generateBtn = QPushButton("测试点XMind生成测试用例")
         self.tc_clearBtn = QPushButton("清空")
+        self.exportXBtn = QPushButton("文案一键生成测试用例XMind")
         self.exportXmindBtn = QPushButton("测试用例json转XMind")
         self.exportXlsxBtn = QPushButton("测试用例XMind转Excel")
-        buttonLayout.addWidget(self.tc_text_generateBtn)
+        # buttonLayout.addWidget(self.tc_text_generateBtn)
         buttonLayout.addWidget(self.tc_generateBtn)
+        buttonLayout.addWidget(self.exportXBtn)
         buttonLayout.addWidget(self.exportXmindBtn)
         buttonLayout.addWidget(self.exportXlsxBtn)
         buttonLayout.addWidget(self.tc_clearBtn)

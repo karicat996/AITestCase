@@ -15,6 +15,7 @@ from src.commonTool import (
     ExportTestPointWorker,
     GenerateTestCaseWorker,
     GenerateTextCaseWorker,
+    TextToXmindWorker,
     ExportTestCaseXmindWorker,
     XmindToXlsxWorker,
     TestcaseXmindToXlsxWorker,
@@ -228,6 +229,23 @@ class Controller(CommonTool):
             self.append_log(f"启动Excel导出失败：{str(e)}")
             QMessageBox.critical(self.main_window, "错误", str(e))
 
+    def text_to_testcaseXmind(self):
+        """需求文案一键生成测试用例XMind文件
+        数据流：testCaseTextInput(文本) → interfaceAIAnyFlieToXmind → outputPathInput(输出目录)
+        """
+        try:
+            text = self.testCaseTab.testCaseTextInput.toPlainText()
+            if not text:
+                QMessageBox.warning(self.main_window, "警告", "请输入需求描述文本")
+                return
+
+            output_dir = self.testCaseTab.outputPathInput.text() or self._get_output_dir()
+            worker = TextToXmindWorker(text, output_dir)
+            self._start_worker(worker, "开始从文本一键生成测试用例XMind...")
+
+        except Exception as e:
+            self.append_log(f"启动文本生成测试用例XMind失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
 
     def export_xmind_to_xlsx(self):
         """测试用例XMind转Excel导出（使用 interfaceAITestCaseXlsx 转换器）
