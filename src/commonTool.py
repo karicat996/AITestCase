@@ -289,6 +289,30 @@ class CommonTool:
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
 
+    def _confirm_default_path(self, path_value, path_name="路径"):
+        """
+        检查路径是否为空（表示使用默认配置路径）。
+        若为空则弹出确认对话框：
+          - 用户点击"确认"→返回True，继续执行（使用默认配置文件路径）
+          - 用户点击"取消"→返回False，中止功能逻辑
+        若路径不为空（自定义路径），直接返回True。
+        """
+        if not path_value or not str(path_value).strip():
+            reply = QMessageBox.question(
+                self.main_window,
+                "确认使用默认路径",
+                f"当前未选择自定义{path_name}，将使用默认配置文件路径。\n是否确认继续？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                self.append_log(f"使用默认{path_name}")
+                return True
+            else:
+                self.append_log(f"已取消执行，未选择自定义{path_name}")
+                return False
+        return True
+
     def _start_worker(self, worker, start_msg="开始执行..."):
         """
         通用的Worker启动方法

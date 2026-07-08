@@ -1,1599 +1,190 @@
 {
-  "id": "sheet1",
-  "title": "功能测试",
-  "topic": {
-    "id": "root1",
-    "link": null,
-    "title": "Root",
-    "note": null,
-    "label": null,
-    "comment": null,
-    "markers": [],
-    "topics": [
-      {
-        "id": "6cf34807b625a4fbd04b48dca7",
-        "link": null,
-        "title": "Z轴升降准确性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "62e209de87ee0168ca96d84a99",
-            "link": null,
-            "title": "正向-Z轴升降至指定高度位置精度准确",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "303307cf5e2e32d741ed4fb70e",
-                "link": null,
-                "title": "打印机已开机并完成归零，Z轴无负载",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "303307cf5e2e36036d08982c0d",
-                    "link": null,
-                    "title": "1. 在控制界面输入目标高度值（例如50mm）\n2. 点击“Z轴移动”按钮\n3. 使用卡尺测量实际升降高度",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "99139627727ba1401bb491716f",
-                        "link": null,
-                        "title": "实际升降高度与设定值误差在±0.1mm以内",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+    "登录注册功能20条": [
+        {
+            "模块名称：注册功能": [
+                {
+                    "测试点名称：手机号注册": [
+                        {
+                            "场景名称：使用有效手机号注册(正向)": "输入未注册的11位手机号，获取验证码并正确填写，注册成功"
+                        },
+                        {
+                            "场景名称：使用已注册手机号注册(反向)": "输入已注册手机号，提示手机号已被注册"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "d93eaadc808b756b9ec77a0d5b",
-            "link": null,
-            "title": "反向-Z轴升降超过限位时触发保护",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "d93eaadc808b79ccf96e7399e5",
-                "link": null,
-                "title": "Z轴位于行程中间位置",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "b5ba22176145553391cafb58e4",
-                    "link": null,
-                    "title": "1. 连续发送向上移动指令直至超过顶部限位\n2. 连续发送向下移动指令直至超过底部限位",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "2bafdf758de553898211b4048a",
-                        "link": null,
-                        "title": "当Z轴触碰限位开关时，电机立即停止，屏幕显示“行程超限”报警",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：邮箱注册": [
+                        {
+                            "场景名称：使用有效邮箱注册(正向)": "输入未注册的邮箱格式，接收验证链接并点击，注册成功"
+                        },
+                        {
+                            "场景名称：使用无效邮箱格式注册(反向)": "输入不含@符号的邮箱，注册按钮置灰并提示格式错误"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "2bafdf758de55b0ef9f5a58ce5",
-        "link": null,
-        "title": "Z轴运动平稳性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "2bafdf758de55e436014a626fd",
-            "link": null,
-            "title": "正向-Z轴升降过程无明显抖动卡顿",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "f42d9b4a39e55d0eaeed69ab13",
-                "link": null,
-                "title": "打印机放置在水平稳定平台，Z轴空载",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "4e5d82c3e7b7b80d69d6401c5d",
-                    "link": null,
-                    "title": "1. 设置Z轴以10mm/s速度匀速升降\n2. 全程观察并录制视频\n3. 在升降过程中触碰Z轴导杆",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "4e5d82c3e7b7b762db160e7dbe",
-                        "link": null,
-                        "title": "Z轴运动连续无可见抖动、卡顿或异响，触碰时无明显位移突变",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：密码强度校验": [
+                        {
+                            "场景名称：密码符合复杂度要求(正向)": "输入8-16位含大小写字母和数字的密码，注册通过"
+                        },
+                        {
+                            "场景名称：密码仅含数字且长度不足(反向)": "输入6位纯数字密码，提示密码强度弱需修改"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "162cfa4b25d5ca0ad8b87f64c6",
-            "link": null,
-            "title": "反向-Z轴负载过重时报警提示",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "162cfa4b25d5c0c545baad0e60",
-                "link": null,
-                "title": "Z轴处于空载状态，准备额外砝码（超过额定负载150%）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "91323dd96b28313e91b275ec64",
-                    "link": null,
-                    "title": "1. 在Z轴平台上放置超负载砝码\n2. 发送向上移动指令",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "a87d1506efc9b63aaeb77e8db5",
-                        "link": null,
-                        "title": "Z轴无法启动或启动2秒内停止，屏幕显示“负载超重，请减轻重量”",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：验证码功能": [
+                        {
+                            "场景名称：短信验证码有效期内提交(正向)": "收到验证码后60秒内正确输入，验证通过"
+                        },
+                        {
+                            "场景名称：验证码过期后提交(反向)": "等待验证码超时后输入，提示验证码已失效重新获取"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "a87d1506efc9b5d7af91230d58",
-        "link": null,
-        "title": "加热至设定温度",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "7ab52ade334ef20da02aa4b9c1",
-            "link": null,
-            "title": "正向-启动加热后树脂槽温度达标",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "aebcaf7f2c67003805ea8d3544",
-                "link": null,
-                "title": "树脂槽空且清洁，环境温度25℃，加热功能开启",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "aebcaf7f2c670851c4bd9c8d73",
-                    "link": null,
-                    "title": "1. 在控制界面设置目标温度35℃\n2. 点击“开始加热”\n3. 等待并记录实际温度升至35℃的时间",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "4bc5b17659a72ddd6581e41057",
-                        "link": null,
-                        "title": "加热系统在5分钟内将树脂槽温度升至35℃±1℃，并停止加热",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：注册协议勾选": [
+                        {
+                            "场景名称：勾选同意协议后注册(正向)": "勾选用户协议并提交，注册流程正常进行"
+                        },
+                        {
+                            "场景名称：未勾选协议点击注册(反向)": "未勾选协议时注册按钮不可点击或提示需同意"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "c7dbc48293730cb1ac2b4e32de",
-            "link": null,
-            "title": "反向-加热超过安全温度自动断电",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "2960a9d1d062d79a08005b4450",
-                "link": null,
-                "title": "打印机内部温度传感器正常，加热器工作正常",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "d8c22f59002a48a9ec37b8d59d",
-                    "link": null,
-                    "title": "1. 通过后台参数将加热目标温度设置为60℃（超过安全阈值）\n2. 开始加热并监控温度",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "2324a49686097e6083f3776ef1",
-                        "link": null,
-                        "title": "当温度达到55℃时，系统自动切断加热电源，并在屏幕显示“超温保护触发”",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：用户名校验": [
+                        {
+                            "场景名称：用户名符合格式(正向)": "输入3-20位中英文数字组合用户名，注册成功"
+                        },
+                        {
+                            "场景名称：用户名含特殊字符(反向)": "输入包含#符号的用户名，提示只允许字母数字下划线"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "2324a49686097b6032b00b344c",
-        "link": null,
-        "title": "恒温保持稳定性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "edef35c950738bcfc34df80106",
-            "link": null,
-            "title": "正向-温度到达后波动在合理范围",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "e267ac1d89bdc1f7cd68243909",
-                "link": null,
-                "title": "树脂槽温度已稳定在35℃，树脂槽内装有常用树脂",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "e267ac1d89bdce30ae80345df3",
-                    "link": null,
-                    "title": "1. 持续记录温度10分钟，每30秒采样一次\n2. 计算温度波动范围",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "9e2cd436970e8859f9503b8bc0",
-                        "link": null,
-                        "title": "所有采样点温度在35℃±2℃之间，无明显持续上升或下降趋势",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：邀请码输入": [
+                        {
+                            "场景名称：正确邀请码输入(正向)": "输入有效的6位数字邀请码，注册成功并应用奖励"
+                        },
+                        {
+                            "场景名称：错误邀请码输入(反向)": "输入不存在的邀请码，提示邀请码无效可跳过"
+                        }
                     ]
-                  }
-                ]
-              }
+                }
             ]
-          },
-          {
-            "id": "9e2cd436970e8cea0f3b60d69b",
-            "link": null,
-            "title": "反向-加热传感器失效时显示故障",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "a40771812dc2cb225bc3a0368f",
-                "link": null,
-                "title": "准备一个已断线的加热传感器连接到主板",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "0d2e6987a8bcd25d19c21018f1",
-                    "link": null,
-                    "title": "1. 更换为断线传感器\n2. 启动加热功能\n3. 观察屏幕",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "0d2e6987a8bcda5e590928a496",
-                        "link": null,
-                        "title": "2秒内屏幕显示“加热传感器故障，请检查”且加热不启动",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+        },
+        {
+            "模块名称：登录功能": [
+                {
+                    "测试点名称：账号密码登录": [
+                        {
+                            "场景名称：正确账号密码登录(正向)": "输入已注册的手机号/邮箱和正确密码，登录成功"
+                        },
+                        {
+                            "场景名称：错误密码登录(反向)": "输入正确账号但密码错误，提示密码错误剩余尝试次数"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "ed1f5dd3fc9220b0b7a9993905",
-        "link": null,
-        "title": "曝光时间设置与执行",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "ed1f5dd3fc9222a864684dcd71",
-            "link": null,
-            "title": "正向-设置曝光时间后层固化时间匹配",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "b904aef6693eae7e9e8e76ccc2",
-                "link": null,
-                "title": "切片文件已导入，设定层数为10层，每层曝光时间8秒",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "83ceba1cdebb410c5a6c7088af",
-                    "link": null,
-                    "title": "1. 开始打印\n2. 使用秒表测量第一层曝光时长\n3. 记录每层实际曝光时间",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "83ceba1cdebb423111ec86f4ed",
-                        "link": null,
-                        "title": "每层实际曝光时间均为8秒±0.2秒，总耗时符合8秒×层数",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：验证码登录": [
+                        {
+                            "场景名称：手机号验证码登录成功(正向)": "输入已注册手机号并接收验证码正确填写，登录成功"
+                        },
+                        {
+                            "场景名称：验证码输入错误(反向)": "输入错误验证码，提示验证码错误请重新输入"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "45f6949814abec98325463523d",
-            "link": null,
-            "title": "反向-曝光时间设为0时触发提醒",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "45f6949814abe50fd0e587fff0",
-                "link": null,
-                "title": "打印机处于待机状态，尚未开始打印",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "62b678e7c62d8ed8698fb4c8db",
-                    "link": null,
-                    "title": "1. 在参数设置中将曝光时间改为0\n2. 点击“保存应用”\n3. 尝试开始打印",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "e6f25556a9277c6145ddc32173",
-                        "link": null,
-                        "title": "弹出提示框：“曝光时间不能为0，请设置有效值(>0秒)”且打印无法启动",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：微信登录": [
+                        {
+                            "场景名称：已绑定微信用户扫码登录(正向)": "点击微信登录，扫码授权后自动登录系统"
+                        },
+                        {
+                            "场景名称：未绑定微信账号扫码登录(反向)": "微信扫码后系统无绑定记录，提示绑定手机号或注册"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "e6f25556a92773de3bbc4a4100",
-        "link": null,
-        "title": "曝光均匀性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "11f2850bf7388cad34c18ac197",
-            "link": null,
-            "title": "正向-整幅画面曝光亮度均匀",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "edab3631031d533219bf941f06",
-                "link": null,
-                "title": "打印机光源已预热5分钟，使用照度计，投影区域无遮挡",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "edab3631031d57cc5bc11dcc99",
-                    "link": null,
-                    "title": "1. 运行投影全幅白色画面\n2. 在投影区域均匀选取9个点（3×3网格）测量照度\n3. 记录各点照度值",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "55329229768129bee3033b7bd5",
-                        "link": null,
-                        "title": "9个点照度最大值与最小值的差异≤10%",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：登录失败锁定机制": [
+                        {
+                            "场景名称：连续失败5次后解锁(反向)": "输入错误密码5次，账号被锁定15分钟并发送通知"
+                        },
+                        {
+                            "场景名称：锁定期间输入正确密码(反向)": "锁定状态下输入正确密码，仍提示账号被锁定"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "1a34d90472d866735ffdd9a9f6",
-            "link": null,
-            "title": "反向-部分区域曝光不足导致固化失败",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "1a34d90472d86ff3e021ce75c6",
-                "link": null,
-                "title": "将树脂槽局部用遮光膜覆盖（模拟光学故障）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "84a12ee9c1e72b07a8c7d73587",
-                    "link": null,
-                    "title": "1. 放置遮光膜覆盖投影区域左下角1/4\n2. 开始打印标准测试件（面积覆盖整幅投影）\n3. 取出固化后模型",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "84a12ee9c1e72902fa3ade08ac",
-                        "link": null,
-                        "title": "被遮挡区域模型未固化或固化层厚度不足0.1mm，其余区域固化正常",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：多设备登录": [
+                        {
+                            "场景名称：同一账号在第二台设备登录(正向)": "在第一台设备已登录，第二台设备成功登录且两台均在线"
+                        },
+                        {
+                            "场景名称：强制踢下线设置(反向)": "重复登录时系统提示是否踢掉前设备，选择后前设备下线"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "a54972033e5c4a60956c5cb691",
-        "link": null,
-        "title": "延时启动打印",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "a54972033e5c49732fca62baba",
-            "link": null,
-            "title": "正向-设定延时后按时自动开始打印",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "8bba344dab67843c2ba11eb6d6",
-                "link": null,
-                "title": "打印机时间与手机/网络时间同步，树脂槽已准备就绪，文件已加载",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "1d01cfc2b74537bc40e5ee9982",
-                    "link": null,
-                    "title": "1. 设置延时打印：12小时后开始\n2. 打印机进入待机状态\n3. 等待12小时并观察",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "1d01cfc2b745319ac1e97ebf88",
-                        "link": null,
-                        "title": "12小时后打印机自动启动打印，与正常启动打印行为一致",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：记住密码功能": [
+                        {
+                            "场景名称：勾选记住密码后登录(正向)": "勾选记住密码登录，关闭后重新打开自动填充密码"
+                        },
+                        {
+                            "场景名称：不勾选记住密码(反向)": "不勾选，关闭页面后重新打开密码输入框为空"
+                        }
                     ]
-                  }
-                ]
-              }
+                }
             ]
-          },
-          {
-            "id": "688ba6f3c9d5b082b859c5fca1",
-            "link": null,
-            "title": "反向-延时期间断电后任务丢失",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "91d3d24ef25bc60dd7931a3906",
-                "link": null,
-                "title": "已设定延时打印任务（剩余2小时），打印机处于待机状态",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "91d3d24ef25bca2af372ac4006",
-                    "link": null,
-                    "title": "1. 切断打印机电源\n2. 等待5分钟\n3. 重新接通电源并开机",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "deb8a16a5abf3f6c756e665c4e",
-                        "link": null,
-                        "title": "开机后延时任务消失，无自动启动，需重新设置延时打印",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+        },
+        {
+            "模块名称：退出登录": [
+                {
+                    "测试点名称：退出登录操作": [
+                        {
+                            "场景名称：从设置退出登录(正向)": "点击退出按钮并确认，成功退出返回登录页"
+                        },
+                        {
+                            "场景名称：退出后访问需登录页面(反向)": "退出后点击个人中心，自动跳转至登录页"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "deb8a16a5abf3902f485cb778d",
-        "link": null,
-        "title": "延时参数修改",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "c21ee96d4afc51d0a7c4ca62d2",
-            "link": null,
-            "title": "正向-延时过程中可更改剩余时间",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "c263a7568645ca3d91ed423ae0",
-                "link": null,
-                "title": "已设置延时打印，剩余时间3小时，打印尚未开始",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "c263a7568645c27fe83d7743fa",
-                    "link": null,
-                    "title": "1. 进入延时设置界面\n2. 将剩余时间修改为1小时\n3. 确认保存",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "c259e0cd85213883caaa723a20",
-                        "link": null,
-                        "title": "显示屏更新为剩余1小时，打印机将在1小时后启动打印",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：被动退出": [
+                        {
+                            "场景名称：Token过期自动退出(正向)": "长期未操作导致Token过期，下次请求提示登录"
+                        },
+                        {
+                            "场景名称：账号异地登录被踢(反向)": "在另一设备登录当前账号，本设备收到下线通知"
+                        }
                     ]
-                  }
-                ]
-              }
+                }
             ]
-          },
-          {
-            "id": "c259e0cd852136d3fffd474426",
-            "link": null,
-            "title": "反向-打印开始后无法修改延时",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "89bccc201764026c2e896f3217",
-                "link": null,
-                "title": "打印正在进行中，已打印3层",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "89bccc20176404d64534677479",
-                    "link": null,
-                    "title": "1. 尝试进入延时设置界面\n2. 尝试修改延时参数",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "cd3edb2d79ce803d864c075af5",
-                        "link": null,
-                        "title": "延时设置界面不可进入或相关参数灰显，无法修改；屏幕提示“打印中不可修改延时”",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+        },
+        {
+            "模块名称：找回密码": [
+                {
+                    "测试点名称：通过手机找回": [
+                        {
+                            "场景名称：手机号验证通过重置密码(正向)": "输入注册手机号，获取验证码后设置新密码，重置成功"
+                        },
+                        {
+                            "场景名称：手机号未注册(反向)": "输入未注册手机号，提示该手机号未注册"
+                        }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "2dfcef4281fff78600dfee0dae",
-        "link": null,
-        "title": "手动中断后续打",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "2dfcef4281fff1907127c6e5de",
-            "link": null,
-            "title": "正向-暂停后继续打印层间无错位",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "114d39ea0aa5a26f75d4c35c4b",
-                "link": null,
-                "title": "打印已进行到第5层，打印机稳定运行",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "0fbb074faea5ca014403417414",
-                    "link": null,
-                    "title": "1. 点击“暂停”按钮\n2. 等待30秒\n3. 点击“继续打印”\n4. 打印完成后取出模型，检查第5层与第6层接合处",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "592e81af989d916b612dc8bb28",
-                        "link": null,
-                        "title": "第5层与第6层之间无明显错位（≤0.05mm），模型整体外观正常",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
+                },
+                {
+                    "测试点名称：通过邮箱找回": [
+                        {
+                            "场景名称：邮箱验证成功重置(正向)": "输入注册邮箱，接收重置链接并设置新密码，重置成功"
+                        },
+                        {
+                            "场景名称：新密码与原密码相同(反向)": "重置时新密码与旧密码相同，提示密码不能与旧密码相同"
+                        }
                     ]
-                  }
-                ]
-              }
+                }
             ]
-          },
-          {
-            "id": "84b5d0f47860ce379ccd6bfcf1",
-            "link": null,
-            "title": "反向-断电后续打需重新校准",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "84b5d0f47860ce396cc92d822b",
-                "link": null,
-                "title": "打印进行到第10层时突然断电",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "395c2b44eb68d94309a962cbe4",
-                    "link": null,
-                    "title": "1. 恢复供电并开机\n2. 选择续打功能\n3. 观察续打过程与成品",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "395c2b44eb68d4c7f6d197615b",
-                        "link": null,
-                        "title": "打印机提示需重新校准平台水平，校准后方可续打；续打后第10层与第11层可能有轻微错位（≤0.2mm）",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "14341e94c395f2b2e2ac975d49",
-        "link": null,
-        "title": "自动中断续打",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "18b7bc72c61de849995afb8fc5",
-            "link": null,
-            "title": "正向-料耗尽加料后自动续打",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "18b7bc72c61de7ef401b1b6334",
-                "link": null,
-                "title": "树脂槽内树脂量仅够打印3层（当前第2层），配有料位传感器",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "f0b30ec6650034091028fc47c5",
-                    "link": null,
-                    "title": "1. 开始打印\n2. 当打印到第4层时料位报警\n3. 手动加入足量树脂\n4. 观察打印机行为",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "c88f854f5c457d5b64d5f92959",
-                        "link": null,
-                        "title": "加入树脂后，打印机自动暂停的打印任务在60秒内恢复，层间无错位（≤0.05mm）",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "c88f854f5c457b1bd47fe03347",
-            "link": null,
-            "title": "反向-连续中断多次导致模型报废",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "4b893c040749b04210a1e24593",
-                "link": null,
-                "title": "使用易脆树脂，打印复杂镂空模型（第6层）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "4b893c040749ba73bcb6b8d570",
-                    "link": null,
-                    "title": "1. 在打印过程中强制断电/断料5次\n2. 每次中断后恢复续打\n3. 打印完成后取出模型",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "972e93a901e3e38a14254a1d04",
-                        "link": null,
-                        "title": "模型层间出现明显错位、分层或断裂，模型报废无法使用",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "887265eea0f4772605ad47fd08",
-        "link": null,
-        "title": "树脂参数适配",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "887265eea0f47223afd3dd9c3c",
-            "link": null,
-            "title": "正向-切换树脂后自动调用预设参数",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "cc618499b980ae115048089f97",
-                "link": null,
-                "title": "打印机内已存储两种树脂配置：标准树脂（曝光10s）和柔性树脂（曝光15s）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "cc618499b980aafc03d2b21177",
-                    "link": null,
-                    "title": "1. 将树脂槽从标准树脂更换为柔性树脂\n2. 在界面选择“柔性树脂”类型\n3. 观察曝光参数",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "12f03f4689b69b9f05b0104943",
-                        "link": null,
-                        "title": "曝光时间自动从10s变为15s，其他相关参数（提升速度、等待时间等）同步更新为柔性树脂配置",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "3270cb1c29dbaf3e6490f4ad93",
-            "link": null,
-            "title": "反向-未适配树脂打印导致固化异常",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "3270cb1c29dba821fb979639f7",
-                "link": null,
-                "title": "树脂槽内装有不支持的非标准树脂（如高粘度树脂）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "38a216ae6599bbbba9738c6501",
-                    "link": null,
-                    "title": "1. 不修改任何参数，直接使用标准树脂配置开始打印\n2. 持续监控打印过程\n3. 打印完成后取出模型",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "004241297704ab9ccdc14525ea",
-                        "link": null,
-                        "title": "模型出现层间分离、表面不完整或过度固化，固化异常明显",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "004241297704a7ad659f6420a4",
-        "link": null,
-        "title": "树脂兼容性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "d8c2d446bd2b8b3a85e872f929",
-            "link": null,
-            "title": "正向-支持常见标准树脂正常打印",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "d8c2d446bd2b8d163bdb00d0c9",
-                "link": null,
-                "title": "树脂槽内装入市售标准光敏树脂（如Anycubic标准树脂）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "1b3e9af1f9ba896e15c42fdffc",
-                    "link": null,
-                    "title": "1. 加载标准测试模型文件\n2. 调用对应树脂的参数配置\n3. 开始打印",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "a2ce45adb0db0f7fedddaecb8e",
-                        "link": null,
-                        "title": "打印顺利完成，模型尺寸精度±0.2mm，表面质量良好",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "a2ce45adb0db07a1a888a920ab",
-            "link": null,
-            "title": "反向-腐蚀性树脂损坏树脂槽",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "2604798e229ad169c07bfc2be4",
-                "link": null,
-                "title": "准备具有腐蚀性的实验树脂（pH<3或含强溶剂）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "2604798e229adcbbc4b5677b52",
-                    "link": null,
-                    "title": "1. 将腐蚀性树脂倒入树脂槽\n2. 静置24小时\n3. 倒出树脂，观察树脂槽内表面",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "9638264174251f1a2f50164b6b",
-                        "link": null,
-                        "title": "树脂槽底部出现腐蚀痕迹、变色或裂纹，密封圈膨胀变形，漏斗测试发现泄漏",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "a648003683462818da30794b29",
-        "link": null,
-        "title": "App远程连接",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "a64800368346268fd06fa01a9c",
-            "link": null,
-            "title": "正向-App成功连接打印机并显示状态",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "b876853abc58fb08909301ea89",
-                "link": null,
-                "title": "打印机已连接WiFi且运行正常，手机已安装最新版App",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "b876853abc58f41110635744af",
-                    "link": null,
-                    "title": "1. 打开手机App\n2. 扫描打印机二维码进行绑定\n3. 查看App主界面",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "392789f5c15a64ebc345a1787e",
-                        "link": null,
-                        "title": "App界面显示打印机在线，并实时更新打印状态（待机/打印中/暂停）、温度、Z轴位置等信息",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "c42291cd1d41727af413bf8328",
-            "link": null,
-            "title": "反向-WiFi断连后App提示离线",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "c42291cd1d4174ac57084b3568",
-                "link": null,
-                "title": "打印机与App处于正常连接状态",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "0ae11d1feded655d415668a912",
-                    "link": null,
-                    "title": "1. 关闭打印机连接的WiFi路由器\n2. 等待30秒\n3. 查看App界面",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "fbdc076d70fbfa55009029cbec",
-                        "link": null,
-                        "title": "App上打印机状态由“在线”变为“离线”，并弹出提示“打印机已断开连接”",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "fbdc076d70fbf57259b63c33a6",
-        "link": null,
-        "title": "App远程控制",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "4e38b4d6719b43245e532ead7d",
-            "link": null,
-            "title": "正向-通过App启动暂停停止打印",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "4e38b4d6719b4a3c96f5d542d0",
-                "link": null,
-                "title": "打印机已连接App，文件已加载，处于待机状态",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "8fc2bb60a54edfd5816bea3a46",
-                    "link": null,
-                    "title": "1. 在App上点击“开始打印”\n2. 打印第3层时点击“暂停”\n3. 30秒后点击“继续”\n4. 打印第8层时点击“停止”",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "3a9bba62bfc57d1bc088c84d9d",
-                        "link": null,
-                        "title": "打印机依次响应：启动、暂停、继续、停止，打印机状态在App同步更新，停止后打印任务结束",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "3a9bba62bfc57aca08c11757ec",
-            "link": null,
-            "title": "反向-App发送无效指令设备忽略",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "d5d12212fd61434a4c45c7f2ba",
-                "link": null,
-                "title": "打印机正在正常打印中",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "ffb55dee1ca73703c9529dac6c",
-                    "link": null,
-                    "title": "1. 使用App调试接口发送非标准指令（如“JUMP”）\n2. 发送超出范围的参数指令（如设置曝光时间-5s）",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "ffb55dee1ca735ee16895f89f8",
-                        "link": null,
-                        "title": "打印机忽略无效指令，继续当前打印流程，App收到“无效指令”提示",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "1fdf59c5de3827aea314ed9e69",
-        "link": null,
-        "title": "树脂槽密封性",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "1fdf59c5de3825fbf2cd77d185",
-            "link": null,
-            "title": "正向-树脂槽装料后无泄漏",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-1"
-            ],
-            "topics": [
-              {
-                "id": "fe51c6ed052b1f3031377c7c3a",
-                "link": null,
-                "title": "树脂槽清洁干燥，密封圈完好",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "b998d44b6273501b3bc5f07f5c",
-                    "link": null,
-                    "title": "1. 将树脂槽装满标准树脂至最大刻度线\n2. 静置在水平桌面上2小时\n3. 用白色纸巾擦拭树脂槽底部四周及接口处",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "b998d44b6273559e75751bb585",
-                        "link": null,
-                        "title": "纸巾无树脂痕迹，树脂槽底部及接口干燥无渗漏",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "a1a8dcfd182c385c439a11cab3",
-            "link": null,
-            "title": "反向-槽体裂缝导致漏料报警",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "1442d35cc5fefd1c0a440631a7",
-                "link": null,
-                "title": "在树脂槽底部人为制作一条细裂缝（0.2mm宽）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "1442d35cc5fef18a999f905fb2",
-                    "link": null,
-                    "title": "1. 向树脂槽中加入树脂至刻度线\n2. 等待5分钟\n3. 观察打印机是否有漏料检测报警",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "6ef7a2a3a9a2682b01875b40de",
-                        "link": null,
-                        "title": "树脂从裂缝缓慢渗出，打印机在检测到树脂液位异常下降或底部传感器触发后，屏幕显示“树脂泄漏，请检查树脂槽”报警",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "6ef7a2a3a9a2612b0d2b9fda59",
-        "link": null,
-        "title": "光源系统寿命",
-        "note": null,
-        "label": null,
-        "comment": null,
-        "markers": [],
-        "topics": [
-          {
-            "id": "4e5c4dce097bf934e94a7076ab",
-            "link": null,
-            "title": "正向-光源连续工作100小时亮度稳定",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-2"
-            ],
-            "topics": [
-              {
-                "id": "df772a60010e59c69664f3852b",
-                "link": null,
-                "title": "光源已累计使用50小时，状态正常",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "df772a60010e59319cfb6304a2",
-                    "link": null,
-                    "title": "1. 记录当前照度值（参考点）\n2. 使光源连续工作100小时（模拟长时间打印）\n3. 每隔20小时测量一次照度\n4. 比较最终照度与初始照度",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "27e6ffea6934933a6918be4dfd",
-                        "link": null,
-                        "title": "100小时后照度降低不超过10%（即在初始照度的90%~110%之间），光源无闪烁或色偏",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": "27e6ffea693492e81d427067e5",
-            "link": null,
-            "title": "反向-光源老化后曝光明暗不均",
-            "note": null,
-            "label": null,
-            "comment": null,
-            "markers": [
-              "priority-3"
-            ],
-            "topics": [
-              {
-                "id": "87837456d8d0d31d5fc05f0bca",
-                "link": null,
-                "title": "使用一个已通知老化的光源（累计使用>5000小时或出现明显亮度衰减）",
-                "note": null,
-                "label": null,
-                "comment": null,
-                "markers": [],
-                "topics": [
-                  {
-                    "id": "f91fff06c30eb75db39ac600da",
-                    "link": null,
-                    "title": "1. 运行投影全幅白色画面\n2. 使用照度计测量9点照度\n3. 打印标准测试板",
-                    "note": null,
-                    "label": null,
-                    "comment": null,
-                    "markers": [],
-                    "topics": [
-                      {
-                        "id": "6a1f0719b95d40ce0d15088a9f",
-                        "link": null,
-                        "title": "9点照度差异>20%，打印出的测试板局部固化厚度差异明显，厚度差>0.3mm",
-                        "note": null,
-                        "label": null,
-                        "comment": null,
-                        "markers": []
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
+        }
     ]
-  }
 }

@@ -50,6 +50,11 @@ class Controller(CommonTool):
     def generate_test_points(self):
         """生成测试点（支持图片识别 / 文本输入两种模式）"""
         try:
+            # 检查模板路径：空则确认是否使用默认配置路径
+            template_path = self.configTab.pointTemplatePathInput.text()
+            if not self._confirm_default_path(template_path, "模板路径"):
+                return
+
             output_dir = self._get_output_dir()
             output_json = self.configTab.pointJsonPathInput.text() or os.path.join(output_dir, "测试点.json")
             output_xmind = os.path.join(output_dir, "测试点.xmind")
@@ -98,6 +103,9 @@ class Controller(CommonTool):
         """导出测试点JSON到XMind"""
         try:
             json_path = self.configTab.pointJsonPathInput.text()
+            # 检查路径：空则确认是否使用默认配置路径
+            if not self._confirm_default_path(json_path, "测试点JSON路径"):
+                return
             if not json_path or not os.path.exists(json_path):
                 QMessageBox.warning(self.main_window, "警告", "测试点JSON文件不存在，请先生成测试点")
                 return
@@ -120,6 +128,10 @@ class Controller(CommonTool):
             output_dir = self._get_output_dir()
 
             if self.testCaseTab.xmindRadio.isChecked():
+                # 检查模板路径：空则确认是否使用默认配置路径
+                template_path = self.testCaseTab.templateInput.text()
+                if not self._confirm_default_path(template_path, "模板文件路径"):
+                    return
                 # ---- XMind导入模式：测试点XMind → AI → 测试用例XMind ----
                 xmind_path = self.testCaseTab.xmindPathInput.text()
                 if not xmind_path:
@@ -135,6 +147,10 @@ class Controller(CommonTool):
                 self._start_worker(worker, f"开始从XMind生成测试用例：{xmind_path}")
             else:
                 # ---- 文本输入模式：文本 → 全链路 → XLSX ----
+                # 检查输出路径：空则确认是否使用默认配置路径
+                output_path = self.testCaseTab.outputPathInput.text()
+                if not self._confirm_default_path(output_path, "输出路径"):
+                    return
                 text = self.testCaseTab.testCaseTextInput.toPlainText()
                 if not text:
                     QMessageBox.warning(self.main_window, "警告", "请输入测试用例内容")
@@ -179,6 +195,9 @@ class Controller(CommonTool):
         try:
             # 读取测试用例JSON路径（配置页 → 测试用例配置 → 输出JSON路径）
             json_path = self.configTab.caseJsonPathInput.text()
+            # 检查路径：空则确认是否使用默认配置路径
+            if not self._confirm_default_path(json_path, "测试用例JSON路径"):
+                return
             if not json_path or not os.path.exists(json_path):
                 # 尝试使用默认路径
                 json_path = os.path.join(self._get_output_dir(), "测试用例_output.json")
@@ -234,6 +253,10 @@ class Controller(CommonTool):
         数据流：testCaseTextInput(文本) → interfaceAIAnyFlieToXmind → outputPathInput(输出目录)
         """
         try:
+            # 检查输出路径：空则确认是否使用默认配置路径
+            output_path = self.testCaseTab.outputPathInput.text()
+            if not self._confirm_default_path(output_path, "输出路径"):
+                return
             text = self.testCaseTab.testCaseTextInput.toPlainText()
             if not text:
                 QMessageBox.warning(self.main_window, "警告", "请输入需求描述文本")
@@ -255,6 +278,9 @@ class Controller(CommonTool):
         try:
             # 读取测试用例XMind路径（测试用例页面 → testCaseXmindPathInput）
             xmind_path = self.testCaseTab.testCaseXmindPathInput.text()
+            # 检查路径：空则确认是否使用默认配置路径
+            if not self._confirm_default_path(xmind_path, "测试用例XMind路径"):
+                return
             if not xmind_path:
                 xmind_path = os.path.join(self._get_output_dir(), "测试用例.xmind")
             if not os.path.exists(xmind_path):
