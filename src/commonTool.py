@@ -73,6 +73,8 @@ class CommonTool:
         self.testPointTab.tp_generateBtn.clicked.connect(self.generate_test_points)
         self.testPointTab.tp_clearBtn.clicked.connect(self.clear_test_points)
         self.testPointTab.exportBtn.clicked.connect(self.export_test_points)
+        self.testPointTab.recognizeBtn.clicked.connect(self.recognize_image_to_points)
+        self.testPointTab.copyResultBtn.clicked.connect(self.copy_recognition_result)
 
         # ==================== 测试用例功能页面 ====================
         self.testCaseTab.xmindRadio.toggled.connect(self.toggle_case_input_method)
@@ -569,5 +571,28 @@ class TestcaseXmindToXlsxWorker(BaseWorker):
                 self.finished_signal.emit(False, "Excel导出失败")
         except Exception as e:
             self.finished_signal.emit(False, f"转换失败：{str(e)}")
+
+
+class ImageRecognitionWorker(BaseWorker):
+    """图像识别生成测试要点Worker"""
+    result_signal = Signal(str)  # 识别结果文本信号
+
+    def __init__(self, image_path, parent=None):
+        super().__init__(parent)
+        self.image_path = image_path
+
+    def run(self):
+        try:
+            self.log_signal.emit(f"开始识别图片：{self.image_path}")
+            from service.xmindChanger import TextRecognition
+            recognizer = TextRecognition(image_path=self.image_path)
+            result = recognizer.get_ai_point()
+            if result:
+                self.result_signal.emit(result)
+                self.finished_signal.emit(True, "图像识别测试要点生成成功")
+            else:
+                self.finished_signal.emit(False, "图像识别返回空结果")
+        except Exception as e:
+            self.finished_signal.emit(False, f"图像识别失败：{str(e)}")
 
 

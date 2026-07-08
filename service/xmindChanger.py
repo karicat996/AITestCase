@@ -3,6 +3,7 @@ import xmind
 import json
 import re
 import uuid
+from ai.deepseekAPI import *
 from xmind.core.markerref import MarkerId
 from utils.logs import LogManager
 from common.textRecognition import *
@@ -2104,92 +2105,68 @@ class TextRecognition:
             raise ValueError("image_path未配置，请传入参数或在systemConfig.yaml中设置IMG_PATH")
         logger.info(f"TextRecognition初始化完成，图片路径: {self.ocr_img}")
     
-    def get_ai_point(self, user_input):
+    def get_ai_point(self, ocr_img=None):
         """
-        公开方法：从图片识别文字并通过AI过滤获取测试点
-        
-        Args:
-            user_input: 用户输入的需求描述
-            
+        公开方法：从图片OCR识别提取文案，将文案喂给AI获取合规的测试点
+
+        流程：
+        1. 对图片进行OCR识别，提取文字内容
+        2. 将识别出的文案喂给AI，生成测试点
+
         Returns:
-            str: AI过滤后的测试结果
-            
+            str: AI生成的测试点结果
+
         Raises:
-            ValueError: 当参数为空或无效时抛出
+            ValueError: 当图片路径为空或无效时抛出
             FileNotFoundError: 当图片文件不存在时抛出
         """
         # 入参校验
-        if not user_input or not isinstance(user_input, str):
-            logger.error("user_input参数不能为空且必须为字符串类型")
-            raise ValueError("user_input参数不能为空且必须为字符串类型")
-        
         if not self.ocr_img or not isinstance(self.ocr_img, str):
             logger.error("图片路径不能为空且必须为字符串类型")
             raise ValueError("图片路径不能为空且必须为字符串类型")
-        
+
         try:
-            logger.info(f"开始处理用户输入: {user_input[:50]}...")
-            
-            # 步骤1：从图片中提取文字（直接调用公共函数）
-            ocr_result = ocr_get_text_from_img(self.ocr_img)
-            logger.debug(f"OCR识别完成，共识别到 {len(ocr_result.get('text', []))} 段文字")
-            
-            # 步骤2：通过AI过滤处理
-            filtered_result = self._text_to_filter_ai(ocr_result, user_input)
-            
+            logger.info(f"读取图片: {self.ocr_img}")
+
+            filtered_result = self._text_to_filter_ai(self.ocr_img)
+
             logger.info("AI过滤处理完成")
             return filtered_result
-            
+
         except FileNotFoundError as e:
             logger.error(f"图片文件不存在: {str(e)}")
             raise
         except Exception as e:
             logger.error(f"处理过程中发生错误: {str(e)}", exc_info=True)
             raise
-    
-    def _text_to_filter_ai(self, ocr_result: dict, user_input: str) -> str:
+
+    def _text_to_filter_ai(self, image_path) -> str:
         """
-        私有方法：将OCR识别的文字通过AI进行过滤处理
-        
-        Args:
-            ocr_result: OCR识别结果字典
-            user_input: 用户输入的需求描述
-            
         Returns:
-            str: AI处理后的结果
+            str: AI处理后的测试点结果
         """
         logger.debug("开始AI过滤处理")
-        
+
         try:
-            # 提取OCR识别的文本内容
-            text_list = ocr_result.get('text', [])
-            if not text_list:
-                logger.warning("OCR未识别到任何文字内容")
-                return ""
-            
-            # 将识别的文字列表拼接为字符串
-            ocr_text = "\n".join(text_list)
-            logger.debug(f"待处理的OCR文本长度: {len(ocr_text)} 字符")
-            
-            # 调用DeepSeek API进行处理
+            # 调用DeepSeek API，将OCR文案喂给AI生成测试要点
             ai_api = DeepSeekAPI()
-            ai_result = ai_api.get_ai_point(user_input)
-            
+            ai_result = ai_api.get_ai_point(image_path)
+
             logger.info("AI处理成功")
             return ai_result
-            
+
         except Exception as e:
             logger.error(f"AI过滤处理失败: {str(e)}", exc_info=True)
             raise
 
 
-#测试点XMind一键生成测试用例XLSX
-
-
-
 
 
 if __name__ == '__main__':
+
+    converter = TextRecognition()
+    converter.get_ai_point()
+
 
     # converter = MxindDataProcessor()
     # converter.write_to_json(output_json_path=r'D:\AIGeneration\testcase\output.json')
@@ -2208,18 +2185,18 @@ if __name__ == '__main__':
     # res = dc.write_to_json()
 
     #
-    converter = TestcaseXmindToAIJson()
-
-    # 步骤1：读取XMind JSON
-    xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
-
-    # 步骤2：转换为测试用例格式
-    testcase_data = converter.convert_to_testcase_format(xmind_data)
-
-    # 步骤3：保存
-    converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+    # converter = TestcaseXmindToAIJson()
     #
-
+    # # 步骤1：读取XMind JSON
+    # xmind_data = converter.read_xmind_json(r"D:\AIGeneration\testcase\xmind_output.json")
+    #
+    # # 步骤2：转换为测试用例格式
+    # testcase_data = converter.convert_to_testcase_format(xmind_data)
+    #
+    # # 步骤3：保存
+    # converter.save_to_json(testcase_data, r"D:\AIGeneration\testcase\output.json")
+    # #
+    #
 
 
     # converter = AIJsonToXlsx()

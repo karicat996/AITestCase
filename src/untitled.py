@@ -250,6 +250,27 @@ class Ui_TestPointTab(QWidget):
         buttonLayout.addStretch()
         layout.addLayout(buttonLayout)
         
+        # 图像识别测试要点结果区域
+        self.recognitionGroup = QGroupBox("图像识别测试要点")
+        recognitionLayout = QVBoxLayout()
+        
+        self.recognizeBtn = QPushButton("识别图像生成测试要点")
+        recognitionLayout.addWidget(self.recognizeBtn)
+        
+        self.recognitionResultLabel = QLabel("识别结果:")
+        recognitionLayout.addWidget(self.recognitionResultLabel)
+        
+        self.recognitionResultArea = QPlainTextEdit()
+        self.recognitionResultArea.setReadOnly(True)
+        self.recognitionResultArea.setMinimumHeight(150)
+        recognitionLayout.addWidget(self.recognitionResultArea)
+        
+        self.copyResultBtn = QPushButton("复制结果")
+        recognitionLayout.addWidget(self.copyResultBtn)
+        
+        self.recognitionGroup.setLayout(recognitionLayout)
+        layout.addWidget(self.recognitionGroup)
+        
         layout.addStretch()
 
 

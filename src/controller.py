@@ -6,7 +6,7 @@ Controller 继承 CommonTool，只负责业务逻辑槽函数
 """
 import os
 
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QGuiApplication
 from PySide6.QtWidgets import QMessageBox
 
 from src.commonTool import (
@@ -19,6 +19,7 @@ from src.commonTool import (
     ExportTestCaseXmindWorker,
     XmindToXlsxWorker,
     TestcaseXmindToXlsxWorker,
+    ImageRecognitionWorker,
 )
 
 
@@ -97,7 +98,62 @@ class Controller(CommonTool):
         self.current_image_path = None
         self.testPointTab.strictCheck.setChecked(False)
         self.testPointTab.detailedCheck.setChecked(False)
+        self.testPointTab.recognitionResultArea.clear()
         self.append_log("已清空测试点输入")
+
+    def recognize_image_to_points(self):
+        """识别图像生成测试要点
+        优先使用测试点页面的自定义图片，为空则使用默认配置图片路径
+        识别结果展示在 recognitionResultArea 中，支持复制
+        """
+        try:
+            # 优先使用测试点页面的自定义图片
+            img_path = self.testPointTab.imagePathInput.text()
+            if not img_path:
+                # 使用默认配置图片路径
+                img_path = self.configTab.pointImgPathInput.text()
+                if not self._confirm_default_path(img_path, "图片路径"):
+                    return
+
+            if not os.path.exists(img_path):
+                QMessageBox.warning(self.main_window, "警告", f"图片文件不存在：{img_path}")
+                return
+
+            worker = ImageRecognitionWorker(image_path=img_path)
+            self._save_config_silent()
+            self.append_log(f"开始识别图片生成测试要点：{img_path}")
+            worker.log_signal.connect(self.append_log)
+            worker.result_signal.connect(self._on_recognize_result)
+            worker.finished_signal.connect(self._on_recognize_finished)
+            self._active_worker = worker
+            worker.start()
+
+        except Exception as e:
+            self.append_log(f"启动图像识别失败：{str(e)}")
+            QMessageBox.critical(self.main_window, "错误", str(e))
+
+    def _on_recognize_result(self, result_text):
+        """显示识别结果到结果区域"""
+        self.testPointTab.recognitionResultArea.setPlainText(result_text)
+
+    def _on_recognize_finished(self, success, message):
+        """识别完成回调（不弹消息框，仅日志）"""
+        if success:
+            self.append_log(f"✓ {message}")
+        else:
+            self.append_log(f"✗ {message}")
+            QMessageBox.critical(self.main_window, "失败", message)
+        self._active_worker = None
+
+    def copy_recognition_result(self):
+        """复制识别结果到剪贴板"""
+        text = self.testPointTab.recognitionResultArea.toPlainText()
+        if not text:
+            QMessageBox.warning(self.main_window, "提示", "没有可复制的结果")
+            return
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(text)
+        self.append_log("测试要点结果已复制到剪贴板")
 
     def export_test_points(self):
         """导出测试点JSON到XMind"""

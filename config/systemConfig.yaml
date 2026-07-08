@@ -1,7 +1,7 @@
 CONVERTED_TESTCASES_JSON_PATH: D:/AIGeneration/testcase/converted_testcases.json
 DEEPSEEK_API_KEY: sk-5822942360b0414eae1134f5b5aaa69a
 DEFAULT_TEMPLATE_PATH: D:/AIGeneration/testcase/template.xmind
-IMG_PATH: C:/Users/admin/Pictures/123.png
+IMG_PATH: D:/AIGeneration/config/de.png
 OUTPUT_JSON_PATH: D:/AIGeneration/testcase/xmind_output.json
 TEMPLATE_PATH: D:/AIGeneration/testcase/blank_template.xmind
 TEMPLATE_XMIND_PATH: C:/Users/admin/Desktop/test.xmind

@@ -55,7 +55,6 @@ class DeepSeekAPI:
         print(f"获取到答案:{result}")
         return result
 
-
     def get_ai_point(self,image_path):
         """
         从图像中提取文本并生成测试关键词（第一步：图片→关键词）
@@ -83,10 +82,6 @@ class DeepSeekAPI:
         result = response.choices[0].message.content
         print(f"获取到关键词:{result}")
         return result
-
-
-
-
     def point_to_list(self, data= None):
         """
         将测试点数据转换为列表
