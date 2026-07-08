@@ -40,12 +40,5 @@ def ocr_get_text_from_img(
     }
 
 
-if __name__ == '__main__':
-    # result = ocr_get_text_from_img(image_path=r"D:\AIGeneration\config\de.png")
-    res = ['chitumanager重构', '1.历史记录自动化', '2.重构登录00，01d的用例今日目标', '3.外部打开chitumanager', '4.chitumanger与设备端的校验', '重构用例后-', '5.封装chitumanager为软件执行', '6.增加chitumanager打包程序', '7.将报告发送到邮件中']
-
-    # 方法1: 使用join直接拼接所有元素
-    des = ''.join(res)
-    print("拼接结果:", des)
 
 

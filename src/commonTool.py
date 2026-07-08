@@ -5,7 +5,8 @@
 """
 import os
 from datetime import datetime
-
+import json
+import zipfile
 import yaml
 from PySide6.QtCore import QThread, Signal, Qt
 from PySide6.QtGui import QPixmap
@@ -239,12 +240,110 @@ class CommonTool:
         except Exception as e:
             self.append_log(f"静默保存配置失败：{str(e)}")
 
+    def _create_default_config(self):
+        """创建默认配置文件 systemConfig.yaml 及其引用的文件（图像文件配置除外）
+
+        当配置文件不存在时自动调用：
+        1. 创建 systemConfig.yaml，写入默认路径配置
+        2. 为非图像路径创建引用的文件（空JSON、空白XMind模板等）
+        3. 图像路径（IMG_PATH、TEST_POINT_XMIND_FILE）留空，不创建图像文件
+        """
+
+        # 项目根目录与默认输出目录
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        default_output_dir = os.path.join(project_root, 'testcase')
+
+        # 确保目录存在
+        os.makedirs(default_output_dir, exist_ok=True)
+        config_dir = os.path.dirname(self.config_path)
+        os.makedirs(config_dir, exist_ok=True)
+
+        # 默认配置（IMG_PATH 和 TEST_POINT_XMIND_FILE 为图像配置，留空）
+        default_config = {
+            'DEEPSEEK_API_KEY': '',
+            'OUTPUT_JSON_PATH': os.path.join(default_output_dir, 'xmind_output.json'),
+            'DEFAULT_TEMPLATE_PATH': os.path.join(default_output_dir, 'template.xmind'),
+            'IMG_PATH': '',  # 图像文件配置除外
+            'TESTCASE_JSON_PATH': os.path.join(default_output_dir, 'output.json'),
+            'TEMPLATE_XMIND_PATH': os.path.join(default_output_dir, '测试用例.xmind'),
+            'TEST_XMIND_PATH': os.path.join(default_output_dir, '测试用例.xmind'),
+            'CONVERTED_TESTCASES_JSON_PATH': os.path.join(default_output_dir, 'converted_testcases.json'),
+            'TEMPLATE_PATH': os.path.join(default_output_dir, 'blank_template.xmind'),
+            'TEST_POINT_XMIND_FILE': '',  # 图像文件配置除外
+        }
+
+        # 图像配置键名集合（这些路径不创建引用文件）
+        image_keys = {'IMG_PATH', 'TEST_POINT_XMIND_FILE'}
+
+        for key, file_path in default_config.items():
+            if key == 'DEEPSEEK_API_KEY':
+                continue
+            if not file_path:
+                continue
+            if key in image_keys:
+                continue  # 图像文件配置除外
+
+            # 确保文件所在目录存在
+            file_dir = os.path.dirname(file_path)
+            if file_dir:
+                os.makedirs(file_dir, exist_ok=True)
+
+            # 文件已存在则跳过
+            if os.path.exists(file_path):
+                continue
+
+            try:
+                if file_path.endswith('.json'):
+                    # 创建空 JSON 文件
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump({}, f, ensure_ascii=False, indent=2)
+                elif file_path.endswith('.xmind'):
+                    # 创建空白 XMind 文件（XMind 8 格式 zip 包）
+                    content_xml = (
+                        '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+                        '<xmap-content xmlns="urn:xmind:xmap:xmlns:content:2.0"'
+                        ' xmlns:fo="http://www.w3.org/1999/XSL/Format"'
+                        ' xmlns:svg="http://www.w3.org/2000/svg"'
+                        ' xmlns:xhtml="http://www.w3.org/1999/xhtml"'
+                        ' xmlns:xlink="http://www.w3.org/1999/xlink"'
+                        ' modified-by="AI" timestamp="1234567890">'
+                        '<sheet id="sheet1" modified-by="AI" timestamp="1234567890">'
+                        '<topic id="root1" modified-by="AI"'
+                        ' structure-class="org.xmind.ui.logic.right"'
+                        ' timestamp="1234567890">'
+                        '<title>Root</title>'
+                        '</topic>'
+                        '</sheet>'
+                        '</xmap-content>'
+                    )
+                    meta_xml = (
+                        '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+                        '<meta xmlns="urn:xmind:xmap:xmlns:meta:2.0" version="2.0">'
+                        '<Creator>AI</Creator>'
+                        '<Created>2024-01-01T00:00:00.000+0800</Created>'
+                        '</meta>'
+                    )
+                    with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                        zf.writestr('content.xml', content_xml.encode('utf-8'))
+                        zf.writestr('meta.xml', meta_xml.encode('utf-8'))
+                elif file_path.endswith('.xlsx'):
+                    # 创建空文件占位（实际使用时由程序生成内容）
+                    open(file_path, 'w').close()
+            except Exception as e:
+                self.append_log(f"创建文件失败：{file_path} - {str(e)}")
+
+        # 写入默认配置文件
+        with open(self.config_path, 'w', encoding='utf-8') as f:
+            yaml.dump(default_config, f, allow_unicode=True, default_flow_style=False)
+
+        self.append_log("已创建默认配置文件及引用的文件（图像配置除外）")
+
     def load_config(self):
         """从YAML文件加载配置"""
         try:
             if not os.path.exists(self.config_path):
-                self.append_log("配置文件不存在，使用默认配置")
-                return
+                self.append_log("配置文件不存在，正在创建默认配置文件...")
+                self._create_default_config()
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
             if config:
